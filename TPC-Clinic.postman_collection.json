@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "TPC Clinic API",
+    "description": "Talibon Polytechnic College Clinic Management System — Complete API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api/v1", "type": "string" },
+    { "key": "token",    "value": "",                             "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "if (pm.response.code === 200) { pm.collectionVariables.set('token', pm.response.json().token); }"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST", "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tpc.edu.ph\",\n  \"password\": \"Admin@123\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"Admin@123\",\n  \"new_password\": \"NewAdmin@456\",\n  \"new_password_confirmation\": \"NewAdmin@456\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/change-password", "host": ["{{base_url}}"], "path": ["auth", "change-password"] }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST", "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tpc.edu.ph\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/forgot-password", "host": ["{{base_url}}"], "path": ["auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Dashboard",
+      "item": [
+        { "name": "Stats",                "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/dashboard/stats","host":["{{base_url}}"],"path":["admin","dashboard","stats"]} } },
+        { "name": "Appointments Chart",   "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/dashboard/appointments-chart","host":["{{base_url}}"],"path":["admin","dashboard","appointments-chart"]} } },
+        { "name": "Medicine Chart",       "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/dashboard/medicine-chart","host":["{{base_url}}"],"path":["admin","dashboard","medicine-chart"]} } },
+        { "name": "Program Distribution", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/dashboard/program-distribution","host":["{{base_url}}"],"path":["admin","dashboard","program-distribution"]} } },
+        { "name": "Pregnancy Stats",      "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/dashboard/pregnancy-stats","host":["{{base_url}}"],"path":["admin","dashboard","pregnancy-stats"]} } }
+      ]
+    },
+    {
+      "name": "👥 User Management (Admin)",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/users?role=student&search=juan&is_active=1", "host": ["{{base_url}}"], "path": ["admin", "users"], "query": [{"key":"role","value":"student"},{"key":"search","value":"juan"},{"key":"is_active","value":"1"}] }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@tpc.edu.ph\",\n  \"role\": \"student\"\n}" },
+            "url": { "raw": "{{base_url}}/admin/users", "host": ["{{base_url}}"], "path": ["admin", "users"] }
+          }
+        },
+        {
+          "name": "Bulk Import (TXT)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "/path/to/emails.txt" }, { "key": "role", "value": "student", "type": "text" }] },
+            "url": { "raw": "{{base_url}}/admin/users/bulk-import", "host": ["{{base_url}}"], "path": ["admin", "users", "bulk-import"] }
+          }
+        },
+        {
+          "name": "Toggle User Active",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/users/1/toggle-active", "host": ["{{base_url}}"], "path": ["admin", "users", "1", "toggle-active"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏥 Appointments (Admin)",
+      "item": [
+        {
+          "name": "Create Slot",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"date\": \"2025-02-15\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"max_appointments\": 3,\n  \"notes\": \"Morning clinic hours\"\n}" },
+            "url": { "raw": "{{base_url}}/admin/appointment-slots", "host": ["{{base_url}}"], "path": ["admin", "appointment-slots"] }
+          }
+        },
+        { "name": "List All Appointments", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/appointments?status=pending","host":["{{base_url}}"],"path":["admin","appointments"]} } },
+        { "name": "Calendar View",         "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/appointments/calendar?month=2025-02","host":["{{base_url}}"],"path":["admin","appointments","calendar"]} } },
+        {
+          "name": "Approve Appointment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/admin/appointments/1/approve", "host": ["{{base_url}}"], "path": ["admin", "appointments", "1", "approve"] }
+          }
+        },
+        {
+          "name": "Decline Appointment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Clinic closed on this day.\"\n}" },
+            "url": { "raw": "{{base_url}}/admin/appointments/1/decline", "host": ["{{base_url}}"], "path": ["admin", "appointments", "1", "decline"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏥 Appointments (Student)",
+      "item": [
+        { "name": "Available Slots", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/student/appointment-slots","host":["{{base_url}}"],"path":["student","appointment-slots"]} } },
+        {
+          "name": "Book Appointment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"appointment_slot_id\": 1,\n  \"purpose\": \"General Check-up\",\n  \"notes\": \"Mild fever since yesterday\"\n}" },
+            "url": { "raw": "{{base_url}}/student/appointments", "host": ["{{base_url}}"], "path": ["student", "appointments"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💊 Medicine (Admin)",
+      "item": [
+        {
+          "name": "Add Medicine",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Paracetamol 500mg\",\n  \"description\": \"Pain reliever and fever reducer\",\n  \"unit\": \"tablets\",\n  \"quantity\": 500,\n  \"reorder_level\": 50,\n  \"expiration_date\": \"2026-12-31\"\n}" },
+            "url": { "raw": "{{base_url}}/admin/medicines", "host": ["{{base_url}}"], "path": ["admin", "medicines"] }
+          }
+        },
+        { "name": "Low Stock",    "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/medicines/low-stock","host":["{{base_url}}"],"path":["admin","medicines","low-stock"]} } },
+        { "name": "Out of Stock", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/medicines/out-of-stock","host":["{{base_url}}"],"path":["admin","medicines","out-of-stock"]} } },
+        {
+          "name": "Release Medicine",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity_released\": 2\n}" },
+            "url": { "raw": "{{base_url}}/admin/medicine-requests/1/release", "host": ["{{base_url}}"], "path": ["admin", "medicine-requests", "1", "release"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Survey (Admin)",
+      "item": [
+        {
+          "name": "Create Question",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"question\": \"Do you have any allergies?\",\n  \"type\": \"radio\",\n  \"options\": [\"Yes\", \"No\"],\n  \"is_required\": true\n}" },
+            "url": { "raw": "{{base_url}}/admin/survey/questions", "host": ["{{base_url}}"], "path": ["admin", "survey", "questions"] }
+          }
+        },
+        {
+          "name": "Reorder Questions",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"order\": [3, 1, 2, 4, 5]\n}" },
+            "url": { "raw": "{{base_url}}/admin/survey/questions/reorder", "host": ["{{base_url}}"], "path": ["admin", "survey", "questions", "reorder"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Survey (Student)",
+      "item": [
+        { "name": "Get Questions", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/student/survey/questions","host":["{{base_url}}"],"path":["student","survey","questions"]} } },
+        {
+          "name": "Submit Survey",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"answers\": {\n    \"1\": \"No\",\n    \"2\": \"\",\n    \"3\": [\"None\"],\n    \"7\": \"Good\"\n  }\n}" },
+            "url": { "raw": "{{base_url}}/student/survey/submit", "host": ["{{base_url}}"], "path": ["student", "survey", "submit"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📁 Requirements (Student)",
+      "item": [
+        { "name": "My Status", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/student/requirements","host":["{{base_url}}"],"path":["student","requirements"]} } },
+        {
+          "name": "Upload Requirement",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "formdata", "formdata": [{ "key": "requirement_type_id", "value": "1", "type": "text" }, { "key": "file", "type": "file", "src": "/path/to/document.pdf" }] },
+            "url": { "raw": "{{base_url}}/student/requirements/upload", "host": ["{{base_url}}"], "path": ["student", "requirements", "upload"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 Reports",
+      "item": [
+        {
+          "name": "Generate Student Health Report",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"student_health\",\n  \"title\": \"Student Health Report Q1 2025\",\n  \"format\": \"pdf\",\n  \"filters\": {\n    \"program_id\": 1,\n    \"year_level\": 2\n  }\n}" },
+            "url": { "raw": "{{base_url}}/admin/reports/generate", "host": ["{{base_url}}"], "path": ["admin", "reports", "generate"] }
+          }
+        },
+        { "name": "Download Report", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/admin/reports/1/download","host":["{{base_url}}"],"path":["admin","reports","1","download"]} } }
+      ]
+    },
+    {
+      "name": "💬 Messaging",
+      "item": [
+        { "name": "My Conversations", "request": { "method": "GET", "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/messages/conversations","host":["{{base_url}}"],"path":["messages","conversations"]} } },
+        {
+          "name": "Start Conversation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"recipient_id\": 2,\n  \"subject\": \"Question about my appointment\",\n  \"body\": \"Good morning, I would like to ask...\"\n}" },
+            "url": { "raw": "{{base_url}}/messages/conversations", "host": ["{{base_url}}"], "path": ["messages", "conversations"] }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"Thank you for your response.\"\n}" },
+            "url": { "raw": "{{base_url}}/messages/conversations/1/messages", "host": ["{{base_url}}"], "path": ["messages", "conversations", "1", "messages"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📢 Public API",
+      "item": [
+        { "name": "Announcements",     "request": { "method": "GET", "auth": {"type":"noauth"}, "header": [{"key":"Accept","value":"application/json"}], "url": {"raw":"{{base_url}}/public/announcements","host":["{{base_url}}"],"path":["public","announcements"]} } },
+        {
+          "name": "Contact Form",
+          "request": {
+            "method": "POST", "auth": {"type":"noauth"},
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Venince Dave Quiamco Autida\",\n  \"email\": \"venincedave@gmail.com\",\n  \"subject\": \"Inquiry\",\n  \"message\": \"I would like to inquire about...\"\n}" },
+            "url": { "raw": "{{base_url}}/public/contact", "host": ["{{base_url}}"], "path": ["public", "contact"] }
+          }
+        }
+      ]
+    }
+  ]
+}
