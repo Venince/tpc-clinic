@@ -11,7 +11,7 @@ export default function AdminNotifications({ notifications }) {
             <NotificationsPage
                 notifications={notifications}
                 notificationsRoute="admin.notifications"
-                role={auth.user?.role}
+                role={auth.user?.role?.name}
                 Layout={AdminLayout}
             />
         </>

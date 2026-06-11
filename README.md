@@ -5,6 +5,7 @@
 ## Quick Start
 
 ### Prerequisites
+
 - PHP 8.2+
 - MySQL 8.0+
 - Node.js 18+
@@ -42,28 +43,28 @@ php artisan serve
 
 ## Default Accounts
 
-| Role       | Email                  | Password       |
-|------------|------------------------|----------------|
-| Super Admin| superadmin@tpc.edu.ph  | SuperAdmin@123 |
-| Admin      | admin@tpc.edu.ph       | Admin@123      |
-| Student    | student@tpc.edu.ph     | Student@123    |
-| Faculty    | faculty@tpc.edu.ph     | Faculty@123    |
+| Role        | Email                 | Password       |
+| ----------- | --------------------- | -------------- |
+| Super Admin | superadmin@tpc.edu.ph | SuperAdmin@123 |
+| Admin       | admin@tpc.edu.ph      | Admin@123      |
+| Student     | student@tpc.edu.ph    | Student@123    |
+| Faculty     | faculty@tpc.edu.ph    | Faculty@123    |
 
 > ⚠️ Change all passwords in production!
 
 ## Tech Stack
 
-| Layer       | Technology                      |
-|-------------|----------------------------------|
-| Backend     | Laravel 12                       |
-| Frontend    | React 18 + Inertia.js v2         |
-| Styling     | Tailwind CSS 3 + custom classes  |
-| Charts      | Recharts                         |
-| Icons       | Heroicons v2                     |
-| Auth        | Laravel session (web guard)      |
-| Database    | MySQL 8 / SQLite (testing)       |
-| Queue       | Database (dev) / Redis (prod)    |
-| PDF         | barryvdh/laravel-dompdf          |
+| Layer    | Technology                      |
+| -------- | ------------------------------- |
+| Backend  | Laravel 12                      |
+| Frontend | React 18 + Inertia.js v2        |
+| Styling  | Tailwind CSS 3 + custom classes |
+| Charts   | Recharts                        |
+| Icons    | Heroicons v2                    |
+| Auth     | Laravel session (web guard)     |
+| Database | MySQL 8 / SQLite (testing)      |
+| Queue    | Database (dev) / Redis (prod)   |
+| PDF      | barryvdh/laravel-dompdf         |
 
 ## Features
 

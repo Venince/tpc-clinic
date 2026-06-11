@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { BellIcon } from '@heroicons/react/24/outline';
+import { BellIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 function resolveUrl(notif, role) {
     const { type, record_id, conversation_id } = notif.data ?? {};
@@ -48,8 +48,10 @@ const typeBadgeColor = {
 };
 
 export default function NotificationsPage({ notifications, notificationsRoute, role, Layout }) {
-    const markRead = (id) => router.post(route(`${notificationsRoute}.read`, id), {}, { preserveScroll: true });
-    const markAll  = ()   => router.post(route(`${notificationsRoute}.readAll`));
+    const markRead   = (id) => router.post(route(`${notificationsRoute}.read`, id), {}, { preserveScroll: true });
+    const markAll    = ()   => router.post(route(`${notificationsRoute}.readAll`));
+    const deleteOne  = (id) => router.delete(route(`${notificationsRoute}.destroy`, id), {}, { preserveScroll: true });
+    const deleteAll  = ()   => router.delete(route(`${notificationsRoute}.destroyAll`));
 
     const handleClick = (notif) => {
         if (!notif.read_at) markRead(notif.id);
@@ -67,8 +69,21 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                     <h2 className="page-title">Notifications</h2>
                     <p className="text-sm text-gray-500 mt-0.5">Click a notification to go directly to the relevant page.</p>
                 </div>
-                {hasUnread && (
-                    <button onClick={markAll} className="btn-secondary btn-sm">Mark all as read</button>
+                {items.length > 0 && (
+                    <div className="flex items-center gap-2">
+                        {hasUnread && (
+                            <button onClick={markAll} className="btn-secondary btn-sm">
+                                Mark all as read
+                            </button>
+                        )}
+                        <button
+                            onClick={() => { if (confirm('Delete all notifications?')) deleteAll(); }}
+                            className="btn-sm flex items-center gap-1.5 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+                        >
+                            <TrashIcon className="w-4 h-4" />
+                            Delete all
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -107,14 +122,23 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                                         {new Date(n.created_at).toLocaleString()}
                                     </p>
                                 </div>
-                                {isNew && (
+                                <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
+                                    {isNew && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
+                                            className="text-xs text-clinic-600 hover:underline"
+                                        >
+                                            Mark read
+                                        </button>
+                                    )}
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
-                                        className="text-xs text-clinic-600 hover:underline flex-shrink-0 mt-0.5"
+                                        onClick={(e) => { e.stopPropagation(); deleteOne(n.id); }}
+                                        className="text-gray-300 hover:text-red-500 transition-colors"
+                                        title="Delete notification"
                                     >
-                                        Mark read
+                                        <TrashIcon className="w-4 h-4" />
                                     </button>
-                                )}
+                                </div>
                             </div>
                         );
                     })}

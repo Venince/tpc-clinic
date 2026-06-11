@@ -18,7 +18,7 @@ export default function FacultyMessageShow({ conversation, messages }) {
                     <div className="card-header">
                         <h2 className="font-semibold text-gray-900">{conversation.subject}</h2>
                         <p className="text-xs text-gray-400 mt-0.5">
-                            {conversation.participants?.map(p => p.name).join(', ')}
+                            With: {conversation.participants?.filter(p => p.id !== auth.user?.id).map(p => p.name).join(', ')}
                         </p>
                     </div>
                     <div className="p-4 space-y-3 max-h-96 overflow-y-auto">

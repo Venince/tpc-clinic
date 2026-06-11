@@ -2,9 +2,9 @@ import { Link, usePage } from '@inertiajs/react';
 import NotificationBell from '@/Components/Common/NotificationBell';
 import {
     HomeIcon, UsersIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
-    DocumentChartBarIcon, MegaphoneIcon, ChatBubbleLeftRightIcon, BellIcon,
+    DocumentChartBarIcon, MegaphoneIcon, ChatBubbleLeftRightIcon,
     AcademicCapIcon, DocumentTextIcon, ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon,
-    ChevronDownIcon, IdentificationIcon,
+    IdentificationIcon, UserCircleIcon, GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
@@ -25,6 +25,7 @@ const navigation = [
     { name: 'Announcements',     href: 'admin.announcements.index',icon: MegaphoneIcon },
     { name: 'Messages',          href: 'admin.messages.index',     icon: ChatBubbleLeftRightIcon },
     { name: 'Reports',           href: 'admin.reports.index',      icon: DocumentChartBarIcon },
+    { name: 'Profile',           href: 'admin.profile',            icon: UserCircleIcon },
 ];
 
 export default function AdminLayout({ children, title }) {
@@ -46,7 +47,7 @@ export default function AdminLayout({ children, title }) {
                 <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
                 <div>
                     <p className="font-semibold text-gray-900 text-sm">TPC Clinic</p>
-                    <p className="text-xs text-gray-500">Management System</p>  {/* or Student Portal / Faculty Portal */}
+                    <p className="text-xs text-gray-500">Management System</p>
                 </div>
             </div>
 
@@ -59,6 +60,14 @@ export default function AdminLayout({ children, title }) {
                         {item.name}
                     </Link>
                 ))}
+                {/* Divider + Home */}
+                <div className="pt-2 mt-2 border-t border-gray-100">
+                    <Link href={route('home')}
+                        className={clsx('sidebar-link', { active: route().current('home') })}>
+                        <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
+                        Public Home
+                    </Link>
+                </div>
             </nav>
 
             {/* User */}
@@ -107,7 +116,6 @@ export default function AdminLayout({ children, title }) {
 
             {/* Main */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top bar */}
                 <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-gray-700">
@@ -118,7 +126,6 @@ export default function AdminLayout({ children, title }) {
                     <NotificationBell notificationsRoute="admin.notifications" role={auth.user?.role?.name} />
                 </header>
 
-                {/* Content */}
                 <main className="flex-1 overflow-y-auto p-6">
                     {children}
                 </main>

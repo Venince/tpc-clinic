@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class AuthService
 {
@@ -23,11 +25,37 @@ class AuthService
 
     public function login(array $credentials, string $ipAddress): array
     {
+        $cacheKey   = 'login_attempts:' . md5($credentials['email'] . '|' . $ipAddress);
+        $lockoutKey = 'login_lockout:'  . md5($credentials['email'] . '|' . $ipAddress);
+
+        // Check active lockout
+        if (Cache::has($lockoutKey)) {
+            $seconds = (int) Cache::get($lockoutKey) - time();
+            throw ValidationException::withMessages([
+                'email' => ["Too many failed attempts. Try again in {$this->formatSeconds($seconds)}."],
+            ]);
+        }
+
         $user = $this->userRepository->findByEmail($credentials['email']);
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            $attempts = Cache::get($cacheKey, 0) + 1;
+            Cache::put($cacheKey, $attempts, now()->addHour());
+
+            // Every 5 attempts, add a lockout minute
+            if ($attempts % 5 === 0) {
+                $lockMinutes = intdiv($attempts, 5);
+                $lockSeconds = $lockMinutes * 60;
+                Cache::put($lockoutKey, time() + $lockSeconds, now()->addSeconds($lockSeconds));
+
+                throw ValidationException::withMessages([
+                    'email' => ["Too many failed attempts. Locked out for {$lockMinutes} minute(s)."],
+                ]);
+            }
+
+            $remaining = 5 - ($attempts % 5);
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'email' => ["The provided credentials are incorrect. {$remaining} attempt(s) remaining before lockout."],
             ]);
         }
 
@@ -37,7 +65,10 @@ class AuthService
             ]);
         }
 
-        // Update last login
+        // Clear attempts on success
+        Cache::forget($cacheKey);
+        Cache::forget($lockoutKey);
+
         $user->update([
             'last_login_at' => now(),
             'last_login_ip' => $ipAddress,
@@ -48,10 +79,19 @@ class AuthService
         $this->auditService->log('login', $user->id, null, null, null, null, $ipAddress);
 
         return [
-            'user' => $user->load('role'),
-            'token' => $token,
+            'user'                  => $user->load('role'),
+            'token'                 => $token,
             'force_password_change' => $user->force_password_change,
         ];
+    }
+
+    private function formatSeconds(int $seconds): string
+    {
+        if ($seconds <= 0) return 'a moment';
+        if ($seconds < 60) return "{$seconds} second(s)";
+        $m = intdiv($seconds, 60);
+        $s = $seconds % 60;
+        return $s > 0 ? "{$m}m {$s}s" : "{$m} minute(s)";
     }
 
     public function logout(User $user): void

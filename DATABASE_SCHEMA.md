@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         TPC CLINIC DATABASE                          │
+│                         TPC Clinic DATABASE                          │
 └─────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐         ┌──────────────┐         ┌──────────────────┐
@@ -131,78 +131,97 @@
 ## Table Descriptions
 
 ### `roles`
+
 Stores the 4 system roles: `student`, `faculty_staff`, `admin`, `super_admin`.
 
 ### `permissions`
+
 Fine-grained permission flags grouped by feature area.  
 Linked to roles via `role_permissions` pivot.
 
 ### `users`
+
 Core authentication table. All accounts created by admin only.  
 `force_password_change = true` on first login until password is updated.
 
 ### `student_profiles`
+
 1:1 with users where role = student. Stores academic info, pregnancy status.
 
 ### `faculty_profiles`
+
 1:1 with users where role = faculty_staff. Stores departmental info, pregnancy status.
 
 ### `programs`
+
 Academic programs (BSIT, BSED, etc.). Students are categorized by program, year, and block.
 
 ### `appointment_slots`
+
 Admin-created time slots. `booked_count` tracks bookings, slot auto-disables when full.
 
 ### `appointments`
+
 Student/faculty bookings linked to slots. Soft-deleted on removal.
 
 ### `medicines`
+
 Inventory items with quantity tracking. `reorder_level` triggers low-stock alerts.
 
 ### `medicine_requests`
+
 Tracks requests through states: `pending → approved → released` or `rejected`.
 
 ### `requirement_types`
+
 Dynamic requirement definitions (Drug Test, Medical Cert, Vaccination Card + custom).
 
 ### `user_requirements`
+
 User-uploaded files linked to requirement types. Dual-status: verification + approval.
 
 ### `survey_questions`
+
 Dynamic health survey with 6 question types. `sort_order` for drag-and-drop reordering.
 
 ### `survey_answers`
+
 JSON-based answer storage, unique per user+question combination.
 
 ### `conversations` + `conversation_participants` + `messages`
+
 Three-table messaging system. Participants track read status per user.  
 Broadcasting-ready via `MessageSent` event on `private-conversation.{id}`.
 
 ### `announcements`
+
 Published with optional expiry dates. Category-filtered.
 
 ### `audit_logs`
+
 Immutable activity log. Records action, actor, model, old/new values, IP.
 
 ### `reports`
+
 Async report generation queue. Stores filters, format, status, output path.
 
 ### `notifications`
+
 Standard Laravel notifications table (UUID primary key).
 
 ---
 
 ## Indexes Summary
 
-| Table                 | Index                                    |
-|-----------------------|------------------------------------------|
-| users                 | email, is_active                         |
-| appointment_slots     | date, is_available; date                 |
-| appointments          | user_id + status; status                 |
-| medicine_requests     | user_id + status; status                 |
-| survey_questions      | sort_order                               |
-| survey_answers        | user_id + survey_question_id (unique)    |
-| user_requirements     | user_id + requirement_type_id            |
-| messages              | conversation_id + created_at             |
-| audit_logs            | user_id + created_at; model; action      |
-| announcements         | is_published + published_at              |
+| Table             | Index                                 |
+| ----------------- | ------------------------------------- |
+| users             | email, is_active                      |
+| appointment_slots | date, is_available; date              |
+| appointments      | user_id + status; status              |
+| medicine_requests | user_id + status; status              |
+| survey_questions  | sort_order                            |
+| survey_answers    | user_id + survey_question_id (unique) |
+| user_requirements | user_id + requirement_type_id         |
+| messages          | conversation_id + created_at          |
+| audit_logs        | user_id + created_at; model; action   |
+| announcements     | is_published + published_at           |

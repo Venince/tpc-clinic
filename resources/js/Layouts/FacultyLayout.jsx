@@ -1,14 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import NotificationBell from '@/Components/Common/NotificationBell';
 import {
     HomeIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
-    DocumentTextIcon, ChatBubbleLeftRightIcon,
-    ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon,
+    DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon,
+    ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
-import { UserCircleIcon } from '@heroicons/react/24/outline';
 import LogoutConfirmModal from '@/Components/Common/LogoutConfirmModal';
 
 const nav = [
@@ -18,13 +17,14 @@ const nav = [
     { name: 'Health Survey',href: 'faculty.survey.index',       icon: ClipboardDocumentListIcon },
     { name: 'Requirements', href: 'faculty.requirements.index', icon: DocumentTextIcon },
     { name: 'Messages',     href: 'faculty.messages.index',     icon: ChatBubbleLeftRightIcon },
-    { name: 'Profile',      href: 'faculty.profile',            icon: UserCircleIcon },  // ← add this
+    { name: 'Profile',      href: 'faculty.profile',            icon: UserCircleIcon },
 ];
 
 export default function FacultyLayout({ children, title }) {
     const { auth, flash } = usePage().props;
     const [open, setOpen] = useState(false);
     const [showLogout, setShowLogout] = useState(false);
+
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
         if (flash?.error)   toast.error(flash.error);
@@ -36,7 +36,7 @@ export default function FacultyLayout({ children, title }) {
                 <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
                 <div>
                     <p className="font-semibold text-gray-900 text-sm">TPC Clinic</p>
-                    <p className="text-xs text-gray-500">Faculty Portal</p>  {/* or Student Portal / Management System */}
+                    <p className="text-xs text-gray-500">Faculty Portal</p>
                 </div>
             </div>
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -47,6 +47,14 @@ export default function FacultyLayout({ children, title }) {
                         {item.name}
                     </Link>
                 ))}
+                {/* Divider + Home */}
+                <div className="pt-2 mt-2 border-t border-gray-100">
+                    <Link href={route('home')}
+                        className={clsx('sidebar-link', { active: route().current('home') })}>
+                        <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
+                        Public Home
+                    </Link>
+                </div>
             </nav>
             <div className="border-t border-gray-100 p-4">
                 <div className="flex items-center gap-3">
@@ -89,10 +97,12 @@ export default function FacultyLayout({ children, title }) {
                 </header>
                 <main className="flex-1 overflow-y-auto p-6">{children}</main>
             </div>
-            <LogoutConfirmModal
-                onConfirm={() => router.post(route('logout'))}
-                onCancel={() => setShowLogout(false)}
-            />
+            {showLogout && (
+                <LogoutConfirmModal
+                    onConfirm={() => router.post(route('logout'))}
+                    onCancel={() => setShowLogout(false)}
+                />
+            )}
         </div>
     );
 }

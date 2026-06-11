@@ -4,7 +4,7 @@ import NotificationBell from '@/Components/Common/NotificationBell';
 import {
     HomeIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon,
-    ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon,
+    ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
@@ -33,13 +33,13 @@ export default function StudentLayout({ children, title }) {
 
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
-                    <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
-            <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
-            <div>
-                <p className="font-semibold text-gray-900 text-sm">TPC Clinic</p>
-                <p className="text-xs text-gray-500">Student Portal</p>  {/* or Management System / Faculty Portal */}
+            <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
+                <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
+                <div>
+                    <p className="font-semibold text-gray-900 text-sm">TPC Clinic</p>
+                    <p className="text-xs text-gray-500">Student Portal</p>
+                </div>
             </div>
-        </div>
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
                 {nav.map(item => (
                     <Link key={item.name} href={route(item.href)}
@@ -48,6 +48,14 @@ export default function StudentLayout({ children, title }) {
                         {item.name}
                     </Link>
                 ))}
+                {/* Divider + Home */}
+                <div className="pt-2 mt-2 border-t border-gray-100">
+                    <Link href={route('home')}
+                        className={clsx('sidebar-link', { active: route().current('home') })}>
+                        <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
+                        Public Home
+                    </Link>
+                </div>
             </nav>
             <div className="border-t border-gray-100 p-4">
                 <div className="flex items-center gap-3">

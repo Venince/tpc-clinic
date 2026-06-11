@@ -32,7 +32,7 @@ Route::get('/announcements', function () {
 // ─── Auth ──────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/tpc_login',         [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/tpc_login', [AuthController::class, 'login'])->middleware('throttle:login')->name('login.store');
+    Route::post('/tpc_login', [AuthController::class, 'login'])->name('login.store');
     Route::get('/forgot-password',  [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
     Route::get('/reset-password/{token}',  [AuthController::class, 'showResetPassword'])->name('password.reset');
@@ -119,6 +119,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/messages',                     [Admin\MessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/{conversation}',       [Admin\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/reply',[Admin\MessageController::class, 'reply'])->name('messages.reply');
+        Route::delete('/messages/{conversation}', [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
 
         // Reports
         Route::get('/reports',                   [Admin\ReportController::class, 'index'])->name('reports.index');
@@ -142,6 +143,14 @@ Route::middleware(['auth', 'active'])->group(function () {
             $faculty = \App\Models\FacultyProfile::with('user')->orderBy('id')->get();
             return inertia('Admin/Faculty/Index', ['faculty' => $faculty]);
         })->name('faculty.index');
+        Route::delete('/notifications/{id}', function(\Illuminate\Http\Request $r, $id) {
+            $r->user()->notifications()->find($id)?->delete();
+            return back()->with('success', 'Notification deleted.');
+        })->name('notifications.destroy');
+        Route::delete('/notifications', function(\Illuminate\Http\Request $r) {
+            $r->user()->notifications()->delete();
+            return back()->with('success', 'All notifications deleted.');
+        })->name('notifications.destroyAll');
 
         // Clinic Services
         Route::post('/services',              [\App\Http\Controllers\Admin\ClinicServiceController::class, 'store'])->name('services.store');
@@ -160,6 +169,11 @@ Route::middleware(['auth', 'active'])->group(function () {
 
             return back()->with('success', 'Facility photo updated.');
         })->name('settings.facility-photo');
+
+        // Profile
+        Route::get('/profile',          [Admin\ProfileController::class, 'show'])->name('profile');
+        Route::put('/profile',          [Admin\ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [Admin\ProfileController::class, 'updatePassword'])->name('profile.password');
     });
 
     // ─── Student ───────────────────────────────────────────────────────────
@@ -185,6 +199,14 @@ Route::middleware(['auth', 'active'])->group(function () {
             $r->user()->unreadNotifications->markAsRead();
             return back()->with('success', 'All notifications marked as read.');
         })->name('notifications.readAll');
+        Route::delete('/notifications/{id}', function(\Illuminate\Http\Request $r, $id) {
+            $r->user()->notifications()->find($id)?->delete();
+            return back()->with('success', 'Notification deleted.');
+        })->name('notifications.destroy');
+        Route::delete('/notifications', function(\Illuminate\Http\Request $r) {
+            $r->user()->notifications()->delete();
+            return back()->with('success', 'All notifications deleted.');
+        })->name('notifications.destroyAll');
 
         // Gated — requires survey completion
         Route::middleware('survey.completed')->group(function () {
@@ -203,6 +225,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/messages',                       [Admin\MessageController::class, 'store'])->name('messages.store');
             Route::get('/messages/{conversation}',         [Admin\MessageController::class, 'show'])->name('messages.show');
             Route::post('/messages/{conversation}/reply',  [Admin\MessageController::class, 'reply'])->name('messages.reply');
+            Route::delete('/messages/{conversation}', [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
         });
     });
 
@@ -231,6 +254,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/messages',                       [Admin\MessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/{conversation}',         [Admin\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/reply',  [Admin\MessageController::class, 'reply'])->name('messages.reply');
+        Route::delete('/messages/{conversation}', [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
 
         Route::get('/notifications', fn(\Illuminate\Http\Request $r) => Inertia::render('Faculty/Notifications', [
             'notifications' => $r->user()->notifications()->paginate(20),
@@ -243,6 +267,14 @@ Route::middleware(['auth', 'active'])->group(function () {
             $r->user()->unreadNotifications->markAsRead();
             return back()->with('success', 'All notifications marked as read.');
         })->name('notifications.readAll');
+        Route::delete('/notifications/{id}', function(\Illuminate\Http\Request $r, $id) {
+            $r->user()->notifications()->find($id)?->delete();
+            return back()->with('success', 'Notification deleted.');
+        })->name('notifications.destroy');
+        Route::delete('/notifications', function(\Illuminate\Http\Request $r) {
+            $r->user()->notifications()->delete();
+            return back()->with('success', 'All notifications deleted.');
+        })->name('notifications.destroyAll');
 
         Route::get('/profile',  [Faculty\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile',  [Faculty\ProfileController::class, 'update'])->name('profile.update');

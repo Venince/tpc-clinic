@@ -10,12 +10,15 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
     public function showLogin(): Response
     {
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Auth/Login', [
+            'lockout_seconds' => session('lockout_seconds', 0),
+        ]);
     }
 
     public function login(Request $request)
@@ -25,8 +28,38 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $key        = 'login_attempts:' . md5($credentials['email'] . '|' . $request->ip());
+        $lockoutKey = 'login_lockout:'  . md5($credentials['email'] . '|' . $request->ip());
+
+        // Lockout check
+        if (Cache::has($lockoutKey)) {
+            $seconds = max(0, (int) Cache::get($lockoutKey) - time());
+            $minutes = ceil($seconds / 60);
+            return redirect()->route('login')
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => "Too many failed attempts. Try again in {$minutes} minute(s)."])
+                ->with('lockout_seconds', $seconds);
+        }
+
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withErrors(['email' => 'These credentials do not match our records.'])->onlyInput('email');
+            $attempts = Cache::get($key, 0) + 1;
+            Cache::put($key, $attempts, now()->addHour());
+
+            if ($attempts % 5 === 0) {
+                $lockMinutes = intdiv($attempts, 5);
+                $lockSeconds = $lockMinutes * 60;
+                Cache::put($lockoutKey, time() + $lockSeconds, now()->addSeconds($lockSeconds));
+
+                return redirect()->route('login')
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => "Too many failed attempts. Locked out for {$lockMinutes} minute(s)."])
+                ->with('lockout_seconds', $lockSeconds);
+        }
+
+            $remaining = 5 - ($attempts % 5);
+            return redirect()->route('login')
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => "Incorrect credentials. {$remaining} attempt(s) left before lockout."]);
         }
 
         /** @var \App\Models\User $user */
@@ -36,6 +69,10 @@ class AuthController extends Controller
             Auth::logout();
             return back()->withErrors(['email' => 'Your account has been deactivated.'])->onlyInput('email');
         }
+
+        // Clear on success
+        Cache::forget($key);
+        Cache::forget($lockoutKey);
 
         $user->update(['last_login_at' => now(), 'last_login_ip' => $request->ip()]);
 

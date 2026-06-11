@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class MessageController extends Controller
@@ -14,7 +15,7 @@ class MessageController extends Controller
     {
         return match($request->user()->role->name) {
             'student'       => 'Student/Messages/Index',
-            'faculty_staff' => 'Faculty/Messages/Index',  // ← was Student/Messages/Index
+            'faculty_staff' => 'Faculty/Messages/Index',
             default         => 'Admin/Messages/Index',
         };
     }
@@ -23,7 +24,7 @@ class MessageController extends Controller
     {
         return match($request->user()->role->name) {
             'student'       => 'Student/Messages/Show',
-            'faculty_staff' => 'Faculty/Messages/Show',   // ← was Student/Messages/Show
+            'faculty_staff' => 'Faculty/Messages/Show',
             default         => 'Admin/Messages/Show',
         };
     }
@@ -35,7 +36,6 @@ class MessageController extends Controller
             ->withCount(['messages as unread'=>fn($q)=>$q->where('sender_id','!=',$request->user()->id)->where('is_read',false)])
             ->orderByDesc('last_message_at')->paginate(20);
 
-        // Contacts: admins for students/faculty, everyone for admins
         $user = $request->user();
         if ($user->isAdminOrHigher()) {
             $contacts = User::where('id','!=',$user->id)->whereHas('role',fn($q)=>$q->whereIn('name',['student','faculty_staff','admin','super_admin']))->select('id','name','email')->get();
@@ -50,7 +50,6 @@ class MessageController extends Controller
     {
         $user = $request->user();
 
-        // Admins can view any conversation; students/faculty must be participants
         if (!$user->isAdminOrHigher()) {
             if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
                 abort(403);
@@ -98,7 +97,6 @@ class MessageController extends Controller
     {
         $user = $request->user();
 
-        // Admins can reply to any conversation; students/faculty must be participants
         if (!$user->isAdminOrHigher()) {
             if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
                 abort(403);
@@ -107,11 +105,6 @@ class MessageController extends Controller
 
         $request->validate(['body' => ['required', 'string']]);
 
-        // Auto-add admin as participant if they're not already, so they receive future replies
-        if ($user->isAdminOrHigher() && !$conversation->participants()->where('user_id', $user->id)->exists()) {
-            $conversation->participants()->attach($user->id);
-        }
-
         $msg = Message::create([
             'conversation_id' => $conversation->id,
             'sender_id'       => $user->id,
@@ -119,9 +112,44 @@ class MessageController extends Controller
         ]);
         $conversation->update(['last_message_at' => now()]);
 
-        $conversation->participants()->where('user_id', '!=', $user->id)->get()
+        $conversation->participants()
+            ->where('user_id', '!=', $user->id)
+            ->get()
             ->each(fn($u) => $u->notify(new NewMessageNotification($msg->load('sender'))));
 
         return back()->with('success', 'Reply sent.');
+    }
+
+    public function destroy(Request $request, Conversation $conversation)
+    {
+        $user = $request->user();
+
+        if (!$user->isAdminOrHigher()) {
+            if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
+                abort(403);
+            }
+        }
+
+        // Delete all NewMessageNotifications tied to this conversation
+        // for every participant, before removing the conversation itself.
+        DB::table('notifications')
+            ->where('type', NewMessageNotification::class)
+            ->where(
+                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.conversation_id'))"),
+                $conversation->id
+            )
+            ->delete();
+
+        $conversation->messages()->delete();
+        $conversation->participants()->detach();
+        $conversation->delete();
+
+        $route = match($user->role->name) {
+            'student'       => 'student.messages.index',
+            'faculty_staff' => 'faculty.messages.index',
+            default         => 'admin.messages.index',
+        };
+
+        return redirect()->route($route)->with('success', 'Conversation deleted.');
     }
 }

@@ -27,15 +27,15 @@ Laravel 12 · MySQL · Redis · Laravel Sanctum
 
 ## 1. Server Requirements
 
-| Requirement       | Minimum Version |
-|-------------------|----------------|
-| PHP               | 8.2+           |
-| MySQL             | 8.0+           |
-| Redis             | 6.0+           |
-| Node.js           | 18+ (optional) |
-| Composer          | 2.x            |
-| Nginx / Apache    | Latest stable  |
-| SSL Certificate   | Required (HTTPS)|
+| Requirement     | Minimum Version  |
+| --------------- | ---------------- |
+| PHP             | 8.2+             |
+| MySQL           | 8.0+             |
+| Redis           | 6.0+             |
+| Node.js         | 18+ (optional)   |
+| Composer        | 2.x              |
+| Nginx / Apache  | Latest stable    |
+| SSL Certificate | Required (HTTPS) |
 
 **Required PHP Extensions:**
 `bcmath, ctype, curl, dom, fileinfo, json, mbstring, openssl, pcre, pdo, pdo_mysql, tokenizer, xml, zip, gd`
@@ -288,6 +288,7 @@ php artisan db:seed --class=MedicineSeeder
 ```
 
 **Seeder order matters:**
+
 1. RoleSeeder — Creates 4 roles + permissions
 2. UserSeeder — Creates default admin accounts
 3. ProgramSeeder — Creates 8 academic programs
@@ -342,6 +343,7 @@ Add to crontab (`crontab -e` as `www-data`):
 ```
 
 **Scheduled tasks:**
+
 - `clinic:check-low-stock` — Daily at 08:00 AM (notifies admins of low/out-of-stock medicines)
 - `clinic:send-appointment-reminders` — Daily at 07:00 AM (sends tomorrow's appointment reminders)
 
@@ -376,8 +378,8 @@ AWS_BUCKET=tpc-clinic-files
 
 ```javascript
 const channel = pusher.subscribe(`private-conversation.${conversationId}`);
-channel.bind('MessageSent', (data) => {
-    console.log('New message:', data);
+channel.bind("MessageSent", (data) => {
+  console.log("New message:", data);
 });
 ```
 
@@ -421,40 +423,40 @@ php artisan test --filter test_user_can_login_with_correct_credentials
 
 > ⚠️ **Change all passwords immediately after first deployment!**
 
-| Role       | Email                    | Password       |
-|------------|--------------------------|----------------|
-| Super Admin| superadmin@tpc.edu.ph    | SuperAdmin@123 |
-| Admin      | admin@tpc.edu.ph         | Admin@123      |
-| Student    | student@tpc.edu.ph       | Student@123    |
-| Faculty    | faculty@tpc.edu.ph       | Faculty@123    |
+| Role        | Email                 | Password       |
+| ----------- | --------------------- | -------------- |
+| Super Admin | superadmin@tpc.edu.ph | SuperAdmin@123 |
+| Admin       | admin@tpc.edu.ph      | Admin@123      |
+| Student     | student@tpc.edu.ph    | Student@123    |
+| Faculty     | faculty@tpc.edu.ph    | Faculty@123    |
 
 ---
 
 ## 13. Role & Permission Matrix
 
-| Feature                        | Student | Faculty | Admin | SuperAdmin |
-|--------------------------------|---------|---------|-------|-----------|
-| Login / Logout                 | ✅      | ✅      | ✅    | ✅        |
-| View own profile               | ✅      | ✅      | ✅    | ✅        |
-| Book appointment               | ✅      | ✅      | ✅    | ✅        |
-| Request medicine               | ✅      | ✅      | ✅    | ✅        |
-| Submit health survey           | ✅      | ✅      | ✅    | ✅        |
-| Upload requirements            | ✅      | ✅      | ✅    | ✅        |
-| Send/receive messages          | ✅      | ✅      | ✅    | ✅        |
-| Manage appointment slots       | ❌      | ❌      | ✅    | ✅        |
-| Approve/Decline appointments   | ❌      | ❌      | ✅    | ✅        |
-| Manage medicines & inventory   | ❌      | ❌      | ✅    | ✅        |
-| Approve medicine requests      | ❌      | ❌      | ✅    | ✅        |
-| Manage survey questions        | ❌      | ❌      | ✅    | ✅        |
-| Manage requirement types       | ❌      | ❌      | ✅    | ✅        |
-| Review user requirements       | ❌      | ❌      | ✅    | ✅        |
-| Manage announcements           | ❌      | ❌      | ✅    | ✅        |
-| View dashboard analytics       | ❌      | ❌      | ✅    | ✅        |
-| Generate reports               | ❌      | ❌      | ✅    | ✅        |
-| Create user accounts           | ❌      | ❌      | ✅    | ✅        |
-| Manage programs                | ❌      | ❌      | ✅    | ✅        |
-| View audit logs                | ❌      | ❌      | ❌    | ✅        |
-| Delete admin accounts          | ❌      | ❌      | ❌    | ✅        |
+| Feature                      | Student | Faculty | Admin | SuperAdmin |
+| ---------------------------- | ------- | ------- | ----- | ---------- |
+| Login / Logout               | ✅      | ✅      | ✅    | ✅         |
+| View own profile             | ✅      | ✅      | ✅    | ✅         |
+| Book appointment             | ✅      | ✅      | ✅    | ✅         |
+| Request medicine             | ✅      | ✅      | ✅    | ✅         |
+| Submit health survey         | ✅      | ✅      | ✅    | ✅         |
+| Upload requirements          | ✅      | ✅      | ✅    | ✅         |
+| Send/receive messages        | ✅      | ✅      | ✅    | ✅         |
+| Manage appointment slots     | ❌      | ❌      | ✅    | ✅         |
+| Approve/Decline appointments | ❌      | ❌      | ✅    | ✅         |
+| Manage medicines & inventory | ❌      | ❌      | ✅    | ✅         |
+| Approve medicine requests    | ❌      | ❌      | ✅    | ✅         |
+| Manage survey questions      | ❌      | ❌      | ✅    | ✅         |
+| Manage requirement types     | ❌      | ❌      | ✅    | ✅         |
+| Review user requirements     | ❌      | ❌      | ✅    | ✅         |
+| Manage announcements         | ❌      | ❌      | ✅    | ✅         |
+| View dashboard analytics     | ❌      | ❌      | ✅    | ✅         |
+| Generate reports             | ❌      | ❌      | ✅    | ✅         |
+| Create user accounts         | ❌      | ❌      | ✅    | ✅         |
+| Manage programs              | ❌      | ❌      | ✅    | ✅         |
+| View audit logs              | ❌      | ❌      | ❌    | ✅         |
+| Delete admin accounts        | ❌      | ❌      | ❌    | ✅         |
 
 ---
 
@@ -463,74 +465,78 @@ php artisan test --filter test_user_can_login_with_correct_credentials
 All endpoints are prefixed with `/api/v1`.
 
 ### Authentication
-| Method | Endpoint                       | Description             |
-|--------|-------------------------------|-------------------------|
-| POST   | /auth/login                   | Login                   |
-| POST   | /auth/logout                  | Logout (auth required)  |
-| GET    | /auth/me                      | Current user info       |
-| POST   | /auth/change-password         | Change password         |
-| POST   | /auth/forgot-password         | Send reset link         |
-| POST   | /auth/reset-password          | Reset password          |
+
+| Method | Endpoint              | Description            |
+| ------ | --------------------- | ---------------------- |
+| POST   | /auth/login           | Login                  |
+| POST   | /auth/logout          | Logout (auth required) |
+| GET    | /auth/me              | Current user info      |
+| POST   | /auth/change-password | Change password        |
+| POST   | /auth/forgot-password | Send reset link        |
+| POST   | /auth/reset-password  | Reset password         |
 
 ### Public
-| Method | Endpoint                         | Description           |
-|--------|----------------------------------|-----------------------|
-| GET    | /public/announcements            | List announcements    |
-| GET    | /public/announcements/{id}       | Single announcement   |
-| POST   | /public/contact                  | Contact form          |
+
+| Method | Endpoint                   | Description         |
+| ------ | -------------------------- | ------------------- |
+| GET    | /public/announcements      | List announcements  |
+| GET    | /public/announcements/{id} | Single announcement |
+| POST   | /public/contact            | Contact form        |
 
 ### Student & Faculty (role-scoped)
-| Method | Endpoint                                   | Description                |
-|--------|--------------------------------------------|----------------------------|
-| GET    | /student/profile                           | View profile               |
-| PUT    | /student/profile                           | Update profile             |
-| GET    | /student/appointment-slots                 | Available slots            |
-| GET    | /student/appointments                      | My appointments            |
-| POST   | /student/appointments                      | Book appointment           |
-| POST   | /student/appointments/{id}/cancel          | Cancel appointment         |
-| GET    | /student/medicines                         | Available medicines        |
-| GET    | /student/medicine-requests                 | My requests                |
-| POST   | /student/medicine-requests                 | Request medicine           |
-| GET    | /student/survey/questions                  | Survey questions           |
-| GET    | /student/survey/my-answers                 | My survey answers          |
-| POST   | /student/survey/submit                     | Submit survey              |
-| GET    | /student/requirements                      | My requirements status     |
-| POST   | /student/requirements/upload               | Upload requirement file    |
+
+| Method | Endpoint                          | Description             |
+| ------ | --------------------------------- | ----------------------- |
+| GET    | /student/profile                  | View profile            |
+| PUT    | /student/profile                  | Update profile          |
+| GET    | /student/appointment-slots        | Available slots         |
+| GET    | /student/appointments             | My appointments         |
+| POST   | /student/appointments             | Book appointment        |
+| POST   | /student/appointments/{id}/cancel | Cancel appointment      |
+| GET    | /student/medicines                | Available medicines     |
+| GET    | /student/medicine-requests        | My requests             |
+| POST   | /student/medicine-requests        | Request medicine        |
+| GET    | /student/survey/questions         | Survey questions        |
+| GET    | /student/survey/my-answers        | My survey answers       |
+| POST   | /student/survey/submit            | Submit survey           |
+| GET    | /student/requirements             | My requirements status  |
+| POST   | /student/requirements/upload      | Upload requirement file |
 
 ### Admin
-| Method | Endpoint                                              | Description              |
-|--------|-------------------------------------------------------|--------------------------|
-| GET    | /admin/dashboard/stats                                | Dashboard statistics     |
-| GET    | /admin/dashboard/appointments-chart                   | Chart data               |
-| GET    | /admin/dashboard/medicine-chart                       | Medicine chart           |
-| GET    | /admin/dashboard/pregnancy-stats                      | Pregnancy statistics     |
-| GET    | /admin/users                                          | List users               |
-| POST   | /admin/users                                          | Create user              |
-| POST   | /admin/users/bulk-import                              | Bulk import via TXT      |
-| PUT    | /admin/users/{id}                                     | Update user              |
-| DELETE | /admin/users/{id}                                     | Delete user              |
-| POST   | /admin/users/{id}/toggle-active                       | Toggle user status       |
-| GET/POST/PUT/DELETE | /admin/programs/{id}                     | Program CRUD             |
-| GET/POST/PUT/DELETE | /admin/appointment-slots/{id}            | Slot management          |
-| GET    | /admin/appointments                                   | All appointments         |
-| GET    | /admin/appointments/calendar?month=YYYY-MM            | Calendar view            |
-| POST   | /admin/appointments/{id}/approve                      | Approve appointment      |
-| POST   | /admin/appointments/{id}/decline                      | Decline appointment      |
-| GET/POST/PUT/DELETE | /admin/medicines/{id}                    | Medicine CRUD            |
-| GET    | /admin/medicines/low-stock                            | Low stock list           |
-| GET    | /admin/medicine-requests                              | All requests             |
-| POST   | /admin/medicine-requests/{id}/approve                 | Approve request          |
-| POST   | /admin/medicine-requests/{id}/reject                  | Reject request           |
-| POST   | /admin/medicine-requests/{id}/release                 | Release medicine         |
-| GET/POST/PUT/DELETE | /admin/survey/questions/{id}             | Survey CRUD              |
-| POST   | /admin/survey/questions/reorder                       | Reorder questions        |
-| GET/POST/PUT/DELETE | /admin/requirement-types/{id}            | Requirement type CRUD    |
-| GET    | /admin/user-requirements                              | User requirement list    |
-| POST   | /admin/user-requirements/{id}/review                  | Approve/reject           |
-| GET/POST/PUT/DELETE | /admin/announcements/{id}                | Announcement CRUD        |
-| POST   | /admin/reports/generate                               | Generate report          |
-| GET    | /admin/reports/{id}/download                          | Download report          |
-| GET    | /admin/audit-logs                                     | Audit logs (SuperAdmin)  |
+
+| Method              | Endpoint                                   | Description             |
+| ------------------- | ------------------------------------------ | ----------------------- |
+| GET                 | /admin/dashboard/stats                     | Dashboard statistics    |
+| GET                 | /admin/dashboard/appointments-chart        | Chart data              |
+| GET                 | /admin/dashboard/medicine-chart            | Medicine chart          |
+| GET                 | /admin/dashboard/pregnancy-stats           | Pregnancy statistics    |
+| GET                 | /admin/users                               | List users              |
+| POST                | /admin/users                               | Create user             |
+| POST                | /admin/users/bulk-import                   | Bulk import via TXT     |
+| PUT                 | /admin/users/{id}                          | Update user             |
+| DELETE              | /admin/users/{id}                          | Delete user             |
+| POST                | /admin/users/{id}/toggle-active            | Toggle user status      |
+| GET/POST/PUT/DELETE | /admin/programs/{id}                       | Program CRUD            |
+| GET/POST/PUT/DELETE | /admin/appointment-slots/{id}              | Slot management         |
+| GET                 | /admin/appointments                        | All appointments        |
+| GET                 | /admin/appointments/calendar?month=YYYY-MM | Calendar view           |
+| POST                | /admin/appointments/{id}/approve           | Approve appointment     |
+| POST                | /admin/appointments/{id}/decline           | Decline appointment     |
+| GET/POST/PUT/DELETE | /admin/medicines/{id}                      | Medicine CRUD           |
+| GET                 | /admin/medicines/low-stock                 | Low stock list          |
+| GET                 | /admin/medicine-requests                   | All requests            |
+| POST                | /admin/medicine-requests/{id}/approve      | Approve request         |
+| POST                | /admin/medicine-requests/{id}/reject       | Reject request          |
+| POST                | /admin/medicine-requests/{id}/release      | Release medicine        |
+| GET/POST/PUT/DELETE | /admin/survey/questions/{id}               | Survey CRUD             |
+| POST                | /admin/survey/questions/reorder            | Reorder questions       |
+| GET/POST/PUT/DELETE | /admin/requirement-types/{id}              | Requirement type CRUD   |
+| GET                 | /admin/user-requirements                   | User requirement list   |
+| POST                | /admin/user-requirements/{id}/review       | Approve/reject          |
+| GET/POST/PUT/DELETE | /admin/announcements/{id}                  | Announcement CRUD       |
+| POST                | /admin/reports/generate                    | Generate report         |
+| GET                 | /admin/reports/{id}/download               | Download report         |
+| GET                 | /admin/audit-logs                          | Audit logs (SuperAdmin) |
 
 ---
 
@@ -539,6 +545,7 @@ All endpoints are prefixed with `/api/v1`.
 ### Common Issues
 
 **Queue jobs not running:**
+
 ```bash
 php artisan queue:work redis
 php artisan queue:failed           # View failed jobs
@@ -546,12 +553,14 @@ php artisan queue:retry all        # Retry failed jobs
 ```
 
 **Permission errors:**
+
 ```bash
 sudo chown -R www-data:www-data storage bootstrap/cache
 sudo chmod -R 775 storage bootstrap/cache
 ```
 
 **Cache issues:**
+
 ```bash
 php artisan cache:clear
 php artisan config:clear
@@ -560,20 +569,23 @@ php artisan view:clear
 ```
 
 **Emails not sending:**
+
 - Verify SMTP credentials in `.env`
 - Check queue worker is running
 - Check `storage/logs/laravel.log` for errors
 
 **File upload issues:**
+
 - Check `php.ini`: `upload_max_filesize` and `post_max_size` ≥ 15M
 - Check Nginx `client_max_body_size` ≥ 15M
 
 **Rate limiting (429 errors):**
+
 - Login endpoint: 5 attempts/minute per email+IP
 - API endpoints: 60 requests/minute per user/IP
 - Contact form: 10 requests/minute per IP
 
 ---
 
-*TPC Clinic — Talibon Polytechnic College Clinic Management System*  
-*Built with Laravel 12 · For support: clinic@tpc.edu.ph*
+_TPC Clinic — Talibon Polytechnic College Clinic Management System_  
+_Built with Laravel 12 · For support: clinic@tpc.edu.ph_
