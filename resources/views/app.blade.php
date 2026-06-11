@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title inertia>{{ config('app.name', 'TPC Clinic') }}</title>
+    <title inertia>{{ config('app.name', 'TPC e-Clinic') }}</title>
 
     <link rel="icon" type="image/jpeg" href="/images/tpc-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">

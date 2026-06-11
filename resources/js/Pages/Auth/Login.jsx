@@ -38,9 +38,9 @@ export default function Login({ status, lockout_seconds = 0 }) {
 
     return (
         <GuestLayout>
-            <Head title="Login" />
+            <Head title="Login — TPC e-Clinic" />
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h2>
-            <p className="text-gray-500 text-sm mb-6">Sign in to your clinic account</p>
+            <p className="text-gray-500 text-sm mb-6">Sign in to your TPC e-Clinic account</p>
 
             {status && (
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">

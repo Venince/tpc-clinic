@@ -42,7 +42,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
 
     return (
         <>
-            <Head title="TPC Clinic — Talibon Polytechnic College" />
+            <Head title="TPC e-Clinic — Talibon Polytechnic College" />
             <div className="min-h-screen bg-white font-sans">
 
                 {/* ── Nav ── */}
@@ -50,7 +50,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                     <div className="flex items-center gap-4 md:gap-8">
                         <Link href={route('home')} className="flex items-center gap-2.5">
                             <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain" />
-                            <span className="font-semibold text-gray-900 text-sm">TPC Clinic</span>
+                            <span className="font-semibold text-gray-900 text-sm">TPC e-Clinic</span>
                         </Link>
                         <div className="hidden md:flex items-center gap-6">
                             {[
@@ -66,9 +66,6 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        {/* <a href="tel:0380000000" className="hidden md:inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                            <PhoneIcon className="w-4 h-4" /> Emergency
-                        </a> */}
                         <Link href={route('login')} className="bg-clinic-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-clinic-700 transition-colors">
                             Sign in
                         </Link>
@@ -102,7 +99,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                             <div className="relative w-full">
                                 <img
                                     src={`/storage/${facilityPhoto}`}
-                                    alt="TPC Clinic facility"
+                                    alt="TPC e-Clinic facility"
                                     className="w-full max-h-[480px] object-contain"
                                 />
                                 {isAdmin && (
@@ -202,7 +199,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         <div>
                             <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Clinic announcements</p>
                             <h2 className="text-xl md:text-2xl font-bold text-gray-900">Stay informed</h2>
-                            <p className="text-sm text-gray-500 mt-1">Latest updates from the TPC Clinic</p>
+                            <p className="text-sm text-gray-500 mt-1">Latest updates from the TPC e-Clinic</p>
                         </div>
                         <Link href={route('announcements')} className="text-sm text-clinic-600 hover:text-clinic-700 font-medium flex items-center gap-1 whitespace-nowrap">
                             View all <span>→</span>
@@ -271,7 +268,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         <div>
                             <div className="flex items-center gap-2 mb-3">
                                 <img src="/images/tpc-logo.png" alt="TPC" className="w-7 h-7 object-contain" />
-                                <span className="font-semibold text-sm">TPC Clinic</span>
+                                <span className="font-semibold text-sm">TPC e-Clinic</span>
                             </div>
                             <p className="text-xs text-clinic-200 leading-relaxed max-w-[200px]">Dedicated to the health and wellness of the TPC academic community.</p>
                         </div>
@@ -289,7 +286,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6">
-                        <p className="text-xs text-clinic-300">© {new Date().getFullYear()} Talibon Polytechnic College Clinic. All rights reserved.</p>
+                        <p className="text-xs text-clinic-300">© {new Date().getFullYear()} Talibon Polytechnic College e-Clinic. All rights reserved.</p>
                         <div className="flex items-center gap-2">
                             <a href="https://www.facebook.com/share/18XASdjQ8z/" target="_blank" rel="noopener noreferrer">
                                 <img src="/images/self-logo-icon.png" alt="SecrIT Solutions Logo" className="h-4 w-auto opacity-60 hover:opacity-100 transition" />

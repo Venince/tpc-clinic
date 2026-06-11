@@ -36,7 +36,7 @@ export default function StudentLayout({ children, title }) {
             <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
                 <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
                 <div>
-                    <p className="font-semibold text-gray-900 text-sm">TPC Clinic</p>
+                    <p className="font-semibold text-gray-900 text-sm">TPC e-Clinic</p>
                     <p className="text-xs text-gray-500">Student Portal</p>
                 </div>
             </div>
