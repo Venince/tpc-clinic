@@ -1,24 +1,27 @@
 import { Head, useForm } from '@inertiajs/react';
 import StudentLayout from '@/Layouts/StudentLayout';
+import ProfilePhotoUploader from '@/Components/Common/ProfilePhotoUploader';
 
 export default function StudentProfile({ profile, programs }) {
     const student = profile.student_profile || {};
 
+    const toDateInput = (val) => val ? val.split('T')[0] : '';
+
     const { data, setData, put, processing, errors } = useForm({
-        name:                 profile.name             || '',
-        student_id:           student.student_id       || '',
-        program_id:           student.program_id       || '',
-        year_level:           student.year_level       || '',
-        block:                student.block            || '',
-        birth_date:           student.birth_date       || '',
-        sex:                  student.sex              || '',
-        contact_number:       student.contact_number   || '',
-        address:              student.address          || '',
-        guardian_name:        student.guardian_name    || '',
-        guardian_contact:     student.guardian_contact || '',
-        civil_status:         student.civil_status     || 'single',
-        is_pregnant:          student.is_pregnant      || false,
-        pregnancy_due_date:   student.pregnancy_due_date || '',
+        name:               profile.name             || '',
+        student_id:         student.student_id       || '',
+        program_id:         student.program_id       || '',
+        year_level:         student.year_level       || '',
+        block:              student.block            || '',
+        birth_date:         toDateInput(student.birth_date),
+        sex:                student.sex              || '',
+        contact_number:     student.contact_number   || '',
+        address:            student.address          || '',
+        guardian_name:      student.guardian_name    || '',
+        guardian_contact:   student.guardian_contact || '',
+        civil_status:       student.civil_status     || 'single',
+        is_pregnant:        student.is_pregnant      || false,
+        pregnancy_due_date: toDateInput(student.pregnancy_due_date),
     });
 
     const submit = (e) => { e.preventDefault(); put(route('student.profile.update')); };
@@ -28,15 +31,23 @@ export default function StudentProfile({ profile, programs }) {
             <Head title="Profile" />
 
             <div className="max-w-2xl mx-auto">
-                {/* Account info (read-only) */}
+                {/* Account info */}
                 <div className="card mb-6">
                     <div className="card-header bg-clinic-50">
                         <h3 className="font-semibold text-clinic-900">Account Information</h3>
                     </div>
-                    <div className="card-body grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p className="text-gray-400 text-xs uppercase tracking-wide">Email</p>
-                            <p className="font-medium mt-0.5">{profile.email}</p>
+                    <div className="card-body">
+                        {/* Photo uploader */}
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-4">
+                            <ProfilePhotoUploader
+                                photoUrl={profile.profile_photo_url}
+                                uploadRoute={route('student.profile.photo.update')}
+                                deleteRoute={route('student.profile.photo.delete')}
+                            />
+                            <div className="text-sm text-center sm:text-left">
+                                <p className="font-medium text-gray-900">{profile.name}</p>
+                                <p className="text-gray-400 text-xs mt-0.5">{profile.email}</p>
+                            </div>
                         </div>
                     </div>
                 </div>

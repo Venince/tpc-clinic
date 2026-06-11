@@ -6,9 +6,11 @@ use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Notifications\AppointmentStatusNotification;
 use App\Repositories\Contracts\AppointmentRepositoryInterface;
+use App\Rules\NotWeekendOrHoliday;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class AppointmentService
 {
@@ -19,6 +21,10 @@ class AppointmentService
 
     public function createSlot(array $data, int $adminId): AppointmentSlot
     {
+        Validator::make($data, [
+            'date' => ['required', 'date', new NotWeekendOrHoliday],
+        ])->validate();
+
         $slot = AppointmentSlot::create(array_merge($data, ['created_by' => $adminId]));
         $this->auditService->log('slot_created', $adminId, 'AppointmentSlot', $slot->id, null, $data);
         return $slot;
@@ -26,6 +32,12 @@ class AppointmentService
 
     public function updateSlot(AppointmentSlot $slot, array $data, int $adminId): AppointmentSlot
     {
+        if (isset($data['date'])) {
+            Validator::make($data, [
+                'date' => ['date', new NotWeekendOrHoliday],
+            ])->validate();
+        }
+
         $old = $slot->toArray();
         $slot->update($data);
         $this->auditService->log('slot_updated', $adminId, 'AppointmentSlot', $slot->id, $old, $data);

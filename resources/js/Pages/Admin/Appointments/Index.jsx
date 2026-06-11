@@ -46,45 +46,53 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
             </div>
 
             {/* Actions row */}
-            <div className="flex flex-wrap gap-3 mb-6 items-end">
-                <div>
-                    <label className="label text-xs">Status</label>
-                    <select value={status} onChange={e => setStatus(e.target.value)} className="input w-36">
-                        <option value="">All</option>
-                        {['pending','approved','declined','completed','cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mb-6 sm:items-end">
+                <div className="flex gap-3">
+                    <div className="flex-1 sm:flex-none">
+                        <label className="label text-xs">Status</label>
+                        <select value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-36">
+                            <option value="">All</option>
+                            {['pending','approved','declined','completed','cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-1 sm:flex-none">
+                        <label className="label text-xs">Date</label>
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="input w-full" />
+                    </div>
                 </div>
-                <div>
-                    <label className="label text-xs">Date</label>
-                    <input type="date" value={date} onChange={e => setDate(e.target.value)} className="input" />
+                <div className="flex gap-2">
+                    <button onClick={() => router.get(route('admin.appointments.index'), { status, date }, { preserveState: true })} className="btn-primary btn-sm flex-1 sm:flex-none">Filter</button>
+                    <button onClick={() => { setStatus(''); setDate(''); router.get(route('admin.appointments.index')); }} className="btn-secondary btn-sm flex-1 sm:flex-none">Clear</button>
                 </div>
-                <button onClick={() => router.get(route('admin.appointments.index'), { status, date }, { preserveState: true })} className="btn-primary btn-sm">Filter</button>
-                <button onClick={() => { setStatus(''); setDate(''); router.get(route('admin.appointments.index')); }} className="btn-secondary btn-sm">Clear</button>
-                <Link href={route('admin.appointments.calendar')} className="btn-secondary btn-sm ml-auto">
+                <Link href={route('admin.appointments.calendar')} className="btn-secondary btn-sm sm:ml-auto justify-center">
                     <CalendarIcon className="w-4 h-4 mr-1" /> Calendar View
                 </Link>
             </div>
 
             <div className="card">
-                <div className="table-wrapper">
+                <div className="table-wrapper overflow-x-auto">
                     <table className="table">
                         <thead><tr>
-                            <th>Patient</th><th>Purpose</th><th>Date & Time</th><th>Status</th><th>Actions</th>
+                            <th className="whitespace-nowrap">Patient</th>
+                            <th className="whitespace-nowrap">Purpose</th>
+                            <th className="whitespace-nowrap">Date & Time</th>
+                            <th className="whitespace-nowrap">Status</th>
+                            <th className="whitespace-nowrap">Actions</th>
                         </tr></thead>
                         <tbody>
                             {appointments.data.map(a => (
                                 <tr key={a.id}>
-                                    <td>
+                                    <td className="whitespace-nowrap">
                                         <p className="font-medium text-gray-900">{a.user?.name}</p>
                                         <p className="text-xs text-gray-400">{a.user?.email}</p>
                                     </td>
-                                    <td>{a.purpose}</td>
-                                    <td>
+                                    <td className="whitespace-nowrap">{a.purpose}</td>
+                                    <td className="whitespace-nowrap">
                                         <p className="text-sm">{a.slot?.date}</p>
                                         <p className="text-xs text-gray-400">{a.slot?.start_time} – {a.slot?.end_time}</p>
                                     </td>
-                                    <td>{statusBadge(a.status)}</td>
-                                    <td>
+                                    <td className="whitespace-nowrap">{statusBadge(a.status)}</td>
+                                    <td className="whitespace-nowrap">
                                         <div className="flex gap-2 items-center">
                                             {a.status === 'pending' && <>
                                                 <button onClick={() => approve(a.id)} className="btn-success btn-sm px-2 py-1">
@@ -116,14 +124,14 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
 
             {/* Decline modal */}
             {declineId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-3">Decline Appointment</h3>
                         <form onSubmit={decline}>
                             <textarea value={data.reason} onChange={e => setData('reason', e.target.value)}
                                 className="input" rows={3} placeholder="Reason for declining…" required />
-                            <div className="flex gap-3 mt-4">
-                                <button type="submit" disabled={processing} className="btn-danger">
+                            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                <button type="submit" disabled={processing} className="btn-danger flex-1 sm:flex-none">
                                     {processing ? 'Declining…' : 'Decline'}
                                 </button>
                                 <button type="button" onClick={() => { setDeclineId(null); reset(); }} className="btn-secondary">Cancel</button>
@@ -135,18 +143,18 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
 
             {/* Delete confirmation modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-2">Delete Appointment?</h3>
-                        <p className="text-sm text-gray-600 mb-1">
+                        <p className="text-sm text-gray-600 mb-1 break-words">
                             <span className="font-medium">{confirmDelete.user?.name}</span> — {confirmDelete.slot?.date}
                         </p>
                         <p className="text-sm text-gray-500 mb-5">
                             Status: <span className="font-medium capitalize">{confirmDelete.status}</span>
                         </p>
-                        <div className="flex gap-3">
-                            <button onClick={deleteAppointment} className="btn-danger">Delete</button>
-                            <button onClick={() => setConfirmDelete(null)} className="btn-secondary">Cancel</button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button onClick={deleteAppointment} className="btn-danger flex-1 sm:flex-none">Delete</button>
+                            <button onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1 sm:flex-none">Cancel</button>
                         </div>
                     </div>
                 </div>

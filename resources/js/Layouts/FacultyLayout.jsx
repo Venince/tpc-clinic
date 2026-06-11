@@ -58,9 +58,17 @@ export default function FacultyLayout({ children, title }) {
             </nav>
             <div className="border-t border-gray-100 p-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-clinic-100 rounded-full flex items-center justify-center">
-                        <span className="text-clinic-700 font-semibold text-xs">{auth.user?.name?.charAt(0)}</span>
-                    </div>
+                    {auth.user?.profile_photo_url ? (
+                        <img
+                            src={auth.user.profile_photo_url}
+                            alt={auth.user.name}
+                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 bg-clinic-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-clinic-700 font-semibold text-xs">{auth.user?.name?.charAt(0)}</span>
+                        </div>
+                    )}
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
                         <p className="text-xs text-gray-500">Faculty / Staff</p>

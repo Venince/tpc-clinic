@@ -125,7 +125,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/reports',                   [Admin\ReportController::class, 'index'])->name('reports.index');
         Route::post('/reports',                  [Admin\ReportController::class, 'store'])->name('reports.store');
         Route::get('/reports/{report}/download', [Admin\ReportController::class, 'download'])->name('reports.download');
-        Route::delete('/reports/{report}',       [Admin\ReportController::class, 'destroy'])->name('reports.destroy'); 
+        Route::delete('/reports/{report}',       [Admin\ReportController::class, 'destroy'])->name('reports.destroy') 
+            ->middleware('role:super_admin');
 
         // Notifications
         Route::get('/notifications', fn(\Illuminate\Http\Request $r) => Inertia::render('Admin/Notifications', [
@@ -184,6 +185,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/dashboard',  [Student\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile',    [Student\ProfileController::class,  'show'])->name('profile');
         Route::put('/profile',    [Student\ProfileController::class,  'update'])->name('profile.update');
+        Route::post('/profile/photo',   [Student\ProfileController::class, 'uploadPhoto'])->name('profile.photo.update');
+        Route::delete('/profile/photo', [Student\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
         Route::get('/survey',     [Student\SurveyController::class,   'index'])->name('survey.index');
         Route::post('/survey',    [Student\SurveyController::class,   'submit'])->name('survey.submit');
 
@@ -217,6 +220,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('/medicine',  [Student\MedicineController::class, 'index'])->name('medicine.index');
             Route::post('/medicine', [Student\MedicineController::class, 'store'])->name('medicine.store');
             Route::post('/medicine/{medicineRequest}/cancel', [Student\MedicineController::class, 'cancel'])->name('medicine.cancel');
+            Route::delete('/medicine/{medicineRequest}', [Student\MedicineController::class, 'destroy'])->name('medicine.destroy');
 
             Route::get('/requirements',         [Student\RequirementController::class, 'index'])->name('requirements.index');
             Route::post('/requirements/upload', [Student\RequirementController::class, 'upload'])->name('requirements.upload');
@@ -243,6 +247,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/medicine',  [Student\MedicineController::class, 'index'])->name('medicine.index');
         Route::post('/medicine', [Student\MedicineController::class, 'store'])->name('medicine.store');
         Route::post('/medicine/{medicineRequest}/cancel', [Student\MedicineController::class, 'cancel'])->name('medicine.cancel');
+        Route::delete('/medicine/{medicineRequest}', [Student\MedicineController::class, 'destroy'])->name('medicine.destroy');
 
         Route::get('/survey',    [Student\SurveyController::class, 'index'])->name('survey.index');
         Route::post('/survey',   [Student\SurveyController::class, 'submit'])->name('survey.submit');
@@ -278,5 +283,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         Route::get('/profile',  [Faculty\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile',  [Faculty\ProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/photo',   [Faculty\ProfileController::class, 'uploadPhoto'])->name('profile.photo.update');
+        Route::delete('/profile/photo', [Faculty\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
     });
 });

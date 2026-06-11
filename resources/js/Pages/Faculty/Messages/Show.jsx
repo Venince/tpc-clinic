@@ -16,17 +16,17 @@ export default function FacultyMessageShow({ conversation, messages }) {
                 </Link>
                 <div className="card">
                     <div className="card-header">
-                        <h2 className="font-semibold text-gray-900">{conversation.subject}</h2>
+                        <h2 className="font-semibold text-gray-900 break-words">{conversation.subject}</h2>
                         <p className="text-xs text-gray-400 mt-0.5">
                             With: {conversation.participants?.filter(p => p.id !== auth.user?.id).map(p => p.name).join(', ')}
                         </p>
                     </div>
-                    <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                    <div className="p-3 sm:p-4 space-y-3 max-h-[60vh] sm:max-h-96 overflow-y-auto">
                         {messages.data?.slice().reverse().map(msg => {
                             const isMine = msg.sender_id === auth.user?.id;
                             return (
                                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-sm px-4 py-2.5 rounded-2xl text-sm ${isMine ? 'bg-clinic-600 text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
+                                    <div className={`max-w-[85%] sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm break-words ${isMine ? 'bg-clinic-600 text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
                                         {!isMine && <p className="text-xs font-semibold mb-1 opacity-70">{msg.sender?.name}</p>}
                                         <p>{msg.body}</p>
                                         <p className={`text-xs mt-1 ${isMine ? 'text-clinic-200' : 'text-gray-400'}`}>
@@ -37,11 +37,11 @@ export default function FacultyMessageShow({ conversation, messages }) {
                             );
                         })}
                     </div>
-                    <div className="p-4 border-t border-gray-100">
+                    <div className="p-3 sm:p-4 border-t border-gray-100">
                         <form onSubmit={submit} className="flex gap-2">
                             <textarea value={data.body} onChange={e => setData('body', e.target.value)}
                                 className="input flex-1 resize-none" rows={2} placeholder="Type your reply…"/>
-                            <button type="submit" disabled={processing || !data.body.trim()} className="btn-primary self-end px-3 py-2">
+                            <button type="submit" disabled={processing || !data.body.trim()} className="btn-primary self-end px-3 py-2 flex-shrink-0">
                                 <PaperAirplaneIcon className="w-5 h-5"/>
                             </button>
                         </form>

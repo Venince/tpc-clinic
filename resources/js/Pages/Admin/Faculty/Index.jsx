@@ -29,17 +29,17 @@ export default function Faculty({ faculty }) {   // ← prop from Inertia
             </div>
 
             <div className="card">
-                <div className="px-6 py-4 border-b border-gray-100">
-                    <div className="relative max-w-sm">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
+                    <div className="relative w-full sm:max-w-sm">
                         <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="input pl-9 w-full text-sm"
+                            className="input pl-9 pr-20 sm:pr-24 w-full text-sm"
                             placeholder="Search by name, email, ID, department…"
                         />
                         {search && (
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 whitespace-nowrap">
                                 {filtered.length} of {faculty.length}
                             </span>
                         )}
@@ -51,35 +51,35 @@ export default function Faculty({ faculty }) {   // ← prop from Inertia
                         <table className="min-w-full divide-y divide-gray-200 text-sm">
                             <thead className="bg-white">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Employee ID</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Department</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Position</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Pregnant</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Last Login</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Name</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Email</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Employee ID</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Department</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Position</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Pregnant</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Status</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Last Login</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-100">
                                 {filtered.map(fp => (
                                     <tr key={fp.id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-2 font-medium text-gray-900">{fp.user?.name}</td>
-                                        <td className="px-4 py-2 text-gray-500">{fp.user?.email}</td>
-                                        <td className="px-4 py-2 text-gray-500">{fp.employee_id || '—'}</td>
-                                        <td className="px-4 py-2 text-gray-500">{fp.department || '—'}</td>
-                                        <td className="px-4 py-2 text-gray-500">{fp.position || '—'}</td>
-                                        <td className="px-4 py-2">
-                                            <span className={`badge ${fp.user?.is_active ? 'badge-green' : 'badge-red'}`}>
-                                                {fp.user?.is_active ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2">
+                                        <td className="px-4 py-2 font-medium text-gray-900 whitespace-nowrap">{fp.user?.name}</td>
+                                        <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{fp.user?.email}</td>
+                                        <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{fp.employee_id || '—'}</td>
+                                        <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{fp.department || '—'}</td>
+                                        <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{fp.position || '—'}</td>
+                                        <td className="px-4 py-2 whitespace-nowrap">
                                             {fp.is_pregnant
                                                 ? <span className="badge badge-red text-xs">Yes</span>
                                                 : <span className="text-gray-400 text-xs">No</span>}
                                         </td>
-                                        <td className="px-4 py-2 text-gray-400 text-xs">
+                                        <td className="px-4 py-2 whitespace-nowrap">
+                                            <span className={`badge ${fp.user?.is_active ? 'badge-green' : 'badge-red'}`}>
+                                                {fp.user?.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-2 text-gray-400 text-xs whitespace-nowrap">
                                             {fp.user?.last_login_at
                                                 ? new Date(fp.user.last_login_at).toLocaleDateString()
                                                 : 'Never'}

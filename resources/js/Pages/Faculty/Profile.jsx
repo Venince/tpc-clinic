@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
+import ProfilePhotoUploader from '@/Components/Common/ProfilePhotoUploader';
 
 export default function FacultyProfile({ profile, programs }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -19,6 +20,21 @@ export default function FacultyProfile({ profile, programs }) {
                     <div>
                         <h2 className="page-title">My Profile</h2>
                         <p className="page-subtitle">Update your personal information</p>
+                    </div>
+                </div>
+
+                {/* Photo card */}
+                <div className="card mb-6">
+                    <div className="card-body flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                        <ProfilePhotoUploader
+                            photoUrl={profile.profile_photo_url}
+                            uploadRoute={route('faculty.profile.photo.update')}
+                            deleteRoute={route('faculty.profile.photo.delete')}
+                        />
+                        <div className="text-sm text-center sm:text-left">
+                            <p className="font-medium text-gray-900">{profile.name}</p>
+                            <p className="text-gray-400 text-xs mt-0.5">{profile.email}</p>
+                        </div>
                     </div>
                 </div>
 

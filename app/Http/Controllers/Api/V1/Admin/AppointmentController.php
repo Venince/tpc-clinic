@@ -34,7 +34,7 @@ class AppointmentController extends Controller
     public function storeSlot(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'date'               => ['required', 'date', 'after_or_equal:today'],
+            'date'               => ['required', 'date', 'after_or_equal:today', new \App\Rules\NotWeekendOrHoliday],
             'start_time'         => ['required', 'date_format:H:i'],
             'end_time'           => ['required', 'date_format:H:i', 'after:start_time'],
             'max_appointments'   => ['required', 'integer', 'min:1'],
@@ -48,7 +48,7 @@ class AppointmentController extends Controller
     public function updateSlot(Request $request, AppointmentSlot $slot): JsonResponse
     {
         $data = $request->validate([
-            'date'             => ['sometimes', 'date'],
+            'date'             => ['sometimes', 'date', new \App\Rules\NotWeekendOrHoliday],
             'start_time'       => ['sometimes', 'date_format:H:i'],
             'end_time'         => ['sometimes', 'date_format:H:i'],
             'max_appointments' => ['sometimes', 'integer', 'min:1'],

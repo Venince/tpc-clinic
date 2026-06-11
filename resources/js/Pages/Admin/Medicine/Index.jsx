@@ -1,7 +1,9 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+
+const formatDate = (iso) => iso ? iso.slice(0, 10) : '—'; 
 
 function MedicineModal({ medicine, onClose }) {
     const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -13,14 +15,14 @@ function MedicineModal({ medicine, onClose }) {
 
     const submit = (e) => {
         e.preventDefault();
-        const action = medicine
+        medicine
             ? put(route('admin.medicine.update', medicine.id), { onSuccess: () => { reset(); onClose(); } })
             : post(route('admin.medicine.store'), { onSuccess: () => { reset(); onClose(); } });
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
                 <h3 className="font-semibold text-gray-900 mb-4">{medicine ? 'Edit Medicine' : 'Add Medicine'}</h3>
                 <form onSubmit={submit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -57,8 +59,8 @@ function MedicineModal({ medicine, onClose }) {
                         </div>
                     </div>
                     <div className="flex gap-3 pt-2">
-                        <button type="submit" disabled={processing} className="btn-primary">{processing ? 'Saving…' : 'Save'}</button>
-                        <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+                        <button type="submit" disabled={processing} className="btn-primary flex-1">{processing ? 'Saving…' : 'Save'}</button>
+                        <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -67,7 +69,7 @@ function MedicineModal({ medicine, onClose }) {
 }
 
 export default function MedicineIndex({ medicines, filters, stats }) {
-    const [modalMed, setModalMed] = useState(undefined); // undefined = closed, null = new, object = edit
+    const [modalMed, setModalMed] = useState(undefined);
     const filtersObj = Array.isArray(filters) ? {} : (filters ?? {});
     const [search, setSearch] = useState(filtersObj.search || '');
     const [filter, setFilter] = useState(filtersObj.filter || '');
@@ -85,42 +87,93 @@ export default function MedicineIndex({ medicines, filters, stats }) {
             <Head title="Medicine" />
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="card p-4 text-center"><p className="text-2xl font-bold">{stats.total}</p><p className="text-sm text-gray-500">Total Medicines</p></div>
-                <div className="card p-4 text-center border-yellow-200 bg-yellow-50">
-                    <p className="text-2xl font-bold text-yellow-700">{stats.low_stock}</p><p className="text-sm text-yellow-600">Low Stock</p>
+            <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="card p-3 md:p-4 text-center">
+                    <p className="text-xl md:text-2xl font-bold">{stats.total}</p>
+                    <p className="text-xs md:text-sm text-gray-500">Total</p>
                 </div>
-                <div className="card p-4 text-center border-red-200 bg-red-50">
-                    <p className="text-2xl font-bold text-red-700">{stats.out}</p><p className="text-sm text-red-600">Out of Stock</p>
+                <div className="card p-3 md:p-4 text-center border-yellow-200 bg-yellow-50">
+                    <p className="text-xl md:text-2xl font-bold text-yellow-700">{stats.low_stock}</p>
+                    <p className="text-xs md:text-sm text-yellow-600">Low Stock</p>
+                </div>
+                <div className="card p-3 md:p-4 text-center border-red-200 bg-red-50">
+                    <p className="text-xl md:text-2xl font-bold text-red-700">{stats.out}</p>
+                    <p className="text-xs md:text-sm text-red-600">Out of Stock</p>
                 </div>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-3 mb-6 items-end">
-                <input value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && router.get(route('admin.medicine.index'), { search, filter })}
-                    className="input flex-1 min-w-48" placeholder="Search medicine…" />
-                <select value={filter} onChange={e => setFilter(e.target.value)} className="input w-36">
-                    <option value="">All</option>
-                    <option value="low">Low Stock</option>
-                    <option value="out">Out of Stock</option>
-                </select>
-                <button onClick={() => router.get(route('admin.medicine.index'), { search, filter })} className="btn-primary btn-sm">Filter</button>
-                <button onClick={() => setModalMed(null)} className="btn-primary btn-sm ml-auto">
-                    <PlusIcon className="w-4 h-4 mr-1" /> Add Medicine
-                </button>
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && router.get(route('admin.medicine.index'), { search, filter })}
+                    className="input flex-1"
+                    placeholder="Search medicine…"
+                />
+                <div className="flex gap-2">
+                    <select value={filter} onChange={e => setFilter(e.target.value)} className="input flex-1 sm:w-36">
+                        <option value="">All</option>
+                        <option value="low">Low Stock</option>
+                        <option value="out">Out of Stock</option>
+                    </select>
+                    <button onClick={() => router.get(route('admin.medicine.index'), { search, filter })} className="btn-primary btn-sm whitespace-nowrap">Filter</button>
+                    <button onClick={() => setModalMed(null)} className="btn-primary btn-sm whitespace-nowrap">
+                        <PlusIcon className="w-4 h-4 mr-1 inline" /> Add
+                    </button>
+                </div>
             </div>
 
-            <div className="card">
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+                {medicines.data.map(m => (
+                    <div key={m.id} className="card p-4">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                                <p className="font-medium text-gray-900">{m.name}</p>
+                                {m.batch_number && <p className="text-xs text-gray-400">Batch: {m.batch_number}</p>}
+                            </div>
+                            {stockBadge(m)}
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
+                            <div>
+                                <span className="text-gray-400">Unit: </span>
+                                <span className="text-gray-700">{m.unit}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-400">Qty: </span>
+                                <span className={`font-semibold ${m.is_out_of_stock ? 'text-red-600' : m.is_low_stock ? 'text-yellow-600' : 'text-gray-900'}`}>{m.quantity}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-400">Reorder: </span>
+                                <span className="text-gray-700">{m.reorder_level}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-400">Expires: </span>
+                                <span className={m.is_expired ? 'text-red-600 font-medium' : 'text-gray-700'}>{formatDate(m.expiration_date)}</span>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 pt-2 border-t border-gray-100">
+                            <button onClick={() => setModalMed(m)} className="btn-secondary btn-sm flex-1 flex items-center justify-center gap-1">
+                                <PencilIcon className="w-4 h-4" /> Edit
+                            </button>
+                            <button onClick={() => deleteMed(m)} className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1">
+                                <TrashIcon className="w-4 h-4" /> Delete
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {!medicines.data.length && (
+                    <div className="card p-8 text-center text-gray-400">No medicines found.</div>
+                )}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="card hidden md:block">
                 <div className="table-wrapper">
                     <table className="table">
                         <thead><tr>
-                            <th>Name</th>
-                            <th>Unit</th>
-                            <th>Quantity</th>
-                            <th>Reorder</th>
-                            <th>Expires</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>Name</th><th>Unit</th><th>Quantity</th><th>Reorder</th><th>Expires</th><th>Status</th><th>Actions</th>
                         </tr></thead>
                         <tbody>
                             {medicines.data.map(m => (
@@ -132,7 +185,7 @@ export default function MedicineIndex({ medicines, filters, stats }) {
                                     <td>{m.unit}</td>
                                     <td className={`font-semibold ${m.is_out_of_stock ? 'text-red-600' : m.is_low_stock ? 'text-yellow-600' : 'text-gray-900'}`}>{m.quantity}</td>
                                     <td className="text-gray-500">{m.reorder_level}</td>
-                                    <td className={`text-sm ${m.is_expired ? 'text-red-600 font-medium' : 'text-gray-500'}`}>{m.expiration_date || '—'}</td>
+                                    <td className={`text-sm ${m.is_expired ? 'text-red-600 font-medium' : 'text-gray-500'}`}>{formatDate(m.expiration_date)}</td>
                                     <td>{stockBadge(m)}</td>
                                     <td>
                                         <div className="flex gap-2">

@@ -26,16 +26,16 @@ export default function UsersIndex({ users, filters, roles, auth }) {
             <Head title="Users" />
 
             {/* Header */}
-            <div className="page-header">
+            <div className="page-header flex flex-col sm:flex-row sm:items-center gap-3">
                 <div>
                     <h2 className="page-title">Users</h2>
                     <p className="page-subtitle">Manage all system accounts</p>
                 </div>
-                <div className="flex gap-2">
-                    <Link href={route('admin.users.import')} method="get" className="btn-secondary btn-sm">
+                <div className="flex gap-2 sm:ml-auto">
+                    <Link href={route('admin.users.import')} method="get" className="btn-secondary btn-sm flex-1 sm:flex-none justify-center">
                         <ArrowUpTrayIcon className="w-4 h-4 mr-1" /> Bulk Import
                     </Link>
-                    <Link href={route('admin.users.create')} className="btn-primary btn-sm">
+                    <Link href={route('admin.users.create')} className="btn-primary btn-sm flex-1 sm:flex-none justify-center">
                         <PlusIcon className="w-4 h-4 mr-1" /> Add User
                     </Link>
                 </div>
@@ -44,43 +44,51 @@ export default function UsersIndex({ users, filters, roles, auth }) {
             {/* Filters */}
             <div className="card mb-6">
                 <div className="card-body py-4">
-                    <div className="flex flex-wrap gap-3">
-                        <div className="relative flex-1 min-w-48">
+                    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                        <div className="relative flex-1 min-w-0 sm:min-w-48">
                             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && applyFilters()}
-                                className="input pl-9" placeholder="Search name or email…" />
+                                className="input pl-9 w-full" placeholder="Search name or email…" />
                         </div>
-                        <select value={role} onChange={e => setRole(e.target.value)} className="input w-44">
+                        <select value={role} onChange={e => setRole(e.target.value)} className="input w-full sm:w-44">
                             <option value="">All roles</option>
                             {roles.map(r => <option key={r.id} value={r.name}>{r.display_name}</option>)}
                         </select>
-                        <button onClick={applyFilters} className="btn-primary btn-sm">Filter</button>
-                        <button onClick={() => { setSearch(''); setRole(''); router.get(route('admin.users.index')); }} className="btn-secondary btn-sm">Clear</button>
+                        <div className="flex gap-2">
+                            <button onClick={applyFilters} className="btn-primary btn-sm flex-1 sm:flex-none">Filter</button>
+                            <button onClick={() => { setSearch(''); setRole(''); router.get(route('admin.users.index')); }} className="btn-secondary btn-sm flex-1 sm:flex-none">Clear</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Table */}
             <div className="card">
-                <div className="table-wrapper">
+                <div className="table-wrapper overflow-x-auto">
                     <table className="table">
                         <thead><tr>
-                            <th>Name</th><th>Email</th><th>Role</th><th>Pregnant</th><th>Status</th><th>Last Login</th><th>Actions</th>
+                            <th className="whitespace-nowrap">Name</th>
+                            <th className="whitespace-nowrap">Email</th>
+                            <th className="whitespace-nowrap">Role</th>
+                            <th className="whitespace-nowrap">Pregnant</th>
+                            <th className="whitespace-nowrap">Status</th>
+                            <th className="whitespace-nowrap">Last Login</th>
+                            <th className="whitespace-nowrap">Actions</th>
                         </tr></thead>
                         <tbody>
                             {users.data.map(user => (
                                 <tr key={user.id}>
-                                    <td className="font-medium text-gray-900">{user.name}</td>
-                                    <td className="text-gray-500">{user.email}</td>
-                                    <td>{roleBadge(user.role?.name)}</td>
-                                    <td>
+                                    <td className="font-medium text-gray-900 whitespace-nowrap">{user.name}</td>
+                                    <td className="text-gray-500 whitespace-nowrap">{user.email}</td>
+                                    <td className="whitespace-nowrap">{roleBadge(user.role?.name)}</td>
+                                    <td className="whitespace-nowrap">
                                         {(user.student_profile?.is_pregnant || user.faculty_profile?.is_pregnant)
                                             ? <span className="badge badge-red text-xs">Pregnant</span>
                                             : <span className="text-gray-300 text-xs">—</span>}
                                     </td>
-                                    <td>{statusBadge(user.is_active)}</td>
-                                    <td className="text-gray-400 text-xs">{user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Never'}</td>
-                                    <td>
+                                    <td className="whitespace-nowrap">{statusBadge(user.is_active)}</td>
+                                    <td className="text-gray-400 text-xs whitespace-nowrap">{user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Never'}</td>
+                                    <td className="whitespace-nowrap">
                                         <div className="flex items-center gap-2">
                                             {user.role?.name !== 'super_admin' || auth.user.role === 'super_admin' ? (
                                                 <>
@@ -88,7 +96,7 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                                                         <PencilIcon className="w-4 h-4" />
                                                     </Link>
                                                     {user.id !== auth.user.id && (
-                                                        <button onClick={() => toggleActive(user)} className={`text-xs px-2 py-1 rounded ${user.is_active ? 'text-red-500 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}>
+                                                        <button onClick={() => toggleActive(user)} className={`text-xs px-2 py-1 rounded whitespace-nowrap ${user.is_active ? 'text-red-500 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}>
                                                             {user.is_active ? 'Deactivate' : 'Activate'}
                                                         </button>
                                                     )}
@@ -111,9 +119,9 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                 </div>
 
                 {/* Pagination */}
-                <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+                <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-gray-500">
                     <span>Showing {users.from}–{users.to} of {users.total}</span>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 flex-wrap">
                         {users.links.map((link, i) => (
                             <button key={i} disabled={!link.url} onClick={() => link.url && router.get(link.url)}
                                 className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}

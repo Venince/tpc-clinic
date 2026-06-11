@@ -11,7 +11,7 @@ export default function StudentSurvey({ questions, answers, completed }) {
 
     const { data, setData, post, processing } = useForm({ answers: initialAnswers });
 
-    const updateAnswer = (qId, value) => setData('answers', { ...data.answers, [qId]: value });
+    const updateAnswer   = (qId, value) => setData('answers', { ...data.answers, [qId]: value });
     const toggleCheckbox = (qId, option) => {
         const current = Array.isArray(data.answers[qId]) ? data.answers[qId] : [];
         const updated  = current.includes(option) ? current.filter(v => v !== option) : [...current, option];
@@ -30,17 +30,21 @@ export default function StudentSurvey({ questions, answers, completed }) {
                         <h2 className="page-title">Health Survey</h2>
                         <p className="page-subtitle">Please answer all required questions honestly.</p>
                     </div>
-                    {completed && <span className="badge badge-green text-sm px-3 py-1"><CheckCircleIcon className="w-4 h-4 mr-1 inline" />Submitted</span>}
+                    {completed && (
+                        <span className="badge badge-green text-sm px-3 py-1 flex-shrink-0">
+                            <CheckCircleIcon className="w-4 h-4 mr-1 inline" />Submitted
+                        </span>
+                    )}
                 </div>
 
                 {completed && (
-                    <div className="mb-4 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                    <div className="mb-4 bg-green-50 border border-green-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0" />
                         <div className="flex-1">
                             <p className="text-sm font-semibold text-green-800">Survey completed</p>
                             <p className="text-sm text-green-700">You can update your answers below, or go back to access all features.</p>
                         </div>
-                        <Link href={route('student.dashboard')} className="btn-primary btn-sm flex-shrink-0">
+                        <Link href={route('student.dashboard')} className="btn-primary btn-sm w-full sm:w-auto text-center flex-shrink-0">
                             Go to Dashboard
                         </Link>
                     </div>
@@ -64,28 +68,30 @@ export default function StudentSurvey({ questions, answers, completed }) {
                                         className="input" rows={3} placeholder="Your answer…" />
                                 )}
                                 {q.type === 'date' && (
-                                    <input type="date" value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)} className="input w-48" />
+                                    <input type="date" value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
+                                        className="input w-full sm:w-48" />
                                 )}
                                 {q.type === 'radio' && q.options?.map(opt => (
-                                    <label key={opt} className="flex items-center gap-2 py-1.5 cursor-pointer">
+                                    <label key={opt} className="flex items-center gap-3 py-2 cursor-pointer">
                                         <input type="radio" name={`q_${q.id}`} value={opt}
                                             checked={data.answers[q.id] === opt}
                                             onChange={() => updateAnswer(q.id, opt)}
-                                            className="text-clinic-600 focus:ring-clinic-500" />
+                                            className="w-4 h-4 text-clinic-600 focus:ring-clinic-500 flex-shrink-0" />
                                         <span className="text-sm text-gray-700">{opt}</span>
                                     </label>
                                 ))}
                                 {q.type === 'checkbox' && q.options?.map(opt => (
-                                    <label key={opt} className="flex items-center gap-2 py-1.5 cursor-pointer">
+                                    <label key={opt} className="flex items-center gap-3 py-2 cursor-pointer">
                                         <input type="checkbox" value={opt}
                                             checked={(data.answers[q.id] || []).includes(opt)}
                                             onChange={() => toggleCheckbox(q.id, opt)}
-                                            className="rounded text-clinic-600 focus:ring-clinic-500" />
+                                            className="w-4 h-4 rounded text-clinic-600 focus:ring-clinic-500 flex-shrink-0" />
                                         <span className="text-sm text-gray-700">{opt}</span>
                                     </label>
                                 ))}
                                 {q.type === 'dropdown' && (
-                                    <select value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)} className="input w-64">
+                                    <select value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
+                                        className="input w-full sm:w-64">
                                         <option value="">— Select —</option>
                                         {q.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                     </select>
@@ -96,7 +102,7 @@ export default function StudentSurvey({ questions, answers, completed }) {
 
                     {questions.length > 0 && (
                         <div className="flex justify-end">
-                            <button type="submit" disabled={processing} className="btn-primary btn-lg">
+                            <button type="submit" disabled={processing} className="btn-primary btn-lg w-full sm:w-auto">
                                 {processing ? 'Submitting…' : completed ? 'Update Survey' : 'Submit Survey'}
                             </button>
                         </div>

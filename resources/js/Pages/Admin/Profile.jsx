@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import { UserCircleIcon } from '@heroicons/react/24/outline';
 
 export default function AdminProfile({ profile }) {
     const nameForm = useForm({
@@ -7,8 +8,8 @@ export default function AdminProfile({ profile }) {
     });
 
     const passwordForm = useForm({
-        current_password: '',
-        password:         '',
+        current_password:      '',
+        password:              '',
         password_confirmation: '',
     });
 
@@ -24,11 +25,21 @@ export default function AdminProfile({ profile }) {
         });
     };
 
+    // Derive initials for the avatar
+    const initials = (profile.name ?? '')
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(w => w[0].toUpperCase())
+        .join('');
+
     return (
         <AdminLayout title="My Profile">
             <Head title="Profile" />
 
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+
+                {/* ── Page header ── */}
                 <div className="page-header">
                     <div>
                         <h2 className="page-title">My Profile</h2>
@@ -36,7 +47,25 @@ export default function AdminProfile({ profile }) {
                     </div>
                 </div>
 
-                {/* ── Profile Info ── */}
+                {/* ── Avatar / identity banner ── */}
+                <div className="card p-4 sm:p-5">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-clinic-100 text-clinic-700 flex items-center justify-center text-xl font-bold shrink-0 select-none">
+                            {initials || <UserCircleIcon className="w-8 h-8" />}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">{profile.name}</p>
+                            <p className="text-sm text-gray-500 truncate">{profile.email}</p>
+                            {profile.role?.display_name && (
+                                <span className="inline-block mt-1 text-xs font-medium bg-clinic-50 text-clinic-700 px-2 py-0.5 rounded-full">
+                                    {profile.role.display_name}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Account Information ── */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="font-semibold text-gray-900">Account Information</h3>
@@ -74,7 +103,11 @@ export default function AdminProfile({ profile }) {
                                 />
                             </div>
                             <div className="flex justify-end">
-                                <button type="submit" disabled={nameForm.processing} className="btn-primary">
+                                <button
+                                    type="submit"
+                                    disabled={nameForm.processing}
+                                    className="btn-primary w-full sm:w-auto"
+                                >
                                     {nameForm.processing ? 'Saving…' : 'Save Changes'}
                                 </button>
                             </div>
@@ -130,13 +163,18 @@ export default function AdminProfile({ profile }) {
                                 )}
                             </div>
                             <div className="flex justify-end">
-                                <button type="submit" disabled={passwordForm.processing} className="btn-primary">
+                                <button
+                                    type="submit"
+                                    disabled={passwordForm.processing}
+                                    className="btn-primary w-full sm:w-auto"
+                                >
                                     {passwordForm.processing ? 'Updating…' : 'Update Password'}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+
             </div>
         </AdminLayout>
     );

@@ -45,17 +45,17 @@ export default function StudentRequirements({ types, requirements }) {
                     const req = requirements[type.id];
                     return (
                         <div key={type.id} className="card">
-                            <div className="card-body flex items-start justify-between gap-4">
-                                <div className="flex items-start gap-4 flex-1">
+                            <div className="card-body flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                                <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                                     <div className="flex-shrink-0 mt-0.5">
                                         {statusIcon(req?.approval_status)}
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="font-medium text-gray-900">{type.name}</p>
-                                        {type.description && <p className="text-xs text-gray-400 mt-0.5">{type.description}</p>}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-gray-900 break-words">{type.name}</p>
+                                        {type.description && <p className="text-xs text-gray-400 mt-0.5 break-words">{type.description}</p>}
                                         {req && (
                                             <div className="mt-2 space-y-1">
-                                                <p className="text-xs text-gray-500">
+                                                <p className="text-xs text-gray-500 break-all">
                                                     File: <span className="font-medium">{req.original_filename}</span>
                                                 </p>
                                                 <p className="text-xs text-gray-400">
@@ -67,7 +67,7 @@ export default function StudentRequirements({ types, requirements }) {
                                                     </p>
                                                 )}
                                                 {req.rejection_reason && (
-                                                    <p className="text-xs text-red-500 mt-1">
+                                                    <p className="text-xs text-red-500 mt-1 break-words">
                                                         Reason: {req.rejection_reason}
                                                     </p>
                                                 )}
@@ -75,9 +75,9 @@ export default function StudentRequirements({ types, requirements }) {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3 flex-shrink-0">
+                                <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 sm:flex-col sm:items-end">
                                     {statusBadge(req?.approval_status)}
-                                    <button onClick={() => openUpload(type)} className="btn-secondary btn-sm">
+                                    <button onClick={() => openUpload(type)} className="btn-secondary btn-sm whitespace-nowrap">
                                         <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
                                         {req ? 'Re-upload' : 'Upload'}
                                     </button>
@@ -94,9 +94,9 @@ export default function StudentRequirements({ types, requirements }) {
 
             {/* Upload Modal */}
             {uploading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-                        <h3 className="font-semibold text-gray-900 mb-1">Upload: {uploading.name}</h3>
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <h3 className="font-semibold text-gray-900 mb-1 break-words">Upload: {uploading.name}</h3>
                         <p className="text-xs text-gray-400 mb-4">Accepted: PDF, JPG, PNG, DOC, DOCX (max 10MB)</p>
                         <form onSubmit={submit} className="space-y-4">
                             <div>
@@ -106,11 +106,11 @@ export default function StudentRequirements({ types, requirements }) {
                                     className={`block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-clinic-50 file:text-clinic-700 hover:file:bg-clinic-100 ${errors.file ? 'text-red-500' : ''}`} />
                                 {errors.file && <p className="error-msg">{errors.file}</p>}
                             </div>
-                            <div className="flex gap-3">
-                                <button type="submit" disabled={processing || !data.file} className="btn-primary flex-1">
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button type="submit" disabled={processing || !data.file} className="btn-primary flex-1 order-1 sm:order-1">
                                     {processing ? 'Uploading…' : 'Upload File'}
                                 </button>
-                                <button type="button" onClick={() => { setUploading(null); reset(); }} className="btn-secondary">Cancel</button>
+                                <button type="button" onClick={() => { setUploading(null); reset(); }} className="btn-secondary order-2">Cancel</button>
                             </div>
                         </form>
                     </div>

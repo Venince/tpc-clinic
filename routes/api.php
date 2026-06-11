@@ -70,6 +70,8 @@ Route::prefix('v1')->group(function () {
             // Profile
             Route::get('profile', [StudentProfileController::class, 'show']);
             Route::put('profile', [StudentProfileController::class, 'update']);
+            Route::post('profile/photo',   [\App\Http\Controllers\Api\V1\ProfilePhotoController::class, 'upload']);
+            Route::delete('profile/photo', [\App\Http\Controllers\Api\V1\ProfilePhotoController::class, 'destroy']);
 
             // Appointments
             Route::get('appointments', [StudentAppointmentController::class, 'index']);
@@ -98,6 +100,8 @@ Route::prefix('v1')->group(function () {
         Route::prefix('faculty')->middleware('role:faculty_staff')->group(function () {
             Route::get('profile', [\App\Http\Controllers\Api\V1\Faculty\ProfileController::class, 'show']);
             Route::put('profile', [\App\Http\Controllers\Api\V1\Faculty\ProfileController::class, 'update']);
+            Route::post('profile/photo',   [\App\Http\Controllers\Api\V1\ProfilePhotoController::class, 'upload']);
+            Route::delete('profile/photo', [\App\Http\Controllers\Api\V1\ProfilePhotoController::class, 'destroy']);
 
             Route::get('appointments', [StudentAppointmentController::class, 'index']);
             Route::post('appointments', [StudentAppointmentController::class, 'store']);

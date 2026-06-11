@@ -41,14 +41,16 @@ export default function SurveyIndex({ questions, responses, filters }) {
     return (
         <AdminLayout title="Health Survey">
             <Head title="Survey" />
-            <div className="page-header">
+
+            {/* Page Header */}
+            <div className="flex items-start justify-between gap-3 mb-6">
                 <div>
                     <h2 className="page-title">Health Survey</h2>
                     <p className="page-subtitle">Build and manage the health survey form</p>
                 </div>
                 {tab === 'questions' && (
-                    <button onClick={() => open(null)} className="btn-primary btn-sm">
-                        <PlusIcon className="w-4 h-4 mr-1" />Add Question
+                    <button onClick={() => open(null)} className="btn-primary btn-sm whitespace-nowrap">
+                        <PlusIcon className="w-4 h-4 mr-1 inline" />Add Question
                     </button>
                 )}
             </div>
@@ -70,46 +72,83 @@ export default function SurveyIndex({ questions, responses, filters }) {
 
             {/* Questions Tab */}
             {tab === 'questions' && (
-                <div className="card">
-                    <div className="table-wrapper">
-                        <table className="table">
-                            <thead>
-                                <tr><th>#</th><th>Question</th><th>Type</th><th>Required</th><th>Responses</th><th>Actions</th></tr>
-                            </thead>
-                            <tbody>
-                                {questions.map(q => (
-                                    <tr key={q.id}>
-                                        <td className="text-gray-400">{q.sort_order}</td>
-                                        <td className="font-medium max-w-xs truncate">{q.question}</td>
-                                        <td><span className="badge badge-blue text-xs">{q.type}</span></td>
-                                        <td>{q.is_required
+                <>
+                    {/* Mobile Cards */}
+                    <div className="md:hidden space-y-3">
+                        {questions.map((q, i) => (
+                            <div key={q.id} className="card p-4">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="flex-1">
+                                        <p className="font-medium text-gray-900 text-sm">{q.question}</p>
+                                        <p className="text-xs text-gray-400 mt-0.5">#{q.sort_order}</p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <span className="badge badge-blue text-xs">{q.type}</span>
+                                        {q.is_required
                                             ? <span className="badge badge-red text-xs">Required</span>
                                             : <span className="badge badge-gray text-xs">Optional</span>}
-                                        </td>
-                                        <td>{q.answers_count}</td>
-                                        <td>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => open(q)} className="text-gray-400 hover:text-clinic-600"><PencilIcon className="w-4 h-4" /></button>
-                                                <button onClick={() => del(q)} className="text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4" /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {!questions.length && <tr><td colSpan={6} className="text-center text-gray-400 py-8">No questions yet.</td></tr>}
-                            </tbody>
-                        </table>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-gray-400 mb-3">
+                                    {q.answers_count} response{q.answers_count !== 1 ? 's' : ''}
+                                </div>
+                                <div className="flex gap-2 pt-2 border-t border-gray-100">
+                                    <button onClick={() => open(q)} className="btn-secondary btn-sm flex-1 flex items-center justify-center gap-1">
+                                        <PencilIcon className="w-4 h-4" /> Edit
+                                    </button>
+                                    <button onClick={() => del(q)} className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1">
+                                        <TrashIcon className="w-4 h-4" /> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                        {!questions.length && (
+                            <div className="card p-8 text-center text-gray-400">No questions yet.</div>
+                        )}
                     </div>
-                </div>
+
+                    {/* Desktop Table */}
+                    <div className="card hidden md:block">
+                        <div className="table-wrapper">
+                            <table className="table">
+                                <thead>
+                                    <tr><th>#</th><th>Question</th><th>Type</th><th>Required</th><th>Responses</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody>
+                                    {questions.map(q => (
+                                        <tr key={q.id}>
+                                            <td className="text-gray-400">{q.sort_order}</td>
+                                            <td className="font-medium max-w-xs truncate">{q.question}</td>
+                                            <td><span className="badge badge-blue text-xs">{q.type}</span></td>
+                                            <td>{q.is_required
+                                                ? <span className="badge badge-red text-xs">Required</span>
+                                                : <span className="badge badge-gray text-xs">Optional</span>}
+                                            </td>
+                                            <td>{q.answers_count}</td>
+                                            <td>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => open(q)} className="text-gray-400 hover:text-clinic-600"><PencilIcon className="w-4 h-4" /></button>
+                                                    <button onClick={() => del(q)} className="text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4" /></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {!questions.length && <tr><td colSpan={6} className="text-center text-gray-400 py-8">No questions yet.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
             )}
 
             {/* Responses Tab */}
             {tab === 'responses' && (
                 <div className="space-y-4">
                     {/* Search */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                         <input value={search} onChange={e => setSearch(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && router.get(route('admin.survey.index'), { search }, { preserveState: true })}
-                            className="input flex-1 max-w-sm" placeholder="Search by name or email…" />
+                            className="input flex-1" placeholder="Search by name or email…" />
                         <button onClick={() => router.get(route('admin.survey.index'), { search }, { preserveState: true })}
                             className="btn-primary btn-sm">Search</button>
                         {search && (
@@ -123,25 +162,25 @@ export default function SurveyIndex({ questions, responses, filters }) {
                         {responses?.data?.map(user => (
                             <div key={user.id}>
                                 {/* Row header */}
-                                <div className="px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+                                <div className="px-4 md:px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
                                     onClick={() => setExpanded(expanded === user.id ? null : user.id)}>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 bg-clinic-100 text-clinic-700 rounded-full flex items-center justify-center font-semibold text-sm">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-9 h-9 shrink-0 bg-clinic-100 text-clinic-700 rounded-full flex items-center justify-center font-semibold text-sm">
                                             {user.name[0].toUpperCase()}
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-900">{user.name}</p>
-                                            <p className="text-xs text-gray-400">
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-sm text-gray-900 truncate">{user.name}</p>
+                                            <p className="text-xs text-gray-400 truncate">
                                                 {user.email}
                                                 {user.student_profile?.program &&
                                                     <span className="ml-2 text-clinic-600 font-medium">{user.student_profile.program.code}</span>}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs text-gray-400">{user.survey_answers_count} answers</span>
+                                    <div className="flex items-center gap-2 ml-2 shrink-0">
+                                        <span className="text-xs text-gray-400 hidden sm:inline">{user.survey_answers_count} answers</span>
                                         {user.survey_answers?.[0]?.created_at && (
-                                            <span className="text-xs text-gray-300">
+                                            <span className="text-xs text-gray-300 hidden sm:inline">
                                                 {new Date(user.survey_answers[0].created_at).toLocaleDateString()}
                                             </span>
                                         )}
@@ -153,7 +192,14 @@ export default function SurveyIndex({ questions, responses, filters }) {
 
                                 {/* Expanded answers */}
                                 {expanded === user.id && (
-                                    <div className="px-6 pb-5 bg-gray-50">
+                                    <div className="px-4 md:px-6 pb-5 bg-gray-50">
+                                        {/* Mobile-only meta info */}
+                                        <div className="flex gap-3 text-xs text-gray-400 py-2 sm:hidden">
+                                            <span>{user.survey_answers_count} answers</span>
+                                            {user.survey_answers?.[0]?.created_at && (
+                                                <span>{new Date(user.survey_answers[0].created_at).toLocaleDateString()}</span>
+                                            )}
+                                        </div>
                                         {user.survey_answers?.length ? (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                 {user.survey_answers.map(answer => (
@@ -181,7 +227,7 @@ export default function SurveyIndex({ questions, responses, filters }) {
 
                     {/* Pagination */}
                     {responses?.links?.length > 3 && (
-                        <div className="flex justify-center gap-1">
+                        <div className="flex flex-wrap justify-center gap-1">
                             {responses.links.map((link, i) => (
                                 <button key={i} disabled={!link.url}
                                     onClick={() => link.url && router.get(link.url, { search })}
@@ -196,7 +242,7 @@ export default function SurveyIndex({ questions, responses, filters }) {
             {/* Question Modal */}
             {modal !== null && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-screen overflow-y-auto">
+                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold mb-4">{modal === 'new' ? 'Add Question' : 'Edit Question'}</h3>
                         <form onSubmit={submit} className="space-y-3">
                             <div>
@@ -236,8 +282,8 @@ export default function SurveyIndex({ questions, responses, filters }) {
                                 <label htmlFor="req" className="text-sm text-gray-700">Required field</label>
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <button type="submit" disabled={processing} className="btn-primary">{processing ? 'Saving…' : 'Save'}</button>
-                                <button type="button" onClick={() => setModal(null)} className="btn-secondary">Cancel</button>
+                                <button type="submit" disabled={processing} className="btn-primary flex-1">{processing ? 'Saving…' : 'Save'}</button>
+                                <button type="button" onClick={() => setModal(null)} className="btn-secondary flex-1">Cancel</button>
                             </div>
                         </form>
                     </div>

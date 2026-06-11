@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Notifications\AppointmentStatusNotification;
+use App\Rules\NotWeekendOrHoliday;
+use App\Support\PhilippineHolidays;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -49,13 +51,17 @@ class AppointmentController extends Controller
             'month'        => $month,
             'currentDate'  => now()->toDateString(),
             'isSuperAdmin' => $request->user()->isSuperAdmin(),
+            'holidays'     => array_merge(
+                PhilippineHolidays::getHolidaysForYear((int) $year),
+                PhilippineHolidays::getHolidaysForYear((int) $year + 1),
+            ),
         ]);
     }
 
     public function slotStore(Request $request)
     {
         $data = $request->validate([
-            'date'             => ['required', 'date', 'after_or_equal:today'],
+            'date'             => ['required', 'date', 'after_or_equal:today', new NotWeekendOrHoliday],
             'start_time'       => ['required', 'date_format:H:i'],
             'end_time'         => ['required', 'date_format:H:i', 'after:start_time'],
             'max_appointments' => ['required', 'integer', 'min:1'],

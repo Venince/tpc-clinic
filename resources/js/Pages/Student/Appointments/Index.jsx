@@ -20,7 +20,7 @@ export default function StudentAppointments({ appointments, slots }) {
 
     const statusBadge = (s) => {
         const map = { pending: 'badge-yellow', approved: 'badge-green', declined: 'badge-red', completed: 'badge-purple', cancelled: 'badge-gray' };
-        return <span className={`badge ${map[s] || 'badge-gray'}`}>{s}</span>;
+        return <span className={`badge ${map[s] || 'badge-gray'} whitespace-nowrap`}>{s}</span>;
     };
 
     return (
@@ -39,7 +39,7 @@ export default function StudentAppointments({ appointments, slots }) {
 
             {/* Available slots preview */}
             {slots?.length > 0 && (
-                <div className="card mb-6">
+                <div className="card mb-4">
                     <div className="card-header">
                         <h3 className="font-semibold text-gray-900 text-sm">Available Slots</h3>
                     </div>
@@ -56,8 +56,42 @@ export default function StudentAppointments({ appointments, slots }) {
                 </div>
             )}
 
-            {/* My appointments */}
-            <div className="card">
+            {/* ── Mobile card list (hidden on md+) ── */}
+            <div className="md:hidden space-y-3">
+                {appointments.data.length === 0 && (
+                    <div className="card px-6 py-10 text-center text-gray-400 text-sm">
+                        No appointments yet.{' '}
+                        <button onClick={() => setShowBook(true)} className="text-clinic-600 hover:underline">Book now</button>
+                    </div>
+                )}
+                {appointments.data.map(a => (
+                    <div key={a.id} className="card p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-semibold text-gray-900">{a.purpose}</p>
+                            {statusBadge(a.status)}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <CalendarIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                            {a.slot?.date}
+                            <ClockIcon className="w-3.5 h-3.5 flex-shrink-0 ml-2" />
+                            {a.slot?.start_time}
+                        </div>
+                        {a.notes && <p className="text-xs text-gray-400 truncate">Notes: {a.notes}</p>}
+                        {a.status === 'declined' && a.decline_reason && (
+                            <p className="text-xs text-red-500">Reason: {a.decline_reason}</p>
+                        )}
+                        {['pending', 'approved'].includes(a.status) && (
+                            <button onClick={() => cancel(a.id)}
+                                className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 pt-1">
+                                <XMarkIcon className="w-3.5 h-3.5" /> Cancel appointment
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* ── Desktop table (hidden on mobile) ── */}
+            <div className="card hidden md:block">
                 <div className="table-wrapper">
                     <table className="table">
                         <thead>
@@ -107,8 +141,8 @@ export default function StudentAppointments({ appointments, slots }) {
 
             {/* Book Modal */}
             {showBook && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-gray-900">Book Appointment</h3>
                             <button onClick={() => { setShowBook(false); reset(); }} className="text-gray-400 hover:text-gray-600">

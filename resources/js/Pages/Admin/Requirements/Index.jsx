@@ -10,13 +10,13 @@ export default function RequirementsIndex({ types, requirements, programs, filte
     const { auth } = usePage().props;
     const isSuperAdmin = auth?.user?.role?.name === 'super_admin';
 
-    const [showAdd, setShowAdd]           = useState(false);
-    const [reviewing, setReviewing]       = useState(null);
-    const [previewing, setPreviewing]     = useState(null);
-    const [showClear, setShowClear]       = useState(false);
-    const [search, setSearch]             = useState(filters?.search || '');
-    const [status, setStatus]             = useState(filters?.status || '');
-    const [programId, setProgramId]       = useState(filters?.program_id || '');
+    const [showAdd, setShowAdd]       = useState(false);
+    const [reviewing, setReviewing]   = useState(null);
+    const [previewing, setPreviewing] = useState(null);
+    const [showClear, setShowClear]   = useState(false);
+    const [search, setSearch]         = useState(filters?.search || '');
+    const [status, setStatus]         = useState(filters?.status || '');
+    const [programId, setProgramId]   = useState(filters?.program_id || '');
 
     const addForm    = useForm({ name: '', description: '' });
     const reviewForm = useForm({ status: 'approved', reason: '' });
@@ -74,21 +74,23 @@ export default function RequirementsIndex({ types, requirements, programs, filte
     return (
         <AdminLayout title="Medical Requirements">
             <Head title="Requirements" />
-            <div className="page-header">
-                <div><h2 className="page-title">Medical Requirements</h2></div>
-                <div className="flex items-center gap-2">
+
+            {/* Page Header */}
+            <div className="flex items-start justify-between gap-3 mb-6">
+                <h2 className="page-title">Medical Requirements</h2>
+                <div className="flex items-center gap-2 shrink-0">
                     {isSuperAdmin && (
                         <button
                             onClick={() => setShowClear(true)}
                             className="btn-danger btn-sm flex items-center gap-1"
-                            title="Clear all submissions for a user group"
                         >
                             <TrashIcon className="w-4 h-4" />
-                            Clear Submissions
+                            <span className="hidden sm:inline">Clear Submissions</span>
                         </button>
                     )}
                     <button onClick={() => setShowAdd(true)} className="btn-primary btn-sm flex items-center gap-1">
-                        <PlusIcon className="w-4 h-4" />Add Type
+                        <PlusIcon className="w-4 h-4" />
+                        <span className="hidden sm:inline">Add Type</span>
                     </button>
                 </div>
             </div>
@@ -98,15 +100,15 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 <div className="card-header"><h3 className="font-semibold text-gray-900">Requirement Types</h3></div>
                 <div className="divide-y divide-gray-100">
                     {types.map(t => (
-                        <div key={t.id} className="px-6 py-3 flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-gray-900">{t.name}</p>
+                        <div key={t.id} className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <p className="font-medium text-gray-900 truncate">{t.name}</p>
                                 {t.description && <p className="text-xs text-gray-400">{t.description}</p>}
                                 <p className="text-xs text-gray-400 mt-0.5">{t.user_requirements_count} submissions</p>
                             </div>
                             <button
                                 onClick={() => { if (confirm('Delete this requirement type?')) router.delete(route('admin.requirements.types.destroy', t.id)); }}
-                                className="text-gray-400 hover:text-red-500"
+                                className="text-gray-400 hover:text-red-500 shrink-0"
                             >
                                 <TrashIcon className="w-4 h-4" />
                             </button>
@@ -121,8 +123,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
             {/* Filters */}
             <div className="card mb-4">
                 <div className="card-body">
-                    <div className="flex flex-wrap gap-3 items-end">
-                        <div className="flex-1 min-w-[200px]">
+                    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                        <div className="flex-1 min-w-0">
                             <label className="label">Search</label>
                             <div className="relative">
                                 <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -135,34 +137,105 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                 />
                             </div>
                         </div>
-                        <div>
-                            <label className="label">Status</label>
-                            <select value={status} onChange={e => setStatus(e.target.value)} className="input">
-                                <option value="">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="approved">Approved</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="label">Program</label>
-                            <select value={programId} onChange={e => setProgramId(e.target.value)} className="input">
-                                <option value="">All Programs</option>
-                                {programs.map(p => <option key={p.id} value={p.id}>{p.code}</option>)}
-                            </select>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={applyFilters} className="btn-primary btn-sm">Filter</button>
-                            {(search || status || programId) && (
-                                <button onClick={clearFilters} className="btn-secondary btn-sm">Clear</button>
-                            )}
+                        <div className="flex gap-3 flex-wrap">
+                            <div>
+                                <label className="label">Status</label>
+                                <select value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-auto">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="label">Program</label>
+                                <select value={programId} onChange={e => setProgramId(e.target.value)} className="input w-full sm:w-auto">
+                                    <option value="">All Programs</option>
+                                    {programs.map(p => <option key={p.id} value={p.id}>{p.code}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex items-end gap-2">
+                                <button onClick={applyFilters} className="btn-primary btn-sm">Filter</button>
+                                {(search || status || programId) && (
+                                    <button onClick={clearFilters} className="btn-secondary btn-sm">Clear</button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Submissions Table */}
-            <div className="card">
+            {/* Submissions — Mobile Cards */}
+            <div className="md:hidden space-y-3 mb-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900">Submissions</h3>
+                    <span className="text-xs text-gray-400">{requirements.total} total</span>
+                </div>
+                {requirements.data.map(r => (
+                    <div key={r.id} className="card p-4">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="min-w-0">
+                                <p className="font-medium text-sm text-gray-900 truncate">{r.user?.name}</p>
+                                <p className="text-xs text-gray-400 truncate">{r.user?.email}</p>
+                            </div>
+                            {statusBadge(r.approval_status)}
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
+                            <div>
+                                <span className="text-gray-400">Requirement: </span>
+                                <span className="text-gray-700">{r.requirement_type?.name}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-400">Program: </span>
+                                <span className="text-gray-700">{r.user?.student_profile?.program?.code || '—'}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-400">Uploaded: </span>
+                                <span className="text-gray-700">{new Date(r.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div>
+                                {r.file_path ? (
+                                    <button
+                                        onClick={() => setPreviewing(r)}
+                                        className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium"
+                                    >
+                                        <EyeIcon className="w-3.5 h-3.5" />
+                                        {r.original_filename || 'View file'}
+                                    </button>
+                                ) : (
+                                    <span className="text-xs text-gray-400">No file</span>
+                                )}
+                            </div>
+                        </div>
+                        {r.approval_status === 'pending' ? (
+                            <div className="flex gap-2 pt-2 border-t border-gray-100">
+                                <button
+                                    onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
+                                    className="btn-success btn-sm flex-1 flex items-center justify-center gap-1"
+                                >
+                                    <CheckIcon className="w-4 h-4" /> Approve
+                                </button>
+                                <button
+                                    onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
+                                    className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1"
+                                >
+                                    <XMarkIcon className="w-4 h-4" /> Reject
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="pt-2 border-t border-gray-100 text-xs text-gray-400 italic">
+                                {r.reviewer?.name ? `Reviewed by ${r.reviewer.name}` : '—'}
+                            </div>
+                        )}
+                    </div>
+                ))}
+                {!requirements.data?.length && (
+                    <div className="card p-8 text-center text-gray-400">No submissions found.</div>
+                )}
+            </div>
+
+            {/* Submissions — Desktop Table */}
+            <div className="card hidden md:block">
                 <div className="card-header">
                     <h3 className="font-semibold text-gray-900">Submissions</h3>
                     <span className="text-xs text-gray-400">{requirements.total} total</span>
@@ -171,13 +244,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>Student</th>
-                                <th>Program</th>
-                                <th>Requirement</th>
-                                <th>File</th>
-                                <th>Uploaded</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>Student</th><th>Program</th><th>Requirement</th>
+                                <th>File</th><th>Uploaded</th><th>Status</th><th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -235,9 +303,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             ))}
                             {!requirements.data?.length && (
                                 <tr>
-                                    <td colSpan={7} className="text-center text-gray-400 py-8">
-                                        No submissions found.
-                                    </td>
+                                    <td colSpan={7} className="text-center text-gray-400 py-8">No submissions found.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -246,7 +312,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
 
                 {/* Pagination */}
                 {requirements.links?.length > 3 && (
-                    <div className="px-6 py-4 flex justify-center gap-1 border-t border-gray-100">
+                    <div className="px-6 py-4 flex flex-wrap justify-center gap-1 border-t border-gray-100">
                         {requirements.links.map((link, i) => (
                             <button
                                 key={i}
@@ -260,11 +326,25 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 )}
             </div>
 
-            {/* ── Clear Submissions Modal (super_admin only) ───────────────────── */}
+            {/* Mobile Pagination */}
+            {requirements.links?.length > 3 && (
+                <div className="md:hidden flex flex-wrap justify-center gap-1 mt-3">
+                    {requirements.links.map((link, i) => (
+                        <button
+                            key={i}
+                            disabled={!link.url}
+                            onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
+                            className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
+                            dangerouslySetInnerHTML={{ __html: link.label }}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* Clear Submissions Modal */}
             {showClear && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
-                        {/* Header */}
                         <div className="flex items-start gap-3 px-6 pt-6 pb-4">
                             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
                                 <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
@@ -277,47 +357,30 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                 </p>
                             </div>
                         </div>
-
-                        {/* Body */}
                         <form onSubmit={submitClear}>
                             <div className="px-6 pb-5 space-y-3">
-                                <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">
-                                    Select user group to clear
-                                </p>
-
+                                <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Select user group to clear</p>
                                 {[
-                                    { value: 'student',       label: 'Students only',          sub: 'Clears all student requirement submissions.' },
-                                    { value: 'faculty_staff', label: 'Faculty / Staff only',   sub: 'Clears all faculty and staff submissions.' },
-                                    { value: 'both',          label: 'Students & Faculty / Staff', sub: 'Clears every submission across all users.' },
+                                    { value: 'student',       label: 'Students only',              sub: 'Clears all student requirement submissions.' },
+                                    { value: 'faculty_staff', label: 'Faculty / Staff only',        sub: 'Clears all faculty and staff submissions.' },
+                                    { value: 'both',          label: 'Students & Faculty / Staff',  sub: 'Clears every submission across all users.' },
                                 ].map(opt => (
-                                    <label
-                                        key={opt.value}
-                                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                                            clearForm.data.user_type === opt.value
-                                                ? 'border-red-400 bg-red-50'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="user_type"
-                                            value={opt.value}
+                                    <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                                        clearForm.data.user_type === opt.value ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}>
+                                        <input type="radio" name="user_type" value={opt.value}
                                             checked={clearForm.data.user_type === opt.value}
                                             onChange={() => clearForm.setData('user_type', opt.value)}
-                                            className="mt-0.5 text-red-600 focus:ring-red-500"
-                                        />
+                                            className="mt-0.5 text-red-600 focus:ring-red-500" />
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">{opt.label}</p>
                                             <p className="text-xs text-gray-500">{opt.sub}</p>
                                         </div>
                                     </label>
                                 ))}
-
                                 {clearForm.errors.user_type && (
                                     <p className="text-xs text-red-500">{clearForm.errors.user_type}</p>
                                 )}
-
-                                {/* Confirmation prompt once a group is selected */}
                                 {clearForm.data.user_type && (
                                     <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
                                         <strong>Warning:</strong> You are about to permanently delete all requirement
@@ -326,21 +389,9 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                     </div>
                                 )}
                             </div>
-
-                            {/* Footer */}
                             <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
-                                <button
-                                    type="button"
-                                    onClick={() => { setShowClear(false); clearForm.reset(); }}
-                                    className="btn-secondary btn-sm"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={!clearForm.data.user_type || clearForm.processing}
-                                    className="btn-danger btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
+                                <button type="button" onClick={() => { setShowClear(false); clearForm.reset(); }} className="btn-secondary btn-sm">Cancel</button>
+                                <button type="submit" disabled={!clearForm.data.user_type || clearForm.processing} className="btn-danger btn-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                     {clearForm.processing ? 'Clearing…' : 'Clear Submissions'}
                                 </button>
                             </div>
@@ -349,21 +400,18 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </div>
             )}
 
-            {/* ── File Preview Modal ──────────────────────────────────────────── */}
+            {/* File Preview Modal */}
             {previewing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                            <div>
-                                <p className="font-semibold text-gray-900">{previewing.requirement_type?.name}</p>
-                                <p className="text-xs text-gray-400">{previewing.user?.name} · {previewing.original_filename}</p>
+                        <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-gray-100">
+                            <div className="min-w-0 mr-3">
+                                <p className="font-semibold text-gray-900 truncate">{previewing.requirement_type?.name}</p>
+                                <p className="text-xs text-gray-400 truncate">{previewing.user?.name} · {previewing.original_filename}</p>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <a
-                                    href={route('admin.requirements.file', previewing.id)}
-                                    target="_blank" rel="noreferrer"
-                                    className="btn-secondary btn-sm text-xs"
-                                >
+                            <div className="flex items-center gap-2 shrink-0">
+                                <a href={route('admin.requirements.file', previewing.id)} target="_blank" rel="noreferrer"
+                                    className="btn-secondary btn-sm text-xs hidden sm:inline-flex">
                                     Open in new tab
                                 </a>
                                 <button onClick={() => setPreviewing(null)} className="text-gray-400 hover:text-gray-600">
@@ -373,23 +421,15 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         </div>
                         <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-50 rounded-b-xl">
                             {isImage(previewing.original_filename) ? (
-                                <img
-                                    src={route('admin.requirements.file', previewing.id)}
-                                    alt={previewing.original_filename}
-                                    className="max-w-full max-h-[70vh] rounded shadow"
-                                />
+                                <img src={route('admin.requirements.file', previewing.id)} alt={previewing.original_filename}
+                                    className="max-w-full max-h-[70vh] rounded shadow" />
                             ) : isPdf(previewing.original_filename) ? (
-                                <iframe
-                                    src={route('admin.requirements.file', previewing.id)}
-                                    className="w-full h-[70vh] rounded"
-                                    title="PDF preview"
-                                />
+                                <iframe src={route('admin.requirements.file', previewing.id)}
+                                    className="w-full h-[70vh] rounded" title="PDF preview" />
                             ) : (
                                 <div className="text-center text-gray-500">
                                     <p className="mb-3">Preview not available for this file type.</p>
-                                    <a href={route('admin.requirements.file', previewing.id)} download className="btn-primary btn-sm">
-                                        Download file
-                                    </a>
+                                    <a href={route('admin.requirements.file', previewing.id)} download className="btn-primary btn-sm">Download file</a>
                                 </div>
                             )}
                         </div>
@@ -397,7 +437,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </div>
             )}
 
-            {/* ── Add Requirement Type Modal ──────────────────────────────────── */}
+            {/* Add Requirement Type Modal */}
             {showAdd && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
@@ -405,32 +445,24 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         <form onSubmit={submitAdd} className="space-y-3">
                             <div>
                                 <label className="label">Name</label>
-                                <input
-                                    value={addForm.data.name}
-                                    onChange={e => addForm.setData('name', e.target.value)}
-                                    className="input"
-                                    placeholder="e.g. X-ray Result"
-                                />
+                                <input value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)}
+                                    className="input" placeholder="e.g. X-ray Result" />
                             </div>
                             <div>
                                 <label className="label">Description</label>
-                                <textarea
-                                    value={addForm.data.description}
-                                    onChange={e => addForm.setData('description', e.target.value)}
-                                    className="input"
-                                    rows={2}
-                                />
+                                <textarea value={addForm.data.description} onChange={e => addForm.setData('description', e.target.value)}
+                                    className="input" rows={2} />
                             </div>
                             <div className="flex gap-3">
-                                <button type="submit" disabled={addForm.processing} className="btn-primary">Add</button>
-                                <button type="button" onClick={() => setShowAdd(false)} className="btn-secondary">Cancel</button>
+                                <button type="submit" disabled={addForm.processing} className="btn-primary flex-1">Add</button>
+                                <button type="button" onClick={() => setShowAdd(false)} className="btn-secondary flex-1">Cancel</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* ── Review Modal ────────────────────────────────────────────────── */}
+            {/* Review Modal */}
             {reviewing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
@@ -442,13 +474,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             <div className="flex gap-4">
                                 {['approved', 'rejected'].map(s => (
                                     <label key={s} className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            value={s}
-                                            checked={reviewForm.data.status === s}
-                                            onChange={() => reviewForm.setData('status', s)}
-                                            className="text-clinic-600"
-                                        />
+                                        <input type="radio" value={s} checked={reviewForm.data.status === s}
+                                            onChange={() => reviewForm.setData('status', s)} className="text-clinic-600" />
                                         <span className="text-sm capitalize font-medium">{s}</span>
                                     </label>
                                 ))}
@@ -456,20 +483,15 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             {reviewForm.data.status === 'rejected' && (
                                 <div>
                                     <label className="label">Rejection Reason</label>
-                                    <textarea
-                                        value={reviewForm.data.reason}
-                                        onChange={e => reviewForm.setData('reason', e.target.value)}
-                                        className="input"
-                                        rows={2}
-                                        required
-                                    />
+                                    <textarea value={reviewForm.data.reason} onChange={e => reviewForm.setData('reason', e.target.value)}
+                                        className="input" rows={2} required />
                                 </div>
                             )}
                             <div className="flex gap-3">
-                                <button type="submit" disabled={reviewForm.processing} className="btn-primary">
+                                <button type="submit" disabled={reviewForm.processing} className="btn-primary flex-1">
                                     {reviewForm.processing ? 'Saving…' : 'Submit Review'}
                                 </button>
-                                <button type="button" onClick={() => setReviewing(null)} className="btn-secondary">Cancel</button>
+                                <button type="button" onClick={() => setReviewing(null)} className="btn-secondary flex-1">Cancel</button>
                             </div>
                         </form>
                     </div>

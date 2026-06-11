@@ -24,10 +24,10 @@ function StatCard({ icon: Icon, label, value, sub, color = 'clinic' }) {
     return (
         <div className="stat-card">
             <div className={`stat-icon ${colors[color]}`}><Icon className="w-6 h-6" /></div>
-            <div>
+            <div className="min-w-0">
                 <p className="stat-value">{value?.toLocaleString()}</p>
-                <p className="stat-label">{label}</p>
-                {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+                <p className="stat-label truncate">{label}</p>
+                {sub && <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>}
             </div>
         </div>
     );
@@ -40,10 +40,10 @@ function PregnancyAlert({ students, faculty, counts }) {
     return (
         <div className="mb-6 rounded-xl border border-pink-200 bg-pink-50 overflow-hidden">
             <button onClick={() => setOpen(o => !o)}
-                className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-pink-100 transition-colors">
-                <div className="flex items-center gap-3">
+                className="w-full px-4 sm:px-5 py-4 flex items-center justify-between text-left hover:bg-pink-100 transition-colors gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                     <HeartIcon className="w-5 h-5 text-pink-500 flex-shrink-0" />
-                    <div>
+                    <div className="min-w-0">
                         <p className="font-semibold text-pink-800">
                             {total} Pregnant {total === 1 ? 'User' : 'Users'} Recorded
                         </p>
@@ -53,32 +53,32 @@ function PregnancyAlert({ students, faculty, counts }) {
                         </p>
                     </div>
                 </div>
-                <span className="text-xs text-pink-400">{open ? 'Hide ▲' : 'Show ▼'}</span>
+                <span className="text-xs text-pink-400 flex-shrink-0">{open ? 'Hide ▲' : 'Show ▼'}</span>
             </button>
 
             {open && (
-                <div className="px-5 pb-5 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 xl:grid-cols-2 gap-4">
                     {students?.length > 0 && (
                         <div>
                             <p className="text-xs font-semibold text-pink-700 uppercase tracking-wide mb-2">Students</p>
-                            <div className="rounded-lg border border-pink-100 overflow-hidden">
+                            <div className="rounded-lg border border-pink-100 overflow-x-auto">
                                 <table className="min-w-full text-sm">
                                     <thead className="bg-pink-100">
                                         <tr>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700">Name</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700">Program</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700">Due Date</th>
+                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700 whitespace-nowrap">Name</th>
+                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700 whitespace-nowrap">Program</th>
+                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700 whitespace-nowrap">Due Date</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-pink-50">
                                         {students.map((s, i) => (
                                             <tr key={i}>
-                                                <td className="px-3 py-2">
+                                                <td className="px-3 py-2 whitespace-nowrap">
                                                     <p className="font-medium text-gray-900">{s.name}</p>
                                                     <p className="text-xs text-gray-400">{s.email}</p>
                                                 </td>
-                                                <td className="px-3 py-2 text-gray-500">{s.program}</td>
-                                                <td className="px-3 py-2 text-gray-500">{s.due_date || '—'}</td>
+                                                <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{s.program}</td>
+                                                <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{s.due_date || '—'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -89,22 +89,22 @@ function PregnancyAlert({ students, faculty, counts }) {
                     {faculty?.length > 0 && (
                         <div>
                             <p className="text-xs font-semibold text-pink-700 uppercase tracking-wide mb-2">Faculty / Staff</p>
-                            <div className="rounded-lg border border-pink-100 overflow-hidden">
+                            <div className="rounded-lg border border-pink-100 overflow-x-auto">
                                 <table className="min-w-full text-sm">
                                     <thead className="bg-pink-100">
                                         <tr>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700">Name</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700">Due Date</th>
+                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700 whitespace-nowrap">Name</th>
+                                            <th className="px-3 py-2 text-left text-xs font-semibold text-pink-700 whitespace-nowrap">Due Date</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-pink-50">
                                         {faculty.map((f, i) => (
                                             <tr key={i}>
-                                                <td className="px-3 py-2">
+                                                <td className="px-3 py-2 whitespace-nowrap">
                                                     <p className="font-medium text-gray-900">{f.name}</p>
                                                     <p className="text-xs text-gray-400">{f.email}</p>
                                                 </td>
-                                                <td className="px-3 py-2 text-gray-500">{f.due_date || '—'}</td>
+                                                <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{f.due_date || '—'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -163,7 +163,7 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                     </div>
                     <div className="card-body pt-2">
                         <ResponsiveContainer width="100%" height={220}>
-                            <LineChart data={appointmentTrend}>
+                            <LineChart data={appointmentTrend} margin={{ left: -20 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                                 <YAxis tick={{ fontSize: 11 }} />
@@ -184,10 +184,10 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                     </div>
                     <div className="card-body pt-2">
                         <ResponsiveContainer width="100%" height={220}>
-                            <BarChart data={medicineStock} layout="vertical">
+                            <BarChart data={medicineStock} layout="vertical" margin={{ left: -10 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                 <XAxis type="number" tick={{ fontSize: 11 }} />
-                                <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
+                                <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
                                 <Tooltip />
                                 <Bar dataKey="quantity" radius={[0, 4, 4, 0]}>
                                     {medicineStock?.map((m, i) => (
@@ -221,16 +221,20 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                     <div className="overflow-x-auto">
                         <table className="table">
                             <thead><tr>
-                                <th>Patient</th><th>Purpose</th><th>Date</th><th>Time</th><th>Status</th>
+                                <th className="whitespace-nowrap">Patient</th>
+                                <th className="whitespace-nowrap">Purpose</th>
+                                <th className="whitespace-nowrap">Date</th>
+                                <th className="whitespace-nowrap">Time</th>
+                                <th className="whitespace-nowrap">Status</th>
                             </tr></thead>
                             <tbody>
                                 {recentAppointments?.map(a => (
                                     <tr key={a.id}>
-                                        <td className="font-medium">{a.patient}</td>
-                                        <td className="text-gray-500">{a.purpose}</td>
-                                        <td>{a.date}</td>
-                                        <td>{a.time}</td>
-                                        <td>{statusBadge(a.status)}</td>
+                                        <td className="font-medium whitespace-nowrap">{a.patient}</td>
+                                        <td className="text-gray-500 whitespace-nowrap">{a.purpose}</td>
+                                        <td className="whitespace-nowrap">{a.date}</td>
+                                        <td className="whitespace-nowrap">{a.time}</td>
+                                        <td className="whitespace-nowrap">{statusBadge(a.status)}</td>
                                     </tr>
                                 ))}
                                 {!recentAppointments?.length && (

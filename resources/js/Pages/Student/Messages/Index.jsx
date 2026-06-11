@@ -41,15 +41,15 @@ export default function StudentMessagesIndex({ conversations, contacts }) {
             <div className="card">
                 <div className="divide-y divide-gray-100">
                     {conversations.data?.map(c => (
-                        <div key={c.id} className="flex items-center gap-2 px-6 py-4 hover:bg-gray-50 transition-colors group">
-                            <Link href={route('student.messages.show', c.id)} className="flex items-center justify-between flex-1 min-w-0">
+                        <div key={c.id} className="flex items-center gap-2 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors group">
+                            <Link href={route('student.messages.show', c.id)} className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-1 min-w-0 gap-1 sm:gap-0">
                                 <div className="min-w-0">
                                     <p className="font-medium text-gray-900 truncate">{c.subject}</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">{c.participants?.map(p => p.name).join(', ')}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5 truncate">{c.participants?.map(p => p.name).join(', ')}</p>
                                 </div>
-                                <div className="text-right flex-shrink-0 ml-3">
+                                <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right flex-shrink-0 sm:ml-3 gap-2 sm:gap-0">
                                     {c.unread > 0 && <span className="badge badge-red text-xs">{c.unread} new</span>}
-                                    <p className="text-xs text-gray-400 mt-1">{c.last_message_at ? new Date(c.last_message_at).toLocaleDateString() : ''}</p>
+                                    <p className="text-xs text-gray-400 sm:mt-1">{c.last_message_at ? new Date(c.last_message_at).toLocaleDateString() : ''}</p>
                                 </div>
                             </Link>
                             <button
@@ -73,8 +73,8 @@ export default function StudentMessagesIndex({ conversations, contacts }) {
 
             {/* New Message Modal */}
             {showNew && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-xl sm:rounded-xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold mb-4">New Message to Clinic</h3>
                         <form onSubmit={submit} className="space-y-3">
                             <div className="relative">
@@ -137,8 +137,8 @@ export default function StudentMessagesIndex({ conversations, contacts }) {
                                 <textarea value={data.body} onChange={e => setData('body', e.target.value)} className="input" rows={4} />
                                 {errors.body && <p className="error-msg">{errors.body}</p>}
                             </div>
-                            <div className="flex gap-3">
-                                <button type="submit" disabled={processing} className="btn-primary">{processing ? 'Sending…' : 'Send'}</button>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button type="submit" disabled={processing} className="btn-primary flex-1 sm:flex-none">{processing ? 'Sending…' : 'Send'}</button>
                                 <button type="button" onClick={() => setShowNew(false)} className="btn-secondary">Cancel</button>
                             </div>
                         </form>
@@ -151,10 +151,10 @@ export default function StudentMessagesIndex({ conversations, contacts }) {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
                         <h3 className="font-semibold text-gray-900 mb-1">Delete Conversation?</h3>
-                        <p className="text-sm text-gray-500 mb-5">
+                        <p className="text-sm text-gray-500 mb-5 break-words">
                             This will permanently delete "<span className="font-medium text-gray-700">{confirmDelete.subject}</span>" and all its messages. This cannot be undone.
                         </p>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <button onClick={handleDelete} className="btn-danger flex-1">Yes, delete</button>
                             <button onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1">Cancel</button>
                         </div>
