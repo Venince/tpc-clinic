@@ -16,7 +16,9 @@ class AppointmentController extends Controller
 {
     public function index(Request $request)
     {
-        $appointments = Appointment::with(['user:id,name,email', 'slot', 'reviewer:id,name'])
+        // profile_photo_path must be included so the profile_photo_url accessor
+        // (added via $appends on User) has the data it needs to build the URL.
+        $appointments = Appointment::with(['user:id,name,email,profile_photo_path', 'slot', 'reviewer:id,name'])
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->date,   fn($q) => $q->whereHas('slot', fn($s) => $s->whereDate('date', $request->date)))
             ->latest()->paginate(15)->withQueryString();
@@ -94,7 +96,6 @@ class AppointmentController extends Controller
         $request->validate(['reason' => ['required', 'string', 'max:500']]);
         $appointment->update(['status' => 'declined', 'decline_reason' => $request->reason, 'reviewed_by' => $request->user()->id, 'reviewed_at' => now()]);
 
-        // Free the slot
         $appointment->slot->decrement('booked_count');
         if (!$appointment->slot->fresh()->isFullyBooked()) {
             $appointment->slot->update(['is_available' => true]);

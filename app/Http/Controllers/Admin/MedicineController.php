@@ -68,10 +68,13 @@ class MedicineController extends Controller
         return back()->with('success', 'Medicine deleted.');
     }
 
-    // Requests
     public function requests(Request $request)
     {
-        $requests = MedicineRequest::with(['user:id,name,email', 'medicine:id,name,unit', 'reviewer:id,name'])
+        $requests = MedicineRequest::with([
+                'user:id,name,email,profile_photo_path',
+                'medicine:id,name,unit',
+                'reviewer:id,name',
+            ])
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->latest()->paginate(15)->withQueryString();
 

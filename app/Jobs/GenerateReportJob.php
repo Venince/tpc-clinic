@@ -28,22 +28,45 @@ class GenerateReportJob implements ShouldQueue
             $filename = "reports/{$this->report->type}_{$this->report->id}.pdf";
 
             $data = match($this->report->type) {
-                'student_health' => StudentProfile::with(['user','program'])->when(isset($filters['program_id']),fn($q)=>$q->where('program_id',$filters['program_id']))->get()->toArray(),
-                'faculty_health' => FacultyProfile::with('user')->get()->toArray(),
-                'appointment'    => Appointment::with(['user','slot'])->when(isset($filters['status']),fn($q)=>$q->where('status',$filters['status']))->get()->toArray(),
-                'medicine'       => Medicine::all()->toArray(),
-                'pregnancy'      => ['students'=>StudentProfile::where('is_pregnant',true)->with(['user','program'])->get()->toArray(),'faculty'=>FacultyProfile::where('is_pregnant',true)->with('user')->get()->toArray()],
-                'survey'         => SurveyQuestion::withCount('answers')->orderBy('sort_order')->get()->toArray(),
-                default          => [],
+                'student_health' => StudentProfile::with(['user', 'program'])
+                    ->when(isset($filters['program_id']), fn($q) => $q->where('program_id', $filters['program_id']))
+                    ->when(isset($filters['year_level']), fn($q) => $q->where('year_level', $filters['year_level']))
+                    ->when(isset($filters['is_pregnant']), fn($q) => $q->where('is_pregnant', $filters['is_pregnant']))
+                    ->get()->toArray(),
+
+                'faculty_health' => FacultyProfile::with('user')
+                    ->when(isset($filters['department']), fn($q) => $q->where('department', $filters['department']))
+                    ->when(isset($filters['is_pregnant']), fn($q) => $q->where('is_pregnant', $filters['is_pregnant']))
+                    ->get()->toArray(),
+
+                'appointment' => Appointment::with(['user', 'slot', 'reviewer'])
+                    ->when(isset($filters['status']), fn($q) => $q->where('status', $filters['status']))
+                    ->when(isset($filters['date_from']), fn($q) => $q->whereHas('slot', fn($s) => $s->whereDate('date', '>=', $filters['date_from'])))
+                    ->when(isset($filters['date_to']), fn($q) => $q->whereHas('slot', fn($s) => $s->whereDate('date', '<=', $filters['date_to'])))
+                    ->latest()->get()->toArray(),
+
+                'medicine' => Medicine::with(['requests' => fn($q) => $q->latest()->limit(5), 'requests.user:id,name'])
+                    ->when(isset($filters['low_stock']), fn($q) => $q->whereRaw('quantity <= reorder_level'))
+                    ->get()->toArray(),
+
+                'pregnancy' => [
+                    'students' => StudentProfile::where('is_pregnant', true)->with(['user', 'program'])->get()->toArray(),
+                    'faculty'  => FacultyProfile::where('is_pregnant', true)->with('user')->get()->toArray(),
+                ],
+
+                'survey' => SurveyQuestion::with('answers.user:id,name')->withCount('answers')->orderBy('sort_order')->get()->toArray(),
+
+                default => [],
             };
 
-            $pdf = Pdf::loadView('pdf.reports.'.$this->report->type, ['data'=>$data,'report'=>$this->report->load('generatedBy')])->setPaper('a4','landscape');
+            $pdf = Pdf::loadView('pdf.reports.'.$this->report->type, ['data' => $data, 'report' => $this->report->load('generatedBy')])
+                ->setPaper('a4', 'landscape');
             Storage::put($filename, $pdf->output());
 
-            $this->report->update(['status'=>'completed','file_path'=>$filename,'completed_at'=>now()]);
+            $this->report->update(['status' => 'completed', 'file_path' => $filename, 'completed_at' => now()]);
             $this->report->generatedBy->notify(new \App\Notifications\ReportReadyNotification($this->report));
         } catch (\Exception $e) {
-            $this->report->update(['status'=>'failed']);
+            $this->report->update(['status' => 'failed']);
             throw $e;
         }
     }

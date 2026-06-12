@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import NotificationBell from '@/Components/Common/NotificationBell';
+import UserAvatar from '@/Components/Common/UserAvatar';
 import {
     HomeIcon, UsersIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentChartBarIcon, MegaphoneIcon, ChatBubbleLeftRightIcon,
@@ -73,11 +74,7 @@ export default function AdminLayout({ children, title }) {
             {/* User */}
             <div className="border-t border-gray-100 p-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-clinic-100 rounded-full flex items-center justify-center">
-                        <span className="text-clinic-700 font-semibold text-xs">
-                            {auth.user?.name?.charAt(0).toUpperCase()}
-                        </span>
-                    </div>
+                    <UserAvatar user={auth.user} size="sm" className="flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
                         <p className="text-xs text-gray-500 truncate">{auth.user?.role?.display_name}</p>

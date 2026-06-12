@@ -7,12 +7,13 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Illuminate\Support\Collection;
 
 class StudentHealthExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
 {
     public function __construct(private array $filters = []) {}
 
-    public function collection()
+    public function collection(): Collection
     {
         return StudentProfile::with(['user', 'program'])
             ->when(isset($this->filters['program_id']), fn($q) => $q->where('program_id', $this->filters['program_id']))
@@ -25,7 +26,9 @@ class StudentHealthExport implements FromCollection, WithHeadings, WithMapping, 
     {
         return [
             '#', 'Student ID', 'Full Name', 'Email', 'Program', 'Year', 'Block',
-            'Sex', 'Birth Date', 'Civil Status', 'Contact', 'Pregnant', 'Due Date', 'Medical Notes',
+            'Sex', 'Birth Date', 'Civil Status', 'Contact', 'Address',
+            'Guardian Name', 'Guardian Contact', 'Pregnant', 'Due Date', 'Medical Notes',
+            'Account Status', 'Last Login',
         ];
     }
 
@@ -43,11 +46,16 @@ class StudentHealthExport implements FromCollection, WithHeadings, WithMapping, 
             $profile->block ?? '—',
             ucfirst($profile->sex ?? '—'),
             $profile->birth_date?->format('Y-m-d') ?? '—',
-            ucfirst($profile->civil_status),
+            ucfirst($profile->civil_status ?? '—'),
             $profile->contact_number ?? '—',
+            $profile->address ?? '—',
+            $profile->guardian_name ?? '—',
+            $profile->guardian_contact ?? '—',
             $profile->is_pregnant ? 'Yes' : 'No',
             $profile->pregnancy_due_date?->format('Y-m-d') ?? '—',
             $profile->medical_notes ?? '—',
+            $profile->user->is_active ? 'Active' : 'Inactive',
+            $profile->user->last_login_at?->format('Y-m-d H:i') ?? 'Never',
         ];
     }
 }

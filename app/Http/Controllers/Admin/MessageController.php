@@ -31,19 +31,27 @@ class MessageController extends Controller
 
     public function index(Request $request)
     {
-        $conversations = Conversation::whereHas('participants', fn($q)=>$q->where('user_id',$request->user()->id))
-            ->with(['participants:id,name,email','messages'=>fn($q)=>$q->latest()->limit(1)])
-            ->withCount(['messages as unread'=>fn($q)=>$q->where('sender_id','!=',$request->user()->id)->where('is_read',false)])
+        $conversations = Conversation::whereHas('participants', fn($q) => $q->where('user_id', $request->user()->id))
+            ->with([
+                'participants:id,name,email,profile_photo_path',
+                'messages' => fn($q) => $q->latest()->limit(1),
+            ])
+            ->withCount(['messages as unread' => fn($q) => $q->where('sender_id', '!=', $request->user()->id)->where('is_read', false)])
             ->orderByDesc('last_message_at')->paginate(20);
 
         $user = $request->user();
         if ($user->isAdminOrHigher()) {
-            $contacts = User::where('id','!=',$user->id)->whereHas('role',fn($q)=>$q->whereIn('name',['student','faculty_staff','admin','super_admin']))->select('id','name','email')->get();
+            $contacts = User::where('id', '!=', $user->id)
+                ->whereHas('role', fn($q) => $q->whereIn('name', ['student', 'faculty_staff', 'admin', 'super_admin']))
+                ->select('id', 'name', 'email', 'profile_photo_path')
+                ->get();
         } else {
-            $contacts = User::whereHas('role',fn($q)=>$q->whereIn('name',['admin','super_admin']))->select('id','name','email')->get();
+            $contacts = User::whereHas('role', fn($q) => $q->whereIn('name', ['admin', 'super_admin']))
+                ->select('id', 'name', 'email', 'profile_photo_path')
+                ->get();
         }
 
-        return Inertia::render($this->indexPage($request), compact('conversations','contacts'));
+        return Inertia::render($this->indexPage($request), compact('conversations', 'contacts'));
     }
 
     public function show(Request $request, Conversation $conversation)
@@ -61,10 +69,11 @@ class MessageController extends Controller
             ->update(['is_read' => true, 'read_at' => now()]);
 
         $messages = Message::where('conversation_id', $conversation->id)
-            ->with('sender:id,name')->latest()->paginate(50);
+            ->with('sender:id,name,profile_photo_path')
+            ->latest()->paginate(50);
 
         return Inertia::render($this->showPage($request), [
-            'conversation' => $conversation->load('participants:id,name,email'),
+            'conversation' => $conversation->load('participants:id,name,email,profile_photo_path'),
             'messages'     => $messages,
         ]);
     }
@@ -72,14 +81,14 @@ class MessageController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'recipient_id' => ['required','exists:users,id'],
-            'subject'      => ['required','string','max:255'],
-            'body'         => ['required','string'],
+            'recipient_id' => ['required', 'exists:users,id'],
+            'subject'      => ['required', 'string', 'max:255'],
+            'body'         => ['required', 'string'],
         ]);
 
-        $conversation = Conversation::create(['subject'=>$data['subject'],'last_message_at'=>now()]);
-        $conversation->participants()->attach([$request->user()->id,$data['recipient_id']]);
-        $msg = Message::create(['conversation_id'=>$conversation->id,'sender_id'=>$request->user()->id,'body'=>$data['body']]);
+        $conversation = Conversation::create(['subject' => $data['subject'], 'last_message_at' => now()]);
+        $conversation->participants()->attach([$request->user()->id, $data['recipient_id']]);
+        $msg = Message::create(['conversation_id' => $conversation->id, 'sender_id' => $request->user()->id, 'body' => $data['body']]);
 
         User::find($data['recipient_id'])->notify(new NewMessageNotification($msg->load('sender')));
 
@@ -90,7 +99,7 @@ class MessageController extends Controller
             default         => 'admin.messages.show',
         };
 
-        return redirect()->route($route, $conversation)->with('success','Message sent.');
+        return redirect()->route($route, $conversation)->with('success', 'Message sent.');
     }
 
     public function reply(Request $request, Conversation $conversation)
@@ -130,8 +139,6 @@ class MessageController extends Controller
             }
         }
 
-        // Delete all NewMessageNotifications tied to this conversation
-        // for every participant, before removing the conversation itself.
         DB::table('notifications')
             ->where('type', NewMessageNotification::class)
             ->where(

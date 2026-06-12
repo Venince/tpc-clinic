@@ -10,9 +10,7 @@ class FacultyController extends Controller
 {
     public function index(): JsonResponse
     {
-        $faculty = FacultyProfile::with('user')
-            ->orderBy('id')
-            ->get();
+        $faculty = FacultyProfile::with(['user' => fn($q) => $q->addSelect(['profile_photo_path'])])->orderBy('id')->get();
 
         return response()->json(['data' => $faculty]);
     }

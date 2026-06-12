@@ -2,6 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 const TYPES = ['text', 'paragraph', 'radio', 'checkbox', 'dropdown', 'date'];
 
@@ -165,9 +166,8 @@ export default function SurveyIndex({ questions, responses, filters }) {
                                 <div className="px-4 md:px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
                                     onClick={() => setExpanded(expanded === user.id ? null : user.id)}>
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-9 h-9 shrink-0 bg-clinic-100 text-clinic-700 rounded-full flex items-center justify-center font-semibold text-sm">
-                                            {user.name[0].toUpperCase()}
-                                        </div>
+                                        {/* Avatar — photo or initial fallback */}
+                                        <UserAvatar user={user} size="md" className="flex-shrink-0" />
                                         <div className="min-w-0">
                                             <p className="font-medium text-sm text-gray-900 truncate">{user.name}</p>
                                             <p className="text-xs text-gray-400 truncate">

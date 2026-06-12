@@ -2,12 +2,13 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { CalendarIcon, CheckIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function AppointmentsIndex({ appointments, filters, stats, isSuperAdmin }) {
     const [status, setStatus] = useState(filters.status || '');
     const [date,   setDate]   = useState(filters.date   || '');
     const [declineId,   setDeclineId]   = useState(null);
-    const [confirmDelete, setConfirmDelete] = useState(null); // holds appointment object
+    const [confirmDelete, setConfirmDelete] = useState(null);
     const { data, setData, post, processing, reset } = useForm({ reason: '' });
 
     const statusBadge = (s) => {
@@ -28,7 +29,6 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
         });
     };
 
-    // Super admin can delete declined, completed, or cancelled appointments
     const canDelete = (a) => isSuperAdmin && ['declined', 'completed', 'cancelled'].includes(a.status);
 
     return (
@@ -83,8 +83,13 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                             {appointments.data.map(a => (
                                 <tr key={a.id}>
                                     <td className="whitespace-nowrap">
-                                        <p className="font-medium text-gray-900">{a.user?.name}</p>
-                                        <p className="text-xs text-gray-400">{a.user?.email}</p>
+                                        <div className="flex items-center gap-2.5">
+                                            <UserAvatar user={a.user} size="sm" />
+                                            <div>
+                                                <p className="font-medium text-gray-900">{a.user?.name}</p>
+                                                <p className="text-xs text-gray-400">{a.user?.email}</p>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td className="whitespace-nowrap">{a.purpose}</td>
                                     <td className="whitespace-nowrap">
@@ -162,3 +167,4 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
         </AdminLayout>
     );
 }
+    

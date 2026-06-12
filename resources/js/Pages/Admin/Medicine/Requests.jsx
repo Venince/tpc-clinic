@@ -2,6 +2,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function MedicineRequests({ requests, filters, stats }) {
     const { auth } = usePage().props;
@@ -84,9 +85,12 @@ export default function MedicineRequests({ requests, filters, stats }) {
                 {requests.data.map(r => (
                     <div key={r.id} className="card p-4">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                            <div>
-                                <p className="font-medium text-gray-900">{r.user?.name}</p>
-                                <p className="text-xs text-gray-400">{r.user?.email}</p>
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <UserAvatar user={r.user} size="sm" className="flex-shrink-0" />
+                                <div className="min-w-0">
+                                    <p className="font-medium text-gray-900 truncate">{r.user?.name}</p>
+                                    <p className="text-xs text-gray-400 truncate">{r.user?.email}</p>
+                                </div>
                             </div>
                             {statusBadge(r.status)}
                         </div>
@@ -127,8 +131,13 @@ export default function MedicineRequests({ requests, filters, stats }) {
                             {requests.data.map(r => (
                                 <tr key={r.id}>
                                     <td>
-                                        <p className="font-medium text-gray-900">{r.user?.name}</p>
-                                        <p className="text-xs text-gray-400">{r.user?.email}</p>
+                                        <div className="flex items-center gap-2.5">
+                                            <UserAvatar user={r.user} size="sm" />
+                                            <div>
+                                                <p className="font-medium text-gray-900">{r.user?.name}</p>
+                                                <p className="text-xs text-gray-400">{r.user?.email}</p>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>{r.medicine?.name} <span className="text-xs text-gray-400">({r.medicine?.unit})</span></td>
                                     <td className="font-semibold">{r.quantity_requested}</td>

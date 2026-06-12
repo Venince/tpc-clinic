@@ -11,7 +11,7 @@ class ProgramController extends Controller {
         $programs = Program::withCount('studentProfiles')
             ->with([
                 'studentProfiles' => fn($q) => $q->select('id', 'user_id', 'program_id', 'student_id', 'year_level', 'block', 'is_pregnant'),
-                'studentProfiles.user' => fn($q) => $q->select('id', 'name', 'email', 'is_active', 'last_login_at'),
+                'studentProfiles.user' => fn($q) => $q->select('id', 'name', 'email', 'is_active', 'last_login_at', 'profile_photo_path'),
             ])
             ->orderBy('name')
             ->get();
@@ -32,5 +32,78 @@ class ProgramController extends Controller {
         if ($program->studentProfiles()->exists()) return back()->with('error','Cannot delete program with enrolled students.');
         $program->delete();
         return back()->with('success','Program deleted.');
+    }
+
+    public function showStudent(\App\Models\StudentProfile $studentProfile)
+    {
+        $studentProfile->load([
+            'user' => fn($q) => $q->select('id','name','email','is_active','last_login_at','profile_photo_path','created_at'),
+            'program:id,code,name',
+        ]);
+
+        $user = $studentProfile->user;
+
+        $appointments = $user->appointments()
+            ->with('slot')
+            ->latest()
+            ->get();
+
+        $medicineRequests = $user->medicineRequests()
+            ->with(['medicine:id,name,unit', 'reviewer:id,name'])
+            ->latest()
+            ->get();
+
+        $surveyAnswers = $user->surveyAnswers()
+            ->with('question')
+            ->get();
+
+        $requirements = $user->requirements()
+            ->with(['requirementType:id,name', 'reviewer:id,name'])
+            ->latest()
+            ->get();
+
+        return Inertia::render('Admin/Programs/StudentShow', [
+            'student' => $studentProfile,
+            'appointments' => $appointments,
+            'medicineRequests' => $medicineRequests,
+            'surveyAnswers' => $surveyAnswers,
+            'requirements' => $requirements,
+        ]);
+    }
+
+    public function showFaculty(\App\Models\FacultyProfile $facultyProfile)
+    {
+        $facultyProfile->load([
+            'user' => fn($q) => $q->select('id','name','email','is_active','last_login_at','profile_photo_path','created_at'),
+        ]);
+
+        $user = $facultyProfile->user;
+
+        $appointments = $user->appointments()
+            ->with('slot')
+            ->latest()
+            ->get();
+
+        $medicineRequests = $user->medicineRequests()
+            ->with(['medicine:id,name,unit', 'reviewer:id,name'])
+            ->latest()
+            ->get();
+
+        $surveyAnswers = $user->surveyAnswers()
+            ->with('question')
+            ->get();
+
+        $requirements = $user->requirements()
+            ->with(['requirementType:id,name', 'reviewer:id,name'])
+            ->latest()
+            ->get();
+
+        return Inertia::render('Admin/Faculty/Show', [
+            'faculty' => $facultyProfile,
+            'appointments' => $appointments,
+            'medicineRequests' => $medicineRequests,
+            'surveyAnswers' => $surveyAnswers,
+            'requirements' => $requirements,
+        ]);
     }
 }

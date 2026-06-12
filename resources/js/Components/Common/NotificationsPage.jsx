@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { BellIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 function resolveUrl(notif, role) {
     const { type, record_id, conversation_id } = notif.data ?? {};
@@ -104,9 +105,11 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                     )}
 
                     {items.map(n => {
-                        const type  = n.data?.type;
-                        const isNew = !n.read_at;
-                        const url   = resolveUrl(n, role);
+                        const type   = n.data?.type;
+                        const isNew  = !n.read_at;
+                        const url    = resolveUrl(n, role);
+                        // Sender info optionally embedded in notification data
+                        const sender = n.data?.sender ?? null;
 
                         return (
                             <div
@@ -115,13 +118,20 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                                 onClick={() => handleClick(n)}
                             >
                                 <div className="flex items-start gap-3">
-                                    {/* Unread dot */}
-                                    <span className={`mt-2 w-2.5 h-2.5 rounded-full flex-shrink-0 ${isNew ? 'bg-clinic-500' : 'bg-transparent border border-gray-200'}`} />
+                                    {/* Sender avatar or unread dot */}
+                                    {sender ? (
+                                        <UserAvatar user={sender} size="sm" className="mt-0.5 flex-shrink-0" />
+                                    ) : (
+                                        <span className={`mt-2 w-2.5 h-2.5 rounded-full flex-shrink-0 ${isNew ? 'bg-clinic-500' : 'bg-transparent border border-gray-200'}`} />
+                                    )}
 
                                     {/* Content */}
                                     <div className="flex-1 min-w-0">
-                                        {/* Badge row */}
+                                        {/* Badge + unread dot (when avatar replaces the dot) */}
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
+                                            {sender && isNew && (
+                                                <span className="w-2 h-2 rounded-full bg-clinic-500 flex-shrink-0" />
+                                            )}
                                             {type && (
                                                 <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${typeBadgeColor[type] ?? 'bg-gray-100 text-gray-600'}`}>
                                                     {typeLabel[type] ?? type}
@@ -137,7 +147,7 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                                             {n.data?.message ?? 'New notification'}
                                         </p>
 
-                                        {/* Mobile action row — shown below message on small screens */}
+                                        {/* Mobile action row */}
                                         <div className="flex items-center gap-3 mt-2 sm:hidden">
                                             {isNew && (
                                                 <button
@@ -158,7 +168,7 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                                         </div>
                                     </div>
 
-                                    {/* Desktop action column — hidden on mobile */}
+                                    {/* Desktop action column */}
                                     <div className="hidden sm:flex flex-col items-end gap-1.5 flex-shrink-0 mt-0.5">
                                         {isNew && (
                                             <button

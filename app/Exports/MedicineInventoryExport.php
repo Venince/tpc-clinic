@@ -13,18 +13,31 @@ class MedicineInventoryExport implements FromCollection, WithHeadings, WithMappi
 
     public function collection(): Collection
     {
-        return Medicine::when(isset($this->filters['low_stock']), fn($q) => $q->whereRaw('quantity <= reorder_level'))->get();
+        return Medicine::withCount('requests')
+            ->when(isset($this->filters['low_stock']), fn($q) => $q->whereRaw('quantity <= reorder_level'))
+            ->get();
     }
 
     public function headings(): array
     {
-        return ['#', 'Name', 'Unit', 'Quantity', 'Reorder Level', 'Expiration Date', 'Batch #', 'Status'];
+        return ['#', 'Name', 'Description', 'Unit', 'Quantity', 'Reorder Level', 'Batch #', 'Expiration Date', 'Status', 'Total Requests'];
     }
 
     public function map($med): array
     {
         static $i = 0; $i++;
         $status = $med->is_out_of_stock ? 'Out of Stock' : ($med->is_low_stock ? 'Low Stock' : 'OK');
-        return [$i, $med->name, $med->unit, $med->quantity, $med->reorder_level, $med->expiration_date?->format('Y-m-d') ?? '—', $med->batch_number ?? '—', $status];
+        return [
+            $i,
+            $med->name,
+            $med->description ?? '—',
+            $med->unit,
+            $med->quantity,
+            $med->reorder_level,
+            $med->batch_number ?? '—',
+            $med->expiration_date?->format('Y-m-d') ?? '—',
+            $status,
+            $med->requests_count,
+        ];
     }
 }

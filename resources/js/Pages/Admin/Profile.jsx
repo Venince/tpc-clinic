@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { UserCircleIcon } from '@heroicons/react/24/outline';
+import ProfilePhotoUploader from '@/Components/Common/ProfilePhotoUploader';
 
 export default function AdminProfile({ profile }) {
     const nameForm = useForm({
@@ -25,14 +25,6 @@ export default function AdminProfile({ profile }) {
         });
     };
 
-    // Derive initials for the avatar
-    const initials = (profile.name ?? '')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(w => w[0].toUpperCase())
-        .join('');
-
     return (
         <AdminLayout title="My Profile">
             <Head title="Profile" />
@@ -48,16 +40,21 @@ export default function AdminProfile({ profile }) {
                 </div>
 
                 {/* ── Avatar / identity banner ── */}
-                <div className="card p-4 sm:p-5">
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-clinic-100 text-clinic-700 flex items-center justify-center text-xl font-bold shrink-0 select-none">
-                            {initials || <UserCircleIcon className="w-8 h-8" />}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 truncate">{profile.name}</p>
+                <div className="card p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row items-center gap-5">
+                        {/* Photo uploader — mirrors student/faculty behaviour */}
+                        <ProfilePhotoUploader
+                            photoUrl={profile.profile_photo_url}
+                            uploadRoute={route('admin.profile.photo.update')}
+                            deleteRoute={route('admin.profile.photo.delete')}
+                        />
+
+                        {/* Identity info */}
+                        <div className="text-center sm:text-left min-w-0">
+                            <p className="font-semibold text-gray-900 text-lg truncate">{profile.name}</p>
                             <p className="text-sm text-gray-500 truncate">{profile.email}</p>
                             {profile.role?.display_name && (
-                                <span className="inline-block mt-1 text-xs font-medium bg-clinic-50 text-clinic-700 px-2 py-0.5 rounded-full">
+                                <span className="inline-block mt-1.5 text-xs font-medium bg-clinic-50 text-clinic-700 px-2 py-0.5 rounded-full">
                                     {profile.role.display_name}
                                 </span>
                             )}

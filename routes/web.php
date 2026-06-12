@@ -68,6 +68,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/programs',         [Admin\ProgramController::class, 'store'])->name('programs.store');
         Route::put('/programs/{program}',[Admin\ProgramController::class, 'update'])->name('programs.update');
         Route::delete('/programs/{program}', [Admin\ProgramController::class, 'destroy'])->name('programs.destroy');
+        Route::get('/programs/students/{studentProfile}', [Admin\ProgramController::class, 'showStudent'])->name('programs.students.show');
 
         // Appointments
         Route::get('/appointments',          [Admin\AppointmentController::class, 'index'])->name('appointments.index');
@@ -144,6 +145,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             $faculty = \App\Models\FacultyProfile::with('user')->orderBy('id')->get();
             return inertia('Admin/Faculty/Index', ['faculty' => $faculty]);
         })->name('faculty.index');
+        Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
         Route::delete('/notifications/{id}', function(\Illuminate\Http\Request $r, $id) {
             $r->user()->notifications()->find($id)?->delete();
             return back()->with('success', 'Notification deleted.');
@@ -175,6 +177,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/profile',          [Admin\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile',          [Admin\ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [Admin\ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/profile/photo',   [Admin\ProfileController::class, 'uploadPhoto'])->name('profile.photo.update');
+        Route::delete('/profile/photo', [Admin\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
     });
 
     // ─── Student ───────────────────────────────────────────────────────────
@@ -240,6 +244,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/dashboard', [Faculty\DashboardController::class, 'index'])->name('dashboard');
 
         // Faculty re-uses student controllers for most features
+        Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
+
         Route::get('/appointments',        [Student\AppointmentController::class, 'index'])->name('appointments.index');
         Route::post('/appointments',       [Student\AppointmentController::class, 'store'])->name('appointments.store');
         Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
@@ -259,7 +265,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/messages',                       [Admin\MessageController::class, 'store'])->name('messages.store');
         Route::get('/messages/{conversation}',         [Admin\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/reply',  [Admin\MessageController::class, 'reply'])->name('messages.reply');
-        Route::delete('/messages/{conversation}', [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
+        Route::delete('/messages/{conversation}',      [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
 
         Route::get('/notifications', fn(\Illuminate\Http\Request $r) => Inertia::render('Faculty/Notifications', [
             'notifications' => $r->user()->notifications()->paginate(20),

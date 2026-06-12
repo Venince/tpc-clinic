@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function UsersIndex({ users, filters, roles, auth }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -78,7 +79,12 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                         <tbody>
                             {users.data.map(user => (
                                 <tr key={user.id}>
-                                    <td className="font-medium text-gray-900 whitespace-nowrap">{user.name}</td>
+                                    <td className="whitespace-nowrap">
+                                        <div className="flex items-center gap-2.5">
+                                            <UserAvatar user={user} size="sm" />
+                                            <span className="font-medium text-gray-900">{user.name}</span>
+                                        </div>
+                                    </td>
                                     <td className="text-gray-500 whitespace-nowrap">{user.email}</td>
                                     <td className="whitespace-nowrap">{roleBadge(user.role?.name)}</td>
                                     <td className="whitespace-nowrap">

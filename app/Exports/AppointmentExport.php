@@ -5,12 +5,13 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Illuminate\Support\Collection;
 
 class AppointmentExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
 {
     public function __construct(private array $filters = []) {}
 
-    public function collection()
+    public function collection(): Collection
     {
         return Appointment::with(['user', 'slot', 'reviewer'])
             ->when(isset($this->filters['status']),    fn($q) => $q->where('status', $this->filters['status']))
@@ -21,7 +22,7 @@ class AppointmentExport implements FromCollection, WithHeadings, WithMapping, Sh
 
     public function headings(): array
     {
-        return ['#', 'Patient Name', 'Email', 'Purpose', 'Date', 'Time', 'Status', 'Reviewed By', 'Decline Reason'];
+        return ['#', 'Patient Name', 'Email', 'Purpose', 'Notes', 'Date', 'Time', 'Status', 'Reviewed By', 'Reviewed At', 'Decline Reason'];
     }
 
     public function map($appt): array
@@ -32,10 +33,12 @@ class AppointmentExport implements FromCollection, WithHeadings, WithMapping, Sh
             $appt->user->name,
             $appt->user->email,
             $appt->purpose,
+            $appt->notes ?? '—',
             $appt->slot->date->format('Y-m-d'),
             $appt->slot->start_time,
             ucfirst($appt->status),
             $appt->reviewer?->name ?? '—',
+            $appt->reviewed_at?->format('Y-m-d H:i') ?? '—',
             $appt->decline_reason ?? '—',
         ];
     }

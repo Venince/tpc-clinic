@@ -2,11 +2,12 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon, UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function Programs({ programs }) {
     const [modal, setModal]       = useState(null);
     const [expanded, setExpanded] = useState(null);
-    const [searches, setSearches] = useState({});  // per-program search state
+    const [searches, setSearches] = useState({});
     const { data, setData, post, put, processing, errors, reset } = useForm({ code: '', name: '', description: '', is_active: true });
 
     const open = (p) => {
@@ -108,8 +109,14 @@ export default function Programs({ programs }) {
                                                     </thead>
                                                     <tbody className="bg-white divide-y divide-gray-100">
                                                         {filtered.length ? filtered.map(sp => (
-                                                            <tr key={sp.id} className="hover:bg-gray-50">
-                                                                <td className="px-4 py-2 font-medium text-gray-900 whitespace-nowrap">{sp.user?.name}</td>
+                                                            <tr key={sp.id} className="hover:bg-clinic-50 cursor-pointer transition-colors"
+                                                                onClick={() => router.visit(route('admin.programs.students.show', sp.id))}>
+                                                                <td className="px-4 py-2 whitespace-nowrap">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <UserAvatar user={sp.user} size="xs" />
+                                                                        <span className="font-medium text-gray-900">{sp.user?.name}</span>
+                                                                    </div>
+                                                                </td>
                                                                 <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{sp.user?.email}</td>
                                                                 <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{sp.student_id || '—'}</td>
                                                                 <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{sp.year_level ? `Year ${sp.year_level}` : '—'}</td>

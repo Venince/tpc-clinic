@@ -1,9 +1,10 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
-export default function Faculty({ faculty }) {   // ← prop from Inertia
+export default function Faculty({ faculty }) {
     const [search, setSearch] = useState('');
 
     const filtered = faculty.filter(fp => {
@@ -63,8 +64,14 @@ export default function Faculty({ faculty }) {   // ← prop from Inertia
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-100">
                                 {filtered.map(fp => (
-                                    <tr key={fp.id} className="hover:bg-gray-50">
-                                        <td className="px-4 py-2 font-medium text-gray-900 whitespace-nowrap">{fp.user?.name}</td>
+                                    <tr key={fp.id} className="hover:bg-clinic-50 cursor-pointer transition-colors"
+                                        onClick={() => router.visit(route('admin.faculty.show', fp.id))}>
+                                        <td className="px-4 py-2 whitespace-nowrap">
+                                            <div className="flex items-center gap-2.5">
+                                                <UserAvatar user={fp.user} size="sm" />
+                                                <span className="font-medium text-gray-900">{fp.user?.name}</span>
+                                            </div>
+                                        </td>
                                         <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{fp.user?.email}</td>
                                         <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{fp.employee_id || '—'}</td>
                                         <td className="px-4 py-2 text-gray-500 whitespace-nowrap">{fp.department || '—'}</td>
