@@ -8,7 +8,7 @@ export default function GuestLayout({ children }) {
                 <div className="bg-white rounded-2xl shadow-2xl p-8">
                     <div className="text-center mb-6">
                         <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-20 h-20 object-contain mx-auto mb-3" />
-                        <h1 className="text-gray-900 text-2xl font-bold">TPC Clinic</h1>
+                        <h1 className="text-gray-900 text-2xl font-bold">TPC e-Clinic</h1>
                         <p className="text-gray-500 text-sm mt-1">Talibon Polytechnic College</p>
                     </div>
                     {children}
