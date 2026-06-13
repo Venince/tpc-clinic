@@ -16,7 +16,7 @@ Route::get('/', function () {
             ->take(3)
             ->get(['id','title','content','category','published_at']),
         'services'      => \App\Models\ClinicService::active()->get(),
-        'facilityPhoto' => \App\Models\Setting::get('facility_photo'),  // ← add
+        'facilityPhoto' => \App\Models\Setting::get('facility_photo') ?: null,
     ]);
 })->name('home');
 
