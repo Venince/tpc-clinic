@@ -4,12 +4,14 @@
     <meta charset="utf-8">
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px }
-        .hdr { text-align: center; border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 15px }
-        h1 { font-size: 17px; color: #4f46e5; margin: 0 }
+        .hdr { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 10px; margin-bottom: 15px }
+        .hdr-inner { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 4px }
+        .logo { width: 48px; height: 48px }
+        h1 { font-size: 17px; color: #16a34a; margin: 0 }
         table { width: 100%; border-collapse: collapse }
-        th { background: #4f46e5; color: #fff; padding: 5px 6px; font-size: 9px; text-align: left }
+        th { background: #16a34a; color: #fff; padding: 5px 6px; font-size: 9px; text-align: left }
         td { padding: 4px 6px; border-bottom: 1px solid #e8e8e8; font-size: 9px }
-        tr:nth-child(even) { background: #f7f9fc }
+        tr:nth-child(even) { background: #f0fdf4 }
         .small { font-size: 8px; color: #888 }
         .status-pending   { color: #d97706; font-weight: bold }
         .status-approved  { color: #2563eb; font-weight: bold }
@@ -19,8 +21,11 @@
 </head>
 <body>
     <div class="hdr">
-        <h1>TPC Clinic — Appointment Report</h1>
-        <p style="font-size:10px;color:#555">Generated: <?php echo e(now()->format('F d, Y h:i A')); ?></p>
+        <div class="hdr-inner">
+            <img src="<?php echo e(public_path('images/tpc-logo.png')); ?>" class="logo" alt="TPC Logo" />
+            <h1>TPC Clinic — Appointment Report</h1>
+        </div>
+        <p style="font-size:10px;color:#555;margin:0">Generated: <?php echo e(now()->format('F d, Y h:i A')); ?></p>
         <p style="font-size:9px;color:#888;margin:2px 0 0">Total Records: <?php echo e(count($data)); ?></p>
     </div>
     <table>
@@ -60,4 +65,4 @@
         </tbody>
     </table>
 </body>
-</html><?php /**PATH C:\Projects\Laravel\tpc-clinic\resources\views/pdf/reports/appointment.blade.php ENDPATH**/ ?>
+</html><?php /**PATH C:\Projects\Laravel\tpc-clinic\resources\views\pdf\reports\appointment.blade.php ENDPATH**/ ?>

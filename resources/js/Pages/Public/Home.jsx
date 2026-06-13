@@ -13,7 +13,7 @@ const tagStyles = {
 };
 
 export default function Home({ announcements, services, auth, facilityPhoto }) {
-    const isAdmin = auth?.user?.role === 'admin' || auth?.user?.role === 'super_admin';
+    const isAdmin = auth?.user?.role?.name === 'admin' || auth?.user?.role?.name === 'super_admin';
     const [modal, setModal] = useState(null);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
@@ -46,7 +46,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
             <div className="min-h-screen bg-white font-sans">
 
                 {/* ── Nav ── */}
-                <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
+                <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between animate-slide-up" style={{ animationDelay: '0ms' }}>
                     <div className="flex items-center gap-4 md:gap-8">
                         <Link href={route('home')} className="flex items-center gap-2.5">
                             <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain" />
@@ -73,7 +73,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </nav>
 
                 {/* ── Hero ── */}
-                <section className="grid grid-cols-1 md:grid-cols-2 items-center">
+                <section className="grid grid-cols-1 md:grid-cols-2 items-center animate-slide-up" style={{ animationDelay: '100ms' }}>
                     <div className="flex flex-col justify-center px-6 md:px-12 py-10 md:py-16">
                         <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-3 py-1.5 mb-5 w-fit">
                             <span className="w-1.5 h-1.5 rounded-full bg-clinic-500 animate-pulse"></span>
@@ -94,7 +94,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                             </a>
                         </div>
                     </div>
-                    <div className="relative overflow-hidden">
+                    <div className="relative">
                         {facilityPhoto ? (
                             <div className="relative w-full">
                                 <img
@@ -151,7 +151,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </section>
 
                 {/* ── Services ── */}
-                <section id="services" className="bg-gray-50 px-4 md:px-10 py-10 md:py-14">
+                <section id="services" className="bg-gray-50 px-4 md:px-10 py-10 md:py-14 animate-slide-up" style={{ animationDelay: '200ms' }}>
                     <div className="flex items-end justify-between mb-8">
                         <div>
                             <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Clinical services</p>
@@ -194,7 +194,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </section>
 
                 {/* ── Announcements ── */}
-                <section className="px-4 md:px-10 py-10 md:py-14">
+                <section className="px-4 md:px-10 py-10 md:py-14 animate-slide-up" style={{ animationDelay: '300ms' }}>
                     <div className="flex items-end justify-between mb-8">
                         <div>
                             <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Clinic announcements</p>
@@ -226,7 +226,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </section>
 
                 {/* ── Facilities ── */}
-                <section id="about" className="bg-gray-50 px-4 md:px-10 py-10 md:py-14">
+                <section id="about" className="bg-gray-50 px-4 md:px-10 py-10 md:py-14 animate-slide-up" style={{ animationDelay: '400ms' }}>
                     <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Visit our facilities</p>
                     <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-8">Find us on campus</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
