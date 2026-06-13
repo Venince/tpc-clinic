@@ -20,3 +20,5 @@ bootstrap/cache/*.php
 storage/app/private/
 storage/app/reports/
 storage/logs/
+storage/framework/views/*
+!storage/framework/views/.gitkeep

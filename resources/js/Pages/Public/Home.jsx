@@ -234,7 +234,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                             {[
                                 { icon: MapPinIcon,   label: 'Address',       value: 'San Isidro, Talibon, Bohol' },
                                 { icon: ClockIcon,    label: 'Clinic hours',  value: 'Mon – Fri: 8:00 AM – 5:00 PM\nSat: 8:00 AM – 12:00 PM' },
-                                { icon: EnvelopeIcon, label: 'Contact us',    value: '(038) 000-0000 · clinic@tpc.edu.ph' },
+                                { icon: EnvelopeIcon, label: 'Contact us',    value: '(038) 000-0000 · tpcwebsite05@gmail.com' },
                             ].map(item => (
                                 <div key={item.label} className="flex gap-4 items-start">
                                     <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -280,7 +280,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         </div>
                         <div>
                             <p className="text-xs font-semibold text-clinic-300 uppercase tracking-widest mb-3">Contact</p>
-                            {['(038) 000-0000','clinic@tpc.edu.ph','San Isidro, Talibon, Bohol'].map(l => (
+                            {['(038) 000-0000','tpcwebsite05@gmail.com','San Isidro, Talibon, Bohol'].map(l => (
                                 <p key={l} className="text-sm text-clinic-200 mb-2">{l}</p>
                             ))}
                         </div>
