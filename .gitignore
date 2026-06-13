@@ -22,3 +22,5 @@ storage/app/reports/
 storage/logs/
 storage/framework/views/*
 !storage/framework/views/.gitkeep
+storage/app/public/facility/
+storage/app/public/profile-photos/
