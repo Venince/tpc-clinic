@@ -73,7 +73,7 @@ export default function StudentMessagesIndex({ conversations, contacts }) {
 
             {/* New Message Modal */}
             {showNew && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-xl sm:rounded-xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold mb-4">New Message to Clinic</h3>
                         <form onSubmit={submit} className="space-y-3">
@@ -148,7 +148,7 @@ export default function StudentMessagesIndex({ conversations, contacts }) {
 
             {/* Delete Confirm Modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
                         <h3 className="font-semibold text-gray-900 mb-1">Delete Conversation?</h3>
                         <p className="text-sm text-gray-500 mb-5 break-words">

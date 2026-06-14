@@ -140,7 +140,7 @@ export default function MessagesIndex({ conversations, contacts }) {
 
             {/* New Message Modal */}
             {showNew && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white w-full sm:rounded-xl sm:max-w-md shadow-xl max-h-[92dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl">
 
                         {/* Header */}
@@ -221,7 +221,7 @@ export default function MessagesIndex({ conversations, contacts }) {
 
             {/* Delete Confirm Modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white w-full sm:rounded-xl sm:max-w-sm shadow-xl rounded-t-2xl sm:rounded-2xl">
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                             <h3 className="font-semibold text-gray-900">Delete Conversation?</h3>
