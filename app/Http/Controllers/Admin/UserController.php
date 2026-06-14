@@ -59,7 +59,11 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users')->whereNull('deleted_at'),
+            ],
             'role'  => ['required', Rule::in(['student', 'faculty_staff', 'admin'])],
         ]);
 
@@ -99,7 +103,11 @@ class UserController extends Controller
 
         $data = $request->validate([
             'name'      => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users')->ignore($user->id)->whereNull('deleted_at'),
+            ],
             'is_active' => ['boolean'],
         ]);
 
@@ -118,6 +126,10 @@ class UserController extends Controller
         if ($user->id === $request->user()->id) {
             return back()->with('error', 'You cannot delete your own account.');
         }
+
+        // Delete related profiles so student_id/faculty data is freed up
+        $user->studentProfile?->delete();
+        $user->facultyProfile?->delete();
 
         $user->delete();
 
@@ -157,7 +169,10 @@ class UserController extends Controller
 
         foreach ($emails as $email) {
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $results['failed']++; continue; }
-            if (User::where('email', $email)->exists())     { $results['skipped']++; continue; }
+            if (User::where('email', $email)->whereNull('deleted_at')->exists()) {
+                $results['skipped']++;
+                continue;
+            }
 
             $password = Str::random(12);
             $user     = User::create([

@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import StudentLayout from '@/Layouts/StudentLayout';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 
@@ -9,7 +9,7 @@ export default function StudentSurvey({ questions, answers, completed }) {
         initialAnswers[q.id] = existing ? (Array.isArray(existing) && q.type !== 'checkbox' ? existing[0] : existing) : (q.type === 'checkbox' ? [] : '');
     });
 
-    const { data, setData, post, processing } = useForm({ answers: initialAnswers });
+    const { data, setData, post, processing, errors } = useForm({ answers: initialAnswers });
 
     const updateAnswer   = (qId, value) => setData('answers', { ...data.answers, [qId]: value });
     const toggleCheckbox = (qId, option) => {
@@ -95,6 +95,9 @@ export default function StudentSurvey({ questions, answers, completed }) {
                                         <option value="">— Select —</option>
                                         {q.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                     </select>
+                                )}
+                                {errors[`answers.${q.id}`] && (
+                                    <p className="mt-1 text-xs text-red-600">{errors[`answers.${q.id}`]}</p>
                                 )}
                             </div>
                         </div>

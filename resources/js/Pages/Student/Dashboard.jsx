@@ -5,7 +5,10 @@ import {
     DocumentTextIcon, ClockIcon, MegaphoneIcon, ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
-export default function StudentDashboard({ profile, appointmentCount, pendingAppointments, medicineRequests, surveyCompleted, requirementsStatus, recentAppointments, announcements }) {
+export default function StudentDashboard({ profile, profileCompleted, appointmentCount, pendingAppointments, medicineRequests, surveyCompleted, requirementsStatus, recentAppointments, announcements }) {
+
+    const bothCompleted = profileCompleted && surveyCompleted;
+
     const statusBadge = (s) => {
         const map = { pending:'badge-yellow', approved:'badge-green', declined:'badge-red', completed:'badge-purple', cancelled:'badge-gray' };
         return <span className={`badge ${map[s] || 'badge-gray'} whitespace-nowrap`}>{s}</span>;
@@ -15,19 +18,30 @@ export default function StudentDashboard({ profile, appointmentCount, pendingApp
         <StudentLayout title="Dashboard">
             <Head title="Student Dashboard" />
 
-            {/* Survey gate banner */}
-            {!surveyCompleted && (
-                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row items-start gap-3">
-                    <ExclamationTriangleIcon className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-amber-800">Health survey required</p>
-                        <p className="text-sm text-amber-700 mt-0.5">
-                            Complete the health survey before you can book appointments, request medicine, upload requirements, or send messages.
-                        </p>
+            {/* Gate banner — shows if either profile OR survey is incomplete */}
+            {!bothCompleted && (
+                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col gap-3">
+                    <div className="flex items-start gap-3">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold text-amber-800">Action required before using other features</p>
+                            <p className="text-sm text-amber-700 mt-0.5">
+                                You must complete both your <strong>Profile</strong> and <strong>Health Survey</strong> to book appointments, request medicine, upload requirements, or send messages.
+                            </p>
+                        </div>
                     </div>
-                    <Link href={route('student.survey.index')} className="btn-primary btn-sm w-full sm:w-auto text-center flex-shrink-0">
-                        Fill out now
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-2 pl-8">
+                        {!profileCompleted && (
+                            <Link href={route('student.profile')} className="btn-primary btn-sm text-center">
+                                Complete Profile
+                            </Link>
+                        )}
+                        {!surveyCompleted && (
+                            <Link href={route('student.survey.index')} className="btn-primary btn-sm text-center">
+                                Fill out Health Survey
+                            </Link>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -43,7 +57,7 @@ export default function StudentDashboard({ profile, appointmentCount, pendingApp
 
             {/* Quick stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div className={`card p-4 text-center ${!surveyCompleted ? 'opacity-40 pointer-events-none select-none' : ''}`}>
+                <div className={`card p-4 text-center ${!bothCompleted ? 'opacity-40 pointer-events-none select-none' : ''}`}>
                     <CalendarIcon className="w-7 h-7 text-clinic-500 mx-auto mb-1.5" />
                     <p className="text-xl sm:text-2xl font-bold text-gray-900">{appointmentCount}</p>
                     <p className="text-xs text-gray-500 leading-tight">Total Appointments</p>
@@ -73,7 +87,7 @@ export default function StudentDashboard({ profile, appointmentCount, pendingApp
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Recent Appointments */}
-                <div className={`card ${!surveyCompleted ? 'opacity-40 pointer-events-none select-none' : ''}`}>
+                <div className={`card ${!bothCompleted ? 'opacity-40 pointer-events-none select-none' : ''}`}>
                     <div className="card-header flex items-center justify-between">
                         <h3 className="font-semibold text-gray-900">Recent Appointments</h3>
                         <Link href={route('student.appointments.index')} className="text-xs text-clinic-600 hover:underline">View all</Link>

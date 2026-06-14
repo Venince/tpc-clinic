@@ -25,20 +25,20 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'name'                => ['required', 'string', 'max:255'],
-            'student_id'          => ['nullable', 'string', 'max:50'],
-            'program_id'          => ['nullable', 'exists:programs,id'],
-            'year_level'          => ['nullable', 'integer', 'min:1', 'max:6'],
-            'block'               => ['nullable', 'string', 'max:10'],
-            'birth_date'          => ['nullable', 'date', 'before:today'],
-            'sex'                 => ['nullable', 'in:male,female,other'],
-            'contact_number'      => ['nullable', 'string', 'max:20'],
-            'address'             => ['nullable', 'string'],
-            'guardian_name'       => ['nullable', 'string', 'max:255'],
-            'guardian_contact'    => ['nullable', 'string', 'max:20'],
-            'civil_status'        => ['nullable', 'in:single,married,widowed,separated'],
-            'is_pregnant'         => ['boolean'],
-            'pregnancy_due_date'  => ['nullable', 'date', 'after:today', 'required_if:is_pregnant,true'],
+            'name'               => ['required', 'string', 'max:255'],
+            'student_id'         => ['required', 'string', 'max:50'],
+            'program_id'         => ['required', 'exists:programs,id'],
+            'year_level'         => ['required', 'integer', 'min:1', 'max:6'],
+            'block'              => ['required', 'string', 'max:10'],
+            'birth_date'         => ['required', 'date', 'before:today'],
+            'sex'                => ['required', 'in:male,female,other'],
+            'contact_number'     => ['required', 'string', 'max:20'],
+            'address'            => ['required', 'string'],
+            'guardian_name'      => ['required', 'string', 'max:255'],
+            'guardian_contact'   => ['required', 'string', 'max:20'],
+            'civil_status'       => ['required', 'in:single,married,widowed,separated'],
+            'is_pregnant'        => ['boolean'],
+            'pregnancy_due_date' => ['nullable', 'date', 'after:today', 'required_if:is_pregnant,true'],
         ]);
 
         $user->update(['name' => $request->name]);
@@ -52,6 +52,25 @@ class ProfileController extends Controller
                 'is_pregnant', 'pregnancy_due_date',
             ])
         );
+
+        // If survey is also complete, redirect to dashboard
+        $requiredIds = \App\Models\SurveyQuestion::where('is_active', true)
+            ->where('is_required', true)
+            ->pluck('id');
+
+        $answeredIds = \App\Models\SurveyAnswer::where('user_id', $user->id)
+            ->whereIn('survey_question_id', $requiredIds)
+            ->whereNotNull('answer')
+            ->get()
+            ->filter(fn($a) => !empty(array_filter((array) $a->answer, fn($v) => trim($v) !== '')))
+            ->pluck('survey_question_id');
+
+        $surveyDone = $requiredIds->isEmpty() || $requiredIds->diff($answeredIds)->isEmpty();
+
+        if ($surveyDone) {
+            return redirect()->route('student.dashboard')
+                ->with('success', 'Profile saved! Welcome to your dashboard.');
+        }
 
         return back()->with('success', 'Profile updated successfully.');
     }

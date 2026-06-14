@@ -26,6 +26,8 @@ export default function StudentProfile({ profile, programs }) {
 
     const submit = (e) => { e.preventDefault(); put(route('student.profile.update')); };
 
+    const Req = () => <span className="text-red-500 ml-0.5">*</span>;
+
     return (
         <StudentLayout title="My Profile">
             <Head title="Profile" />
@@ -37,7 +39,6 @@ export default function StudentProfile({ profile, programs }) {
                         <h3 className="font-semibold text-clinic-900">Account Information</h3>
                     </div>
                     <div className="card-body">
-                        {/* Photo uploader */}
                         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-4">
                             <ProfilePhotoUploader
                                 photoUrl={profile.profile_photo_url}
@@ -56,14 +57,16 @@ export default function StudentProfile({ profile, programs }) {
                 <div className="card">
                     <div className="card-header">
                         <h3 className="font-semibold text-gray-900">My Profile</h3>
-                        <p className="text-xs text-gray-400 mt-0.5">Keep your information up to date</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                            Keep your information up to date. Fields marked <span className="text-red-500">*</span> are required.
+                        </p>
                     </div>
                     <div className="card-body">
                         <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                             {/* --- Account --- */}
                             <div className="sm:col-span-2">
-                                <label className="label">Full Name</label>
+                                <label className="label">Full Name <Req /></label>
                                 <input
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
@@ -75,7 +78,7 @@ export default function StudentProfile({ profile, programs }) {
 
                             {/* --- Enrollment --- */}
                             <div>
-                                <label className="label">Student ID</label>
+                                <label className="label">Student ID <Req /></label>
                                 <input
                                     value={data.student_id}
                                     onChange={e => setData('student_id', e.target.value)}
@@ -85,7 +88,7 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.student_id && <p className="error-msg">{errors.student_id}</p>}
                             </div>
                             <div>
-                                <label className="label">Program</label>
+                                <label className="label">Program <Req /></label>
                                 <select
                                     value={data.program_id}
                                     onChange={e => setData('program_id', e.target.value)}
@@ -99,7 +102,7 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.program_id && <p className="error-msg">{errors.program_id}</p>}
                             </div>
                             <div>
-                                <label className="label">Year Level</label>
+                                <label className="label">Year Level <Req /></label>
                                 <select
                                     value={data.year_level}
                                     onChange={e => setData('year_level', e.target.value)}
@@ -113,7 +116,7 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.year_level && <p className="error-msg">{errors.year_level}</p>}
                             </div>
                             <div>
-                                <label className="label">Block</label>
+                                <label className="label">Block <Req /></label>
                                 <input
                                     value={data.block}
                                     onChange={e => setData('block', e.target.value)}
@@ -125,7 +128,7 @@ export default function StudentProfile({ profile, programs }) {
 
                             {/* --- Health --- */}
                             <div>
-                                <label className="label">Birth Date</label>
+                                <label className="label">Birth Date <Req /></label>
                                 <input
                                     type="date"
                                     value={data.birth_date}
@@ -135,7 +138,7 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.birth_date && <p className="error-msg">{errors.birth_date}</p>}
                             </div>
                             <div>
-                                <label className="label">Sex</label>
+                                <label className="label">Sex <Req /></label>
                                 <select
                                     value={data.sex}
                                     onChange={e => {
@@ -145,52 +148,66 @@ export default function StudentProfile({ profile, programs }) {
                                             setData('pregnancy_due_date', '');
                                         }
                                     }}
-                                    className="input"
+                                    className={`input ${errors.sex ? 'input-error' : ''}`}
                                 >
                                     <option value="">— Select —</option>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
                                     <option value="other">Prefer not to say</option>
                                 </select>
+                                {errors.sex && <p className="error-msg">{errors.sex}</p>}
                             </div>
                             <div>
-                                <label className="label">Contact Number</label>
+                                <label className="label">Contact Number <Req /></label>
                                 <input
                                     value={data.contact_number}
                                     onChange={e => setData('contact_number', e.target.value)}
-                                    className="input"
+                                    className={`input ${errors.contact_number ? 'input-error' : ''}`}
                                     placeholder="09xxxxxxxxx"
                                 />
+                                {errors.contact_number && <p className="error-msg">{errors.contact_number}</p>}
                             </div>
                             <div>
-                                <label className="label">Civil Status</label>
-                                <select value={data.civil_status} onChange={e => setData('civil_status', e.target.value)} className="input">
+                                <label className="label">Civil Status <Req /></label>
+                                <select
+                                    value={data.civil_status}
+                                    onChange={e => setData('civil_status', e.target.value)}
+                                    className={`input ${errors.civil_status ? 'input-error' : ''}`}
+                                >
                                     {['single', 'married', 'widowed', 'separated'].map(s => (
                                         <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                                     ))}
                                 </select>
+                                {errors.civil_status && <p className="error-msg">{errors.civil_status}</p>}
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="label">Address</label>
+                                <label className="label">Address <Req /></label>
                                 <textarea
                                     value={data.address}
                                     onChange={e => setData('address', e.target.value)}
-                                    className="input"
+                                    className={`input ${errors.address ? 'input-error' : ''}`}
                                     rows={2}
                                 />
+                                {errors.address && <p className="error-msg">{errors.address}</p>}
                             </div>
                             <div>
-                                <label className="label">Guardian Name</label>
-                                <input value={data.guardian_name} onChange={e => setData('guardian_name', e.target.value)} className="input" />
+                                <label className="label">Guardian Name <Req /></label>
+                                <input
+                                    value={data.guardian_name}
+                                    onChange={e => setData('guardian_name', e.target.value)}
+                                    className={`input ${errors.guardian_name ? 'input-error' : ''}`}
+                                />
+                                {errors.guardian_name && <p className="error-msg">{errors.guardian_name}</p>}
                             </div>
                             <div>
-                                <label className="label">Guardian Contact</label>
+                                <label className="label">Guardian Contact <Req /></label>
                                 <input
                                     value={data.guardian_contact}
                                     onChange={e => setData('guardian_contact', e.target.value)}
-                                    className="input"
+                                    className={`input ${errors.guardian_contact ? 'input-error' : ''}`}
                                     placeholder="09xxxxxxxxx"
                                 />
+                                {errors.guardian_contact && <p className="error-msg">{errors.guardian_contact}</p>}
                             </div>
 
                             {/* --- Pregnancy --- */}
@@ -214,7 +231,7 @@ export default function StudentProfile({ profile, programs }) {
                                     </div>
                                     {data.is_pregnant && (
                                         <div>
-                                            <label className="label">Expected Due Date <span className="text-gray-400">(optional)</span></label>
+                                            <label className="label">Expected Due Date <span className="text-gray-400 text-xs">(optional)</span></label>
                                             <input
                                                 type="date"
                                                 value={data.pregnancy_due_date}

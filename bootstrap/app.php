@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active'           => EnsureUserIsActive::class,
             'password.changed' => EnsurePasswordChanged::class,
             'survey.completed' => \App\Http\Middleware\EnsureSurveyCompleted::class,
+            'profile.completed' => \App\Http\Middleware\EnsureProfileCompleted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
