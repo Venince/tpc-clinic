@@ -31,12 +31,16 @@ Route::get('/announcements', function () {
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
-    Route::get('/tpc_login',        [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/tpc_login',       [AuthController::class, 'login'])->name('login.store');
-    Route::get('/forgot-password',  [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
+    Route::get('/tpc_login',  [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/reset-password',        [AuthController::class, 'resetPassword'])->name('password.update');
+
+    // Rate-limited auth POSTs — 5 attempts per minute per IP
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('/tpc_login',       [AuthController::class, 'login'])->name('login.store');
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
+        Route::post('/reset-password',  [AuthController::class, 'resetPassword'])->name('password.update');
+    });
 });
 
 Route::middleware(['auth', 'active'])->group(function () {
@@ -158,9 +162,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
 
         // Clinic Services
-        Route::post('/services',                  [\App\Http\Controllers\Admin\ClinicServiceController::class, 'store'])->name('services.store');
-        Route::put('/services/{clinicService}',   [\App\Http\Controllers\Admin\ClinicServiceController::class, 'update'])->name('services.update');
-        Route::delete('/services/{clinicService}',[\App\Http\Controllers\Admin\ClinicServiceController::class, 'destroy'])->name('services.destroy');
+        Route::post('/services',                   [\App\Http\Controllers\Admin\ClinicServiceController::class, 'store'])->name('services.store');
+        Route::put('/services/{clinicService}',    [\App\Http\Controllers\Admin\ClinicServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{clinicService}', [\App\Http\Controllers\Admin\ClinicServiceController::class, 'destroy'])->name('services.destroy');
 
         // Settings
         Route::post('/settings/facility-photo', function (\Illuminate\Http\Request $request) {
@@ -184,7 +188,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['role:student', 'password.changed'])
         ->prefix('student')->name('student.')->group(function () {
 
-        // ── Always accessible ─────────────────────────────────────────────
         Route::get('/profile',          [Student\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile',          [Student\ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/photo',   [Student\ProfileController::class, 'uploadPhoto'])->name('profile.photo.update');
@@ -216,9 +219,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             return back()->with('success', 'All notifications deleted.');
         })->name('notifications.destroyAll');
 
-        // ── Gated: requires ALL three completed ───────────────────────────
         Route::middleware('profile.completed')->group(function () {
-
             Route::get('/dashboard', [Student\DashboardController::class, 'index'])->name('dashboard');
 
             Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
@@ -267,9 +268,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             return back()->with('success', 'All notifications deleted.');
         })->name('notifications.destroyAll');
 
-        // No profile.completed gate — faculty can access everything freely
         Route::get('/dashboard', [Faculty\DashboardController::class, 'index'])->name('dashboard');
-
         Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
 
         Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');

@@ -1,10 +1,14 @@
 <?php
+
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Program;
 use App\Models\StudentProfile;
+use App\Models\SurveyAnswer;
+use App\Models\SurveyQuestion;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,7 +18,7 @@ class ProfileController extends Controller
     {
         return Inertia::render('Student/Profile', [
             'profile'  => $request->user()
-                            ->append('profile_photo_url')   // ← add this
+                            ->append('profile_photo_url')
                             ->load('studentProfile.program'),
             'programs' => Program::orderBy('name')->get(['id', 'name']),
         ]);
@@ -26,14 +30,19 @@ class ProfileController extends Controller
 
         $request->validate([
             'name'               => ['required', 'string', 'max:255'],
-            'student_id'         => ['required', 'string', 'max:50'],
+            'student_id'         => [
+                'required', 'string', 'max:50',
+                // Unique across student_profiles, ignoring this user's own row
+                Rule::unique('student_profiles', 'student_id')
+                    ->where(fn($q) => $q->where('user_id', '!=', $user->id)),
+            ],
             'program_id'         => ['required', 'exists:programs,id'],
             'year_level'         => ['required', 'integer', 'min:1', 'max:6'],
             'block'              => ['required', 'string', 'max:10'],
             'birth_date'         => ['required', 'date', 'before:today'],
             'sex'                => ['required', 'in:male,female,other'],
             'contact_number'     => ['required', 'string', 'max:20'],
-            'address'            => ['required', 'string'],
+            'address'            => ['required', 'string', 'max:500'],
             'guardian_name'      => ['required', 'string', 'max:255'],
             'guardian_contact'   => ['required', 'string', 'max:20'],
             'civil_status'       => ['required', 'in:single,married,widowed,separated'],
@@ -53,12 +62,11 @@ class ProfileController extends Controller
             ])
         );
 
-        // If survey is also complete, redirect to dashboard
-        $requiredIds = \App\Models\SurveyQuestion::where('is_active', true)
+        $requiredIds = SurveyQuestion::where('is_active', true)
             ->where('is_required', true)
             ->pluck('id');
 
-        $answeredIds = \App\Models\SurveyAnswer::where('user_id', $user->id)
+        $answeredIds = SurveyAnswer::where('user_id', $user->id)
             ->whereIn('survey_question_id', $requiredIds)
             ->whereNotNull('answer')
             ->get()

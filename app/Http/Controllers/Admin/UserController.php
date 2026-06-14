@@ -21,7 +21,9 @@ class UserController extends Controller
 
         $users = User::with(['role', 'studentProfile', 'facultyProfile'])
             ->when(!$isSuperAdmin, fn($q) => $q->whereHas('role', fn($r) => $r->where('name', '!=', 'super_admin')))
-            ->when($request->search, fn($q) => $q->where(fn($s) => $s->where('name', 'like', "%{$request->search}%")->orWhere('email', 'like', "%{$request->search}%")))
+            ->when($request->search, fn($q) => $q->where(fn($s) => $s
+                ->where('name', 'like', "%{$request->search}%")
+                ->orWhere('email', 'like', "%{$request->search}%")))
             ->when($request->role && ($isSuperAdmin || $request->role !== 'super_admin'),
                 fn($q) => $q->whereHas('role', fn($r) => $r->where('name', $request->role)))
             ->when($request->filled('is_active'), fn($q) => $q->where('is_active', $request->boolean('is_active')))
@@ -81,8 +83,13 @@ class UserController extends Controller
 
         SendCredentialsEmail::dispatch($user, $password);
 
-        AuditLog::create(['user_id' => $request->user()->id, 'action' => 'user_created',
-            'model_type' => 'User', 'model_id' => $user->id, 'ip_address' => $request->ip()]);
+        AuditLog::create([
+            'user_id'    => $request->user()->id,
+            'action'     => 'user_created',
+            'model_type' => 'User',
+            'model_id'   => $user->id,
+            'ip_address' => $request->ip(),
+        ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User created and credentials sent.');
     }
@@ -103,7 +110,7 @@ class UserController extends Controller
 
         $data = $request->validate([
             'name'      => ['required', 'string', 'max:255'],
-            'email' => [
+            'email'     => [
                 'required',
                 'email',
                 Rule::unique('users')->ignore($user->id)->whereNull('deleted_at'),
@@ -113,8 +120,13 @@ class UserController extends Controller
 
         $user->update($data);
 
-        AuditLog::create(['user_id' => $request->user()->id, 'action' => 'user_updated',
-            'model_type' => 'User', 'model_id' => $user->id, 'ip_address' => $request->ip()]);
+        AuditLog::create([
+            'user_id'    => $request->user()->id,
+            'action'     => 'user_updated',
+            'model_type' => 'User',
+            'model_id'   => $user->id,
+            'ip_address' => $request->ip(),
+        ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User updated.');
     }
@@ -127,14 +139,17 @@ class UserController extends Controller
             return back()->with('error', 'You cannot delete your own account.');
         }
 
-        // Delete related profiles so student_id/faculty data is freed up
         $user->studentProfile?->delete();
         $user->facultyProfile?->delete();
-
         $user->delete();
 
-        AuditLog::create(['user_id' => $request->user()->id, 'action' => 'user_deleted',
-            'model_type' => 'User', 'model_id' => $user->id, 'ip_address' => $request->ip()]);
+        AuditLog::create([
+            'user_id'    => $request->user()->id,
+            'action'     => 'user_deleted',
+            'model_type' => 'User',
+            'model_id'   => $user->id,
+            'ip_address' => $request->ip(),
+        ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User deleted.');
     }
@@ -149,9 +164,13 @@ class UserController extends Controller
 
         $user->update(['is_active' => !$user->is_active]);
 
-        AuditLog::create(['user_id' => $request->user()->id,
-            'action' => $user->is_active ? 'user_activated' : 'user_deactivated',
-            'model_type' => 'User', 'model_id' => $user->id, 'ip_address' => $request->ip()]);
+        AuditLog::create([
+            'user_id'    => $request->user()->id,
+            'action'     => $user->is_active ? 'user_activated' : 'user_deactivated',
+            'model_type' => 'User',
+            'model_id'   => $user->id,
+            'ip_address' => $request->ip(),
+        ]);
 
         return back()->with('success', 'User status updated.');
     }
@@ -163,12 +182,21 @@ class UserController extends Controller
             'role' => ['required', Rule::in(['student', 'faculty_staff'])],
         ]);
 
-        $emails   = array_filter(array_map('trim', explode("\n", file_get_contents($request->file('file')->getRealPath()))));
-        $role     = Role::where('name', $request->role)->firstOrFail();
-        $results  = ['created' => 0, 'skipped' => 0, 'failed' => 0];
+        // Normalize line endings, split, trim, remove blanks, cap at 500
+        $raw    = file_get_contents($request->file('file')->getRealPath());
+        $lines  = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw)));
+        $emails = array_slice(array_values($lines), 0, 500);
+
+        $role    = Role::where('name', $request->role)->firstOrFail();
+        $results = ['created' => 0, 'skipped' => 0, 'failed' => 0];
 
         foreach ($emails as $email) {
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $results['failed']++; continue; }
+            // Strict email validation
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 255) {
+                $results['failed']++;
+                continue;
+            }
+
             if (User::where('email', $email)->whereNull('deleted_at')->exists()) {
                 $results['skipped']++;
                 continue;
@@ -176,16 +204,25 @@ class UserController extends Controller
 
             $password = Str::random(12);
             $user     = User::create([
-                'name'     => ucwords(str_replace(['.','_','-'],' ', explode('@', $email)[0])),
-                'email'    => $email,
-                'role_id'  => $role->id,
-                'password' => Hash::make($password),
+                'name'                  => ucwords(str_replace(['.', '_', '-'], ' ', explode('@', $email)[0])),
+                'email'                 => $email,
+                'role_id'               => $role->id,
+                'password'              => Hash::make($password),
                 'force_password_change' => true,
+                'is_active'             => true,
             ]);
 
             SendCredentialsEmail::dispatch($user, $password);
             $results['created']++;
         }
+
+        AuditLog::create([
+            'user_id'    => $request->user()->id,
+            'action'     => 'bulk_import',
+            'model_type' => 'User',
+            'model_id'   => null,
+            'ip_address' => $request->ip(),
+        ]);
 
         return back()->with('success', "Import complete: {$results['created']} created, {$results['skipped']} skipped, {$results['failed']} failed.");
     }
