@@ -48,10 +48,8 @@ export default function FacultyLayout({ children, title }) {
                         {item.name}
                     </Link>
                 ))}
-                {/* Divider + Home */}
                 <div className="pt-2 mt-2 border-t border-gray-100">
-                    <Link href={route('home')}
-                        className={clsx('sidebar-link', { active: route().current('home') })}>
+                    <Link href={route('home')} className={clsx('sidebar-link', { active: route().current('home') })}>
                         <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
                         Public Home
                     </Link>
@@ -60,11 +58,8 @@ export default function FacultyLayout({ children, title }) {
             <div className="border-t border-gray-100 p-4">
                 <div className="flex items-center gap-3">
                     {auth.user?.profile_photo_url ? (
-                        <img
-                            src={auth.user.profile_photo_url}
-                            alt={auth.user.name}
-                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                        />
+                        <img src={auth.user.profile_photo_url} alt={auth.user.name}
+                            className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
                     ) : (
                         <div className="w-8 h-8 bg-clinic-100 rounded-full flex items-center justify-center flex-shrink-0">
                             <span className="text-clinic-700 font-semibold text-xs">{auth.user?.name?.charAt(0)}</span>
@@ -87,6 +82,8 @@ export default function FacultyLayout({ children, title }) {
             <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 flex-shrink-0">
                 <SidebarContent />
             </aside>
+
+            {/* Mobile sidebar */}
             <div className={clsx(
                 'fixed inset-0 z-40 lg:hidden transition-opacity duration-300',
                 open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -102,18 +99,24 @@ export default function FacultyLayout({ children, title }) {
                     <SidebarContent />
                 </aside>
             </div>
+
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500"><Bars3Icon className="w-6 h-6" /></button>
+                        <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500">
+                            <Bars3Icon className="w-6 h-6" />
+                        </button>
                         <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
                     </div>
                     <NotificationBell notificationsRoute="faculty.notifications" role="faculty_staff" />
                 </header>
-                <main className="flex-1 overflow-y-auto p-6">
-                    <div key={url} className="page-fade">{children}</div>
+
+                {/* p-4 on mobile, p-6 on sm+ */}
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                    <div key={url} className="page-fade h-full">{children}</div>
                 </main>
             </div>
+
             {showLogout && (
                 <LogoutConfirmModal
                     onConfirm={() => router.post(route('logout'))}

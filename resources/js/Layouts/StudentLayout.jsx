@@ -21,7 +21,6 @@ const nav = [
     { name: 'Profile',       href: 'student.profile',            icon: UserCircleIcon },
 ];
 
-// These are never locked regardless of onboarding state
 const ALWAYS_ACCESSIBLE = new Set([
     'student.profile',
     'student.survey.index',
@@ -33,44 +32,26 @@ function OnboardingBanner({ onboarding }) {
     if (!onboarding || onboarding.done) return null;
 
     const steps = [
-        {
-            label: 'Complete Profile',
-            done: onboarding.profile_completed,
-            href: route('student.profile'),
-        },
-        {
-            label: 'Health Survey',
-            done: onboarding.survey_completed,
-            href: route('student.survey.index'),
-        },
-        {
-            label: 'Upload Requirements',
-            done: onboarding.requirements_completed,
-            href: route('student.requirements.index'),
-        },
+        { label: 'Complete Profile',     done: onboarding.profile_completed,      href: route('student.profile') },
+        { label: 'Health Survey',        done: onboarding.survey_completed,       href: route('student.survey.index') },
+        { label: 'Upload Requirements',  done: onboarding.requirements_completed, href: route('student.requirements.index') },
     ];
 
     const nextStep = steps.find(s => !s.done);
 
     return (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex-shrink-0">
-            {/* Header */}
             <div className="flex items-center gap-2 mb-2.5">
                 <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
                 <p className="text-xs sm:text-sm font-semibold text-amber-800">
                     Complete your setup to access all features
                 </p>
             </div>
-
-            {/* Steps — always horizontal, shrink on mobile */}
             <div className="flex items-center gap-1 sm:gap-2">
                 {steps.map((step, i) => (
                     <div key={i} className="flex items-center gap-1 sm:gap-2 min-w-0">
                         {i > 0 && (
-                            <div className={clsx(
-                                'h-px w-3 sm:w-5 flex-shrink-0',
-                                steps[i - 1].done ? 'bg-green-400' : 'bg-amber-300'
-                            )} />
+                            <div className={clsx('h-px w-3 sm:w-5 flex-shrink-0', steps[i - 1].done ? 'bg-green-400' : 'bg-amber-300')} />
                         )}
                         {step.done ? (
                             <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-green-800 bg-green-100 border border-green-300 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 whitespace-nowrap">
@@ -79,23 +60,16 @@ function OnboardingBanner({ onboarding }) {
                                 <span className="xs:hidden sm:hidden">✓</span>
                             </span>
                         ) : (
-                            <Link
-                                href={step.href}
-                                className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors whitespace-nowrap"
-                            >
+                            <Link href={step.href} className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors whitespace-nowrap">
                                 <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-amber-500 flex-shrink-0" />
                                 {step.label}
                             </Link>
                         )}
                     </div>
                 ))}
-
                 {nextStep && (
                     <p className="ml-auto text-[10px] sm:text-xs text-amber-700 whitespace-nowrap pl-1">
-                        <Link
-                            href={nextStep.href}
-                            className="font-semibold underline underline-offset-2 hover:text-amber-900"
-                        >
+                        <Link href={nextStep.href} className="font-semibold underline underline-offset-2 hover:text-amber-900">
                             <span className="hidden sm:inline">Next: </span>{nextStep.label}
                         </Link>
                     </p>
@@ -116,8 +90,7 @@ export default function StudentLayout({ children, title }) {
         if (flash?.error)   toast.error(flash.error);
     }, [flash?.success, flash?.error]);
 
-    const isLocked = (href) =>
-        onboarding && !onboarding.done && !ALWAYS_ACCESSIBLE.has(href);
+    const isLocked = (href) => onboarding && !onboarding.done && !ALWAYS_ACCESSIBLE.has(href);
 
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
@@ -133,14 +106,11 @@ export default function StudentLayout({ children, title }) {
                     const locked = isLocked(item.href);
                     if (locked) {
                         return (
-                            <div key={item.name}
-                                title="Finish setup to unlock this section"
+                            <div key={item.name} title="Finish setup to unlock this section"
                                 className="sidebar-link opacity-40 cursor-not-allowed select-none">
                                 <item.icon className="w-5 h-5 flex-shrink-0" />
                                 <span className="flex-1">{item.name}</span>
-                                <span className="text-[10px] bg-gray-100 text-gray-500 rounded px-1.5 py-0.5 font-medium">
-                                    Locked
-                                </span>
+                                <span className="text-[10px] bg-gray-100 text-gray-500 rounded px-1.5 py-0.5 font-medium">Locked</span>
                             </div>
                         );
                     }
@@ -153,8 +123,7 @@ export default function StudentLayout({ children, title }) {
                     );
                 })}
                 <div className="pt-2 mt-2 border-t border-gray-100">
-                    <Link href={route('home')}
-                        className={clsx('sidebar-link', { active: route().current('home') })}>
+                    <Link href={route('home')} className={clsx('sidebar-link', { active: route().current('home') })}>
                         <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
                         Public Home
                     </Link>
@@ -174,8 +143,7 @@ export default function StudentLayout({ children, title }) {
                         <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
                         <p className="text-xs text-gray-500">Student</p>
                     </div>
-                    <button onClick={() => setShowLogout(true)}
-                        className="text-gray-400 hover:text-red-500 transition-colors">
+                    <button onClick={() => setShowLogout(true)} className="text-gray-400 hover:text-red-500 transition-colors">
                         <ArrowRightOnRectangleIcon className="w-5 h-5" />
                     </button>
                 </div>
@@ -188,8 +156,8 @@ export default function StudentLayout({ children, title }) {
             <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 flex-shrink-0">
                 <SidebarContent />
             </aside>
-            
-            {/* Mobile sidebar backdrop + drawer */}
+
+            {/* Mobile sidebar */}
             <div className={clsx(
                 'fixed inset-0 z-40 lg:hidden transition-opacity duration-300',
                 open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -205,8 +173,9 @@ export default function StudentLayout({ children, title }) {
                     <SidebarContent />
                 </aside>
             </div>
+
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500">
                             <Bars3Icon className="w-6 h-6" />
@@ -218,10 +187,12 @@ export default function StudentLayout({ children, title }) {
 
                 <OnboardingBanner onboarding={onboarding} />
 
-                <main className="flex-1 overflow-y-auto p-6">
-                    <div key={url} className="page-fade">{children}</div>
+                {/* p-4 on mobile, p-6 on sm+ — pages that need full-height use -m-4 sm:-m-6 */}
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                    <div key={url} className="page-fade h-full">{children}</div>
                 </main>
             </div>
+
             {showLogout && (
                 <LogoutConfirmModal
                     onConfirm={() => router.post(route('logout'))}

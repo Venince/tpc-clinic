@@ -33,7 +33,7 @@ export default function AdminLayout({ children, title }) {
     const { auth, flash } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { url } = usePage();
-    
+
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
         if (flash?.error)   toast.error(flash.error);
@@ -44,7 +44,6 @@ export default function AdminLayout({ children, title }) {
 
     const SidebarContent = () => (
         <div className="flex flex-col h-full">
-            {/* Logo */}
             <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
                 <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
                 <div>
@@ -52,8 +51,6 @@ export default function AdminLayout({ children, title }) {
                     <p className="text-xs text-gray-500">Management System</p>
                 </div>
             </div>
-
-            {/* Nav */}
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
                 {navigation.map((item) => (
                     <Link key={item.name} href={route(item.href)}
@@ -62,17 +59,13 @@ export default function AdminLayout({ children, title }) {
                         {item.name}
                     </Link>
                 ))}
-                {/* Divider + Home */}
                 <div className="pt-2 mt-2 border-t border-gray-100">
-                    <Link href={route('home')}
-                        className={clsx('sidebar-link', { active: route().current('home') })}>
+                    <Link href={route('home')} className={clsx('sidebar-link', { active: route().current('home') })}>
                         <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
                         Public Home
                     </Link>
                 </div>
             </nav>
-
-            {/* User */}
             <div className="border-t border-gray-100 p-4">
                 <div className="flex items-center gap-3">
                     <UserAvatar user={auth.user} size="sm" className="flex-shrink-0" />
@@ -80,11 +73,7 @@ export default function AdminLayout({ children, title }) {
                         <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
                         <p className="text-xs text-gray-500 truncate">{auth.user?.role?.display_name}</p>
                     </div>
-                    <button
-                        onClick={() => setShowLogout(true)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                        title="Logout"
-                    >
+                    <button onClick={() => setShowLogout(true)} className="text-gray-400 hover:text-red-500 transition-colors" title="Logout">
                         <ArrowRightOnRectangleIcon className="w-5 h-5" />
                     </button>
                 </div>
@@ -118,7 +107,7 @@ export default function AdminLayout({ children, title }) {
 
             {/* Main */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-gray-700">
                             <Bars3Icon className="w-6 h-6" />
@@ -128,12 +117,14 @@ export default function AdminLayout({ children, title }) {
                     <NotificationBell notificationsRoute="admin.notifications" role={auth.user?.role?.name} />
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-6">
-                    <div key={url} className="page-fade">
+                {/* p-4 on mobile, p-6 on sm+ */}
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+                    <div key={url} className="page-fade h-full">
                         {children}
                     </div>
                 </main>
             </div>
+
             {showLogout && (
                 <LogoutConfirmModal
                     onConfirm={logout}

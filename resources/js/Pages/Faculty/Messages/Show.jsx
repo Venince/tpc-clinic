@@ -1,51 +1,118 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
+import { useEffect, useRef } from 'react';
 import { ArrowLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 export default function FacultyMessageShow({ conversation, messages }) {
     const { auth } = usePage().props;
     const { data, setData, post, processing, reset } = useForm({ body: '' });
-    const submit = (e) => { e.preventDefault(); post(route('faculty.messages.reply', conversation.id), { onSuccess: () => reset() }); };
+    const bottomRef = useRef(null);
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    const submit = (e) => {
+        e.preventDefault();
+        if (!data.body.trim()) return;
+        post(route('faculty.messages.reply', conversation.id), {
+            onSuccess: () => reset(),
+            preserveScroll: true,
+        });
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submit(e);
+        }
+    };
+
+    const orderedMessages = [...(messages.data ?? [])].reverse();
 
     return (
         <FacultyLayout title={conversation.subject}>
-            <Head title={conversation.subject}/>
-            <div className="max-w-2xl mx-auto">
-                <Link href={route('faculty.messages.index')} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
-                    <ArrowLeftIcon className="w-4 h-4"/> Back
-                </Link>
-                <div className="card">
-                    <div className="card-header">
-                        <h2 className="font-semibold text-gray-900 break-words">{conversation.subject}</h2>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                            With: {conversation.participants?.filter(p => p.id !== auth.user?.id).map(p => p.name).join(', ')}
+            <Head title={conversation.subject} />
+
+            <div className="flex flex-col h-full -m-6">
+
+                {/* Back link + subject header */}
+                <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0">
+                    <Link
+                        href={route('faculty.messages.index')}
+                        className="p-1.5 rounded-md text-gray-500 hover:text-clinic-600 hover:bg-gray-100 transition-colors flex-shrink-0"
+                    >
+                        <ArrowLeftIcon className="w-5 h-5" />
+                    </Link>
+                    <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
+                            {conversation.subject}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                            {conversation.participants
+                                ?.filter(p => p.id !== auth.user?.id)
+                                .map(p => p.name)
+                                .join(', ')}
                         </p>
                     </div>
-                    <div className="p-3 sm:p-4 space-y-3 max-h-[60vh] sm:max-h-96 overflow-y-auto">
-                        {messages.data?.slice().reverse().map(msg => {
-                            const isMine = msg.sender_id === auth.user?.id;
-                            return (
-                                <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[85%] sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm break-words ${isMine ? 'bg-clinic-600 text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'}`}>
-                                        {!isMine && <p className="text-xs font-semibold mb-1 opacity-70">{msg.sender?.name}</p>}
-                                        <p>{msg.body}</p>
-                                        <p className={`text-xs mt-1 ${isMine ? 'text-clinic-200' : 'text-gray-400'}`}>
-                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
+                </div>
+
+                {/* Message list */}
+                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+                    {orderedMessages.map(msg => {
+                        const isOwn = msg.sender_id === auth.user.id;
+                        return (
+                            <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[80%] sm:max-w-[65%] flex flex-col gap-0.5 ${isOwn ? 'items-end' : 'items-start'}`}>
+                                    {!isOwn && (
+                                        <p className="text-xs text-gray-500 px-1">{msg.sender?.name}</p>
+                                    )}
+                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                                        isOwn
+                                            ? 'bg-clinic-600 text-white rounded-br-sm'
+                                            : 'bg-white text-gray-900 rounded-bl-sm shadow-sm border border-gray-100'
+                                    }`}>
+                                        {msg.body}
                                     </div>
+                                    <p className="text-[11px] text-gray-400 px-1">
+                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
                                 </div>
-                            );
-                        })}
-                    </div>
-                    <div className="p-3 sm:p-4 border-t border-gray-100">
-                        <form onSubmit={submit} className="flex gap-2">
-                            <textarea value={data.body} onChange={e => setData('body', e.target.value)}
-                                className="input flex-1 resize-none" rows={2} placeholder="Type your reply…"/>
-                            <button type="submit" disabled={processing || !data.body.trim()} className="btn-primary self-end px-3 py-2 flex-shrink-0">
-                                <PaperAirplaneIcon className="w-5 h-5"/>
-                            </button>
-                        </form>
-                    </div>
+                            </div>
+                        );
+                    })}
+                    <div ref={bottomRef} />
+                </div>
+
+                {/* Reply box */}
+                <div className="px-4 py-3 bg-white border-t border-gray-200 flex-shrink-0">
+                    <form onSubmit={submit} className="flex gap-2 items-end">
+                        <textarea
+                            value={data.body}
+                            onChange={e => setData('body', e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            rows={1}
+                            className="input flex-1 resize-none"
+                            placeholder="Type your reply…"
+                            style={{ minHeight: '2.5rem', maxHeight: '8rem' }}
+                            onInput={e => {
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            disabled={processing || !data.body.trim()}
+                            className="btn-primary p-2.5 flex-shrink-0 disabled:opacity-50"
+                            title="Send"
+                        >
+                            <PaperAirplaneIcon className="w-4 h-4" />
+                        </button>
+                    </form>
+                    <p className="text-xs text-gray-400 mt-1.5 hidden sm:block">
+                        Press <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px]">Enter</kbd> to send,{' '}
+                        <kbd className="px-1 py-0.5 bg-gray-100 rounded text-[10px]">Shift+Enter</kbd> for new line
+                    </p>
                 </div>
             </div>
         </FacultyLayout>
