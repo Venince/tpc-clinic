@@ -49,8 +49,16 @@ class MedicineService
 
         $request = MedicineRequest::create(array_merge($data, ['user_id' => $userId, 'status' => 'pending']));
         $this->auditService->log('medicine_requested', $userId, 'MedicineRequest', $request->id);
-        return $request->load('medicine', 'user');
-    }
+
+        $loaded = $request->load('medicine', 'user');
+
+        $admins = User::whereHas('role', fn($q) => $q->whereIn('name', ['admin', 'super_admin']))->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new \App\Notifications\NewMedicineRequestNotification($loaded));
+        }
+
+        return $loaded;
+}
 
     public function approveRequest(MedicineRequest $medicineRequest, int $adminId): MedicineRequest
     {

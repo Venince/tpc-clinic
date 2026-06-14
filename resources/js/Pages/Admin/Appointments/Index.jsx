@@ -129,7 +129,7 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
 
             {/* Decline modal */}
             {declineId && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-3">Decline Appointment</h3>
                         <form onSubmit={decline}>
@@ -148,7 +148,7 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
 
             {/* Delete confirmation modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-2">Delete Appointment?</h3>
                         <p className="text-sm text-gray-600 mb-1 break-words">

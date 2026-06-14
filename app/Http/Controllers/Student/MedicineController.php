@@ -5,6 +5,8 @@ use App\Models\Medicine;
 use App\Models\MedicineRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\User;
+use App\Notifications\NewMedicineRequestNotification;
 
 class MedicineController extends Controller
 {
@@ -32,8 +34,15 @@ class MedicineController extends Controller
         $medicine = Medicine::findOrFail($data['medicine_id']);
         if ($medicine->is_out_of_stock) return back()->with('error', 'This medicine is currently out of stock.');
 
-        MedicineRequest::create(array_merge($data, ['user_id' => $request->user()->id, 'status' => 'pending']));
-        return back()->with('success', 'Medicine requested successfully.');
+            $medicineRequest = MedicineRequest::create(array_merge($data, ['user_id' => $request->user()->id, 'status' => 'pending']));
+            $medicineRequest->load('medicine', 'user');
+
+            $admins = User::whereHas('role', fn($q) => $q->whereIn('name', ['admin', 'super_admin']))->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new NewMedicineRequestNotification($medicineRequest));
+            }
+
+            return back()->with('success', 'Medicine requested successfully.');
     }
 
     public function cancel(Request $request, MedicineRequest $medicineRequest)

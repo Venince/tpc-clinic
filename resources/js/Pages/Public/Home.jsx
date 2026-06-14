@@ -1,5 +1,5 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     PlusIcon, PencilIcon, TrashIcon, XMarkIcon,
     CalendarDaysIcon, PhoneIcon, MapPinIcon,
@@ -15,6 +15,15 @@ const tagStyles = {
 export default function Home({ announcements, services, auth, facilityPhoto }) {
     const isAdmin = auth?.user?.role?.name === 'admin' || auth?.user?.role?.name === 'super_admin';
     const [modal, setModal] = useState(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); observer.unobserve(e.target); } }),
+            { threshold: 0.1 }
+        );
+        document.querySelectorAll('.section-animate').forEach(el => observer.observe(el));
+        return () => observer.disconnect();
+    }, []);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         title: '', description: '', icon: 'stethoscope',
@@ -46,7 +55,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
             <div className="min-h-screen bg-white font-sans">
 
                 {/* ── Nav ── */}
-                <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between animate-slide-up" style={{ animationDelay: '0ms' }}>
+                <nav className="section-animate sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4 md:gap-8">
                         <Link href={route('home')} className="flex items-center gap-2.5">
                             <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain" />
@@ -73,7 +82,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </nav>
 
                 {/* ── Hero ── */}
-                <section className="grid grid-cols-1 md:grid-cols-2 items-center animate-slide-up" style={{ animationDelay: '100ms' }}>
+                <section className="section-animate grid grid-cols-1 md:grid-cols-2 items-center">
                     <div className="flex flex-col justify-center px-6 md:px-12 py-10 md:py-16">
                         <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-3 py-1.5 mb-5 w-fit">
                             <span className="w-1.5 h-1.5 rounded-full bg-clinic-500 animate-pulse"></span>
@@ -96,27 +105,29 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                     </div>
                     <div className="relative">
                         {facilityPhoto ? (
-                            <div className="relative w-full">
+                            <div className="w-full flex flex-col px-4 md:px-0">
                                 <img
                                     src={`/storage/${facilityPhoto}`}
                                     alt="TPC e-Clinic facility"
-                                    className="w-full max-h-[480px] object-contain"
+                                    className="w-full max-h-[480px] object-contain rounded-xl md:rounded-none"
                                 />
                                 {isAdmin && (
-                                    <label className="absolute bottom-3 right-3 cursor-pointer inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white shadow-sm transition-colors">
-                                        <PencilIcon className="w-3.5 h-3.5" />
-                                        Change photo
-                                        <input type="file" accept="image/*" className="hidden"
-                                            onChange={e => {
-                                                const file = e.target.files[0];
-                                                if (!file) return;
-                                                const form = new FormData();
-                                                form.append('photo', file);
-                                                form.append('_token', document.querySelector('meta[name=csrf-token]')?.content ?? '');
-                                                router.post(route('admin.settings.facility-photo'), form, { forceFormData: true });
-                                            }}
-                                        />
-                                    </label>
+                                    <div className="flex justify-end px-3 pt-2">
+                                        <label className="cursor-pointer inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50 shadow-sm transition-colors">
+                                            <PencilIcon className="w-3.5 h-3.5" />
+                                            Change photo
+                                            <input type="file" accept="image/*" className="hidden"
+                                                onChange={e => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+                                                    const form = new FormData();
+                                                    form.append('photo', file);
+                                                    form.append('_token', document.querySelector('meta[name=csrf-token]')?.content ?? '');
+                                                    router.post(route('admin.settings.facility-photo'), form, { forceFormData: true });
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
                                 )}
                             </div>
                         ) : (
@@ -151,7 +162,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </section>
 
                 {/* ── Services ── */}
-                <section id="services" className="bg-gray-50 px-4 md:px-10 py-10 md:py-14 animate-slide-up" style={{ animationDelay: '200ms' }}>
+                <section id="services" className="section-animate bg-gray-50 px-4 md:px-10 py-10 md:py-14">
                     <div className="flex items-end justify-between mb-8">
                         <div>
                             <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Clinical services</p>
@@ -194,7 +205,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </section>
 
                 {/* ── Announcements ── */}
-                <section className="px-4 md:px-10 py-10 md:py-14 animate-slide-up" style={{ animationDelay: '300ms' }}>
+                <section className="section-animate px-4 md:px-10 py-10 md:py-14">
                     <div className="flex items-end justify-between mb-8">
                         <div>
                             <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Clinic announcements</p>
@@ -226,14 +237,14 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                 </section>
 
                 {/* ── Facilities ── */}
-                <section id="about" className="bg-gray-50 px-4 md:px-10 py-10 md:py-14 animate-slide-up" style={{ animationDelay: '400ms' }}>
+                <section id="about" className="section-animate bg-gray-50 px-4 md:px-10 py-10 md:py-14">
                     <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Visit our facilities</p>
                     <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-8">Find us on campus</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-5">
                             {[
                                 { icon: MapPinIcon,   label: 'Address',       value: 'San Isidro, Talibon, Bohol' },
-                                { icon: ClockIcon,    label: 'Clinic hours',  value: 'Mon – Fri: 8:00 AM – 5:00 PM\nSat: 8:00 AM – 12:00 PM' },
+                                { icon: ClockIcon,    label: 'Clinic hours',  value: 'Mon – Fri: 8:00 AM – 5:00 PM' },
                                 { icon: EnvelopeIcon, label: 'Contact us',    value: '(038) 000-0000 · tpcwebsite05@gmail.com' },
                             ].map(item => (
                                 <div key={item.label} className="flex gap-4 items-start">
@@ -274,8 +285,13 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         </div>
                         <div>
                             <p className="text-xs font-semibold text-clinic-300 uppercase tracking-widest mb-3">Quick links</p>
-                            {['Home','Services','Announcements','Sign in'].map(l => (
-                                <a key={l} href="#" className="block text-sm text-clinic-200 hover:text-white mb-2 transition-colors">{l}</a>
+                            {[
+                                { label: 'Home',          href: route('home') },
+                                { label: 'Services',      href: '#services' },
+                                { label: 'Announcements', href: route('announcements') },
+                                // { label: 'Sign in',       href: route('login') },
+                            ].map(l => (
+                                <a key={l.label} href={l.href} className="block text-sm text-clinic-200 hover:text-white mb-2 transition-colors">{l.label}</a>
                             ))}
                         </div>
                         <div>

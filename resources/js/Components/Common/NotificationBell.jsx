@@ -22,6 +22,8 @@ function resolveUrl(notif, role) {
             return isAdmin
                 ? route('admin.medicine.requests')
                 : route(`${prefix}.medicine.index`);
+        case 'NewMedicineRequestNotification':
+            return route('admin.medicine.requests');
         case 'LowStockAlertNotification':
             return route('admin.medicine.index');
         case 'RequirementStatusNotification':

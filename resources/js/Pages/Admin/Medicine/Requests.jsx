@@ -6,7 +6,7 @@ import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function MedicineRequests({ requests, filters, stats }) {
     const { auth } = usePage().props;
-    const isSuperAdmin = auth.user?.role === 'super_admin';
+    const isSuperAdmin = auth.user?.role?.name === 'super_admin';
 
     const [status, setStatus] = useState(filters.status || '');
     const [rejectId,   setRejectId]   = useState(null);
@@ -43,9 +43,8 @@ export default function MedicineRequests({ requests, filters, stats }) {
                 <button onClick={() => { setReleaseId(r.id); releaseForm.setData('quantity_released', r.quantity_requested); }} className="btn-primary btn-sm text-xs">Release</button>
             )}
             {isSuperAdmin && (
-                <button onClick={() => handleDelete(r.id)} disabled={deletingId === r.id} className="btn-danger btn-sm text-xs flex items-center gap-1">
-                    <TrashIcon className="w-3.5 h-3.5" />
-                    {deletingId === r.id ? 'Deleting…' : 'Delete'}
+                <button onClick={() => handleDelete(r.id)} disabled={deletingId === r.id} className="btn-danger btn-sm text-xs flex items-center">
+                    <TrashIcon className="w-4 h-4" />
                 </button>
             )}
         </div>

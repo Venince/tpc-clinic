@@ -32,7 +32,8 @@ const navigation = [
 export default function AdminLayout({ children, title }) {
     const { auth, flash } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
-
+    const { url } = usePage();
+    
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
         if (flash?.error)   toast.error(flash.error);
@@ -124,7 +125,9 @@ export default function AdminLayout({ children, title }) {
                 </header>
 
                 <main className="flex-1 overflow-y-auto p-6">
-                    {children}
+                    <div key={url} className="page-fade">
+                        {children}
+                    </div>
                 </main>
             </div>
             {showLogout && (

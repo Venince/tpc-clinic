@@ -95,7 +95,7 @@ export default function AnnouncementsIndex({ announcements }) {
 
             {/* Modal */}
             {modal !== null && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     {/* Sheet on mobile, centered dialog on sm+ */}
                     <div className="bg-white w-full sm:rounded-xl sm:max-w-lg shadow-xl max-h-[90dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl">
 

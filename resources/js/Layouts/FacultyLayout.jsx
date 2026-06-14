@@ -22,6 +22,7 @@ const nav = [
 
 export default function FacultyLayout({ children, title }) {
     const { auth, flash } = usePage().props;
+    const { url } = usePage();
     const [open, setOpen] = useState(false);
     const [showLogout, setShowLogout] = useState(false);
 
@@ -103,7 +104,9 @@ export default function FacultyLayout({ children, title }) {
                     </div>
                     <NotificationBell notificationsRoute="faculty.notifications" role="faculty_staff" />
                 </header>
-                <main className="flex-1 overflow-y-auto p-6">{children}</main>
+                <main className="flex-1 overflow-y-auto p-6">
+                    <div key={url} className="page-fade">{children}</div>
+                </main>
             </div>
             {showLogout && (
                 <LogoutConfirmModal

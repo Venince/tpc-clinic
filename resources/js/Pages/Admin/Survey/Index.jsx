@@ -241,7 +241,7 @@ export default function SurveyIndex({ questions, responses, filters }) {
 
             {/* Question Modal */}
             {modal !== null && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold mb-4">{modal === 'new' ? 'Add Question' : 'Edit Question'}</h3>
                         <form onSubmit={submit} className="space-y-3">

@@ -19,8 +19,20 @@ class ProgramController extends Controller {
         return Inertia::render('Admin/Programs/Index', ['programs' => $programs]);
     }
     public function store(Request $request) {
-        $request->validate(['code'=>['required','string','max:20','unique:programs,code'],'name'=>['required','string','max:255'],'description'=>['nullable','string']]);
-        Program::create($request->only('code','name','description'));
+        $request->validate([
+            'code' => ['required','string','max:20', Rule::unique('programs','code')->whereNull('deleted_at')],
+            'name' => ['required','string','max:255'],
+            'description' => ['nullable','string'],
+        ]);
+
+        $trashed = Program::withTrashed()->where('code', $request->code)->first();
+        if ($trashed) {
+            $trashed->restore();
+            $trashed->update($request->only('name','description'));
+        } else {
+            Program::create($request->only('code','name','description'));
+        }
+
         return back()->with('success','Program created.');
     }
     public function update(Request $request, Program $program) {

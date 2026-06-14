@@ -352,7 +352,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
 
             {/* Clear Submissions Modal */}
             {showClear && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
                         <div className="flex items-start gap-3 px-6 pt-6 pb-4">
                             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -411,7 +411,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
 
             {/* File Preview Modal */}
             {previewing && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
                         <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-gray-100">
                             <div className="min-w-0 mr-3">
@@ -448,7 +448,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
 
             {/* Add Requirement Type Modal */}
             {showAdd && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
                         <h3 className="font-semibold mb-4">Add Requirement Type</h3>
                         <form onSubmit={submitAdd} className="space-y-3">
@@ -473,7 +473,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
 
             {/* Review Modal */}
             {reviewing && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
                         <h3 className="font-semibold mb-1">Review Submission</h3>
                         <p className="text-sm text-gray-500 mb-4">

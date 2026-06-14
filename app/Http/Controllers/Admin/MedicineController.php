@@ -120,8 +120,9 @@ class MedicineController extends Controller
         return back()->with('success', 'Medicine released.');
     }
 
-    public function destroyRequest(MedicineRequest $medicineRequest)
+    public function destroyRequest(Request $request, MedicineRequest $medicineRequest)
     {
+        abort_unless($request->user()->isSuperAdmin(), 403, 'Only super admins can delete medicine requests.');
         $medicineRequest->delete();
         return back()->with('success', 'Medicine request deleted.');
     }

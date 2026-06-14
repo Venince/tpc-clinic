@@ -167,7 +167,7 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
 
             {/* Add Slot Modal */}
             {showSlotForm && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-4">Create Appointment Slot</h3>
                         <form onSubmit={submit} className="space-y-3">
@@ -218,7 +218,7 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
 
             {/* Delete Confirmation Modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-2">Delete Slot?</h3>
                         <p className="text-sm text-gray-600 mb-1">
