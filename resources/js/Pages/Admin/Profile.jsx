@@ -3,8 +3,11 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import ProfilePhotoUploader from '@/Components/Common/ProfilePhotoUploader';
 
 export default function AdminProfile({ profile }) {
+    const isSuperAdmin = profile.role?.name === 'super_admin';
+
     const nameForm = useForm({
-        name: profile.name ?? '',
+        name:  profile.name  ?? '',
+        email: profile.email ?? '',
     });
 
     const passwordForm = useForm({
@@ -66,7 +69,9 @@ export default function AdminProfile({ profile }) {
                 <div className="card">
                     <div className="card-header">
                         <h3 className="font-semibold text-gray-900">Account Information</h3>
-                        <p className="text-xs text-gray-400 mt-0.5">Update your display name</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                            {isSuperAdmin ? 'Update your display name and email' : 'Update your display name'}
+                        </p>
                     </div>
                     <div className="card-body">
                         <form onSubmit={submitName} className="space-y-4">
@@ -84,12 +89,29 @@ export default function AdminProfile({ profile }) {
                             </div>
                             <div>
                                 <label className="label">Email</label>
-                                <input
-                                    value={profile.email}
-                                    disabled
-                                    className="input opacity-60 cursor-not-allowed"
-                                />
-                                <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+                                {isSuperAdmin ? (
+                                    <>
+                                        <input
+                                            type="email"
+                                            value={nameForm.data.email}
+                                            onChange={e => nameForm.setData('email', e.target.value)}
+                                            className={`input ${nameForm.errors.email ? 'input-error' : ''}`}
+                                            placeholder="you@tpc.edu.ph"
+                                        />
+                                        {nameForm.errors.email && (
+                                            <p className="error-msg">{nameForm.errors.email}</p>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <input
+                                            value={profile.email}
+                                            disabled
+                                            className="input opacity-60 cursor-not-allowed"
+                                        />
+                                        <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+                                    </>
+                                )}
                             </div>
                             <div>
                                 <label className="label">Role</label>

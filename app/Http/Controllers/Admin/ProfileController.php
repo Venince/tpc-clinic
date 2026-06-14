@@ -20,11 +20,23 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
+        $user = $request->user();
+        $isSuperAdmin = $user->isSuperAdmin();
 
-        $request->user()->update($validated);
+        $rules = ['name' => ['required', 'string', 'max:255']];
+
+        if ($isSuperAdmin) {
+            $rules['email'] = [
+                'required',
+                'email',
+                'max:255',
+                \Illuminate\Validation\Rule::unique('users')->ignore($user->id)->whereNull('deleted_at'),
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        $user->update($validated);
 
         return back()->with('success', 'Profile updated successfully.');
     }
