@@ -100,17 +100,21 @@ export default function AdminLayout({ children, title }) {
             </aside>
 
             {/* Mobile sidebar */}
-            {sidebarOpen && (
-                <div className="fixed inset-0 z-40 lg:hidden">
-                    <div className="fixed inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
-                    <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl z-50">
-                        <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-                            <XMarkIcon className="w-6 h-6" />
-                        </button>
-                        <SidebarContent />
-                    </aside>
-                </div>
-            )}
+            <div className={clsx(
+                'fixed inset-0 z-40 lg:hidden transition-opacity duration-300',
+                sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+            )}>
+                <div className="fixed inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
+                <aside className={clsx(
+                    'fixed left-0 top-0 h-full w-64 bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out',
+                    sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                )}>
+                    <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                        <XMarkIcon className="w-6 h-6" />
+                    </button>
+                    <SidebarContent />
+                </aside>
+            </div>
 
             {/* Main */}
             <div className="flex-1 flex flex-col overflow-hidden">

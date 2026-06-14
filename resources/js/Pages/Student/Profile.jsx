@@ -83,7 +83,7 @@ export default function StudentProfile({ profile, programs }) {
                                     value={data.student_id}
                                     onChange={e => setData('student_id', e.target.value)}
                                     className={`input ${errors.student_id ? 'input-error' : ''}`}
-                                    placeholder="e.g. 2021-00123"
+                                    placeholder="e.g. 202111394"
                                 />
                                 {errors.student_id && <p className="error-msg">{errors.student_id}</p>}
                             </div>

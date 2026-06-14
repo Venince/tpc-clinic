@@ -1,14 +1,31 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import ProfilePhotoUploader from '@/Components/Common/ProfilePhotoUploader';
 
 export default function FacultyProfile({ profile, programs }) {
+    const currentDept = profile.faculty_profile?.department ?? '';
+    const isOther = currentDept && !programs.some(p => p.name === currentDept);
+
+    const [useOther, setUseOther] = useState(isOther);
+
     const { data, setData, put, processing, errors } = useForm({
         name:       profile.name ?? '',
-        department: profile.faculty_profile?.department ?? '',
+        department: currentDept,
         position:   profile.faculty_profile?.position ?? '',
         phone:      profile.faculty_profile?.contact_number ?? '',
     });
+
+    const handleDepartmentChange = (e) => {
+        const val = e.target.value;
+        if (val === '__other__') {
+            setUseOther(true);
+            setData('department', '');
+        } else {
+            setUseOther(false);
+            setData('department', val);
+        }
+    };
 
     const submit = (e) => { e.preventDefault(); put(route('faculty.profile.update')); };
 
@@ -50,16 +67,34 @@ export default function FacultyProfile({ profile, programs }) {
                                 <label className="label">Email</label>
                                 <input value={profile.email} disabled className="input opacity-60 cursor-not-allowed" />
                             </div>
+
+                            {/* Department / Program */}
                             <div>
                                 <label className="label">Department / Program</label>
-                                <select value={data.department} onChange={e => setData('department', e.target.value)} className="input">
+                                <select
+                                    value={useOther ? '__other__' : data.department}
+                                    onChange={handleDepartmentChange}
+                                    className="input"
+                                >
                                     <option value="">— Select a program —</option>
                                     {programs.map(p => (
                                         <option key={p.id} value={p.name}>{p.name}</option>
                                     ))}
+                                    <option value="__other__">Other</option>
                                 </select>
+
+                                {useOther && (
+                                    <input
+                                        value={data.department}
+                                        onChange={e => setData('department', e.target.value)}
+                                        className="input mt-2"
+                                        placeholder="Enter your department or office"
+                                        autoFocus
+                                    />
+                                )}
                                 {errors.department && <p className="error-msg">{errors.department}</p>}
                             </div>
+
                             <div>
                                 <label className="label">Position</label>
                                 <input value={data.position} onChange={e => setData('position', e.target.value)} className="input" placeholder="e.g. Instructor" />

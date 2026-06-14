@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 10px }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #111 }
         .hdr { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 10px; margin-bottom: 15px }
         .hdr-inner { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 4px }
         .logo { width: 48px; height: 48px }
@@ -11,18 +11,16 @@
         h3 { color: #16a34a; border-left: 4px solid #16a34a; padding-left: 8px }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px }
         th { background: #16a34a; color: #fff; padding: 5px 6px; font-size: 9px; text-align: left }
-        td { padding: 4px 6px; border-bottom: 1px solid #e8e8e8; font-size: 9px }
+        td { padding: 4px 6px; border-bottom: 1px solid #e8e8e8; font-size: 9px; color: #111 }
         tr:nth-child(even) { background: #f0fdf4 }
-        .small { font-size: 8px; color: #888 }
+        .small { font-size: 8px; color: #111 }
     </style>
 </head>
 <body>
     <div class="hdr">
-        <div class="hdr-inner">
-            <img src="{{ public_path('images/tpc-logo.png') }}" class="logo" alt="TPC Logo" />
-            <h1>TPC Clinic — Pregnancy Monitoring Report</h1>
-        </div>
-        <p style="font-size:10px;color:#555;margin:0">Generated: {{ now()->format('F d, Y h:i A') }}</p>
+        <img src="{{ public_path('images/header.png') }}" style="width:100%" alt="TPC Header" />
+        <h1 style="font-size:14px;color:#16a34a;margin:6px 0 2px">TPC Clinic — Pregnancy Monitoring Report</h1>
+        <p style="font-size:10px;color:#111;margin:0">Generated: {{ now()->format('F d, Y') }}</p>
     </div>
 
     <h3>Pregnant Students ({{ count($data['students']) }})</h3>
@@ -51,12 +49,12 @@
                     <td class="small">{{ $p['user']['email'] ?? '—' }}</td>
                     <td>{{ $p['program']['code'] ?? '—' }}</td>
                     <td>{{ $p['year_level'] ?? '—' }}{{ $p['block'] ? ' - '.$p['block'] : '' }}</td>
-                    <td>{{ $p['birth_date'] ?? '—' }}</td>
+                    <td>{{ $p['birth_date'] ? \Carbon\Carbon::parse($p['birth_date'])->format('Y-m-d') : '—' }}</td>
                     <td>{{ $p['contact_number'] ?? '—' }}</td>
                     <td class="small">{{ $p['address'] ?? '—' }}</td>
                     <td>{{ $p['guardian_name'] ?? '—' }}</td>
                     <td>{{ $p['guardian_contact'] ?? '—' }}</td>
-                    <td>{{ $p['pregnancy_due_date'] ?? '—' }}</td>
+                    <td>{{ $p['pregnancy_due_date'] ? \Carbon\Carbon::parse($p['pregnancy_due_date'])->format('Y-m-d') : '—' }}</td>
                     <td class="small">{{ $p['medical_notes'] ?? '—' }}</td>
                 </tr>
             @empty
@@ -89,10 +87,10 @@
                     <td class="small">{{ $p['user']['email'] ?? '—' }}</td>
                     <td>{{ $p['department'] ?? '—' }}</td>
                     <td>{{ $p['position'] ?? '—' }}</td>
-                    <td>{{ $p['birth_date'] ?? '—' }}</td>
+                    <td>{{ $p['birth_date'] ? \Carbon\Carbon::parse($p['birth_date'])->format('Y-m-d') : '—' }}</td>
                     <td>{{ $p['contact_number'] ?? '—' }}</td>
                     <td class="small">{{ $p['address'] ?? '—' }}</td>
-                    <td>{{ $p['pregnancy_due_date'] ?? '—' }}</td>
+                    <td>{{ $p['pregnancy_due_date'] ? \Carbon\Carbon::parse($p['pregnancy_due_date'])->format('Y-m-d') : '—' }}</td>
                     <td class="small">{{ $p['medical_notes'] ?? '—' }}</td>
                 </tr>
             @empty

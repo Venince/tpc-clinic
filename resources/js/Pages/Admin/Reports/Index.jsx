@@ -184,7 +184,7 @@ export default function Reports({ reports }) {
 
             {/* ── Generate Report modal ── */}
             {showForm && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
                     {/* Sheet slides up on mobile, centered modal on sm+ */}
                     <div className="bg-white w-full sm:max-w-md sm:rounded-xl rounded-t-2xl shadow-xl">
                         {/* Modal header */}
