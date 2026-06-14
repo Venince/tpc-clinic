@@ -17,6 +17,55 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        // Compute onboarding status for students only
+        $onboarding = null;
+        if ($user && optional($user->role)->name === 'student') {
+            $profile    = $user->studentProfile;
+            $profileOk  = $profile
+                && $profile->student_id
+                && $profile->program_id
+                && $profile->year_level
+                && $profile->sex
+                && $profile->birth_date
+                && $profile->contact_number;
+
+            $surveyOk = false;
+            if ($profileOk) {
+                $requiredIds = \App\Models\SurveyQuestion::where('is_active', true)
+                    ->where('is_required', true)
+                    ->pluck('id');
+                if ($requiredIds->isEmpty()) {
+                    $surveyOk = true;
+                } else {
+                    $answered = \App\Models\SurveyAnswer::where('user_id', $user->id)
+                        ->whereIn('survey_question_id', $requiredIds)
+                        ->whereNotNull('answer')
+                        ->pluck('survey_question_id');
+                    $surveyOk = $requiredIds->diff($answered)->isEmpty();
+                }
+            }
+
+            $requiredTypeIds = \App\Models\RequirementType::where('is_active', true)
+                ->where('is_required', true)
+                ->pluck('id');
+
+            $requirementsOk = true;
+            if ($requiredTypeIds->isNotEmpty()) {
+                $uploadedTypeIds = \App\Models\UserRequirement::where('user_id', $user->id)
+                    ->whereIn('requirement_type_id', $requiredTypeIds)
+                    ->whereNotNull('file_path')
+                    ->pluck('requirement_type_id');
+                $requirementsOk = $requiredTypeIds->diff($uploadedTypeIds)->isEmpty();
+            }
+
+            $onboarding = [
+                'profile_completed'      => (bool) $profileOk,
+                'survey_completed'       => $surveyOk,
+                'requirements_completed' => $requirementsOk,  // ← new
+                'done'                   => $profileOk && $surveyOk && $requirementsOk,
+            ];
+        }
+
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $user ? [
@@ -24,9 +73,9 @@ class HandleInertiaRequests extends Middleware
                     'name'                  => $user->name,
                     'email'                 => $user->email,
                     'role' => $user->role ? [
-                    'name'                  => $user->role->name,
-                    'display_name'          => $user->role->display_name,
-                ] : null,
+                        'name'              => $user->role->name,
+                        'display_name'      => $user->role->display_name,
+                    ] : null,
                     'force_password_change' => $user->force_password_change,
                     'profile_photo_url'     => $user->profile_photo_url,
                 ] : null,
@@ -39,7 +88,6 @@ class HandleInertiaRequests extends Middleware
                 ...(new \Tighten\Ziggy\Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
-            // Shared with all layouts so the bell works everywhere
             'notifications' => fn() => $user ? [
                 'unread_count' => $user->unreadNotifications()->count(),
                 'latest'       => $user->notifications()->limit(8)->get()->map(fn($n) => [
@@ -49,6 +97,7 @@ class HandleInertiaRequests extends Middleware
                     'created_at' => $n->created_at,
                 ]),
             ] : null,
+            'onboarding' => $onboarding,   // ← only new line in the return
         ]);
     }
 }

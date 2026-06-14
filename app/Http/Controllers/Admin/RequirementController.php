@@ -21,10 +21,28 @@ class RequirementController extends Controller {
         ]);
     }
     public function storeType(Request $request) {
-        $request->validate(['name'=>['required','string','max:255'],'description'=>['nullable','string']]);
-        RequirementType::create(['name'=>$request->name,'description'=>$request->description,'sort_order'=>RequirementType::max('sort_order')+1]);
-        return back()->with('success','Requirement type added.');
+        $request->validate([
+            'name'        => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'is_required' => ['boolean'],
+        ]);
+        RequirementType::create([
+            'name'        => $request->name,
+            'description' => $request->description,
+            'is_required' => $request->boolean('is_required', false),
+            'sort_order'  => RequirementType::max('sort_order') + 1,
+        ]);
+        return back()->with('success', 'Requirement type added.');
     }
+
+    public function updateType(Request $request, RequirementType $requirementType) {
+        $request->validate([
+            'is_required' => ['required', 'boolean'],
+        ]);
+        $requirementType->update(['is_required' => $request->boolean('is_required')]);
+        return back()->with('success', 'Requirement type updated.');
+    }
+
     public function destroyType(RequirementType $requirementType) { $requirementType->delete(); return back()->with('success','Requirement type deleted.'); }
     public function review(Request $request, UserRequirement $userRequirement) {
         $request->validate(['status'=>['required','in:approved,rejected'],'reason'=>['required_if:status,rejected','nullable','string','max:500']]);

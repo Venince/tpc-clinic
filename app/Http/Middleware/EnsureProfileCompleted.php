@@ -1,9 +1,10 @@
 <?php
-
 namespace App\Http\Middleware;
 
+use App\Models\RequirementType;
 use App\Models\SurveyAnswer;
 use App\Models\SurveyQuestion;
+use App\Models\UserRequirement;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -22,7 +23,7 @@ class EnsureProfileCompleted
         // ── Student ────────────────────────────────────────────────────────
         if ($role === 'student') {
 
-            // 1. Check profile first
+            // 1. Profile check
             $profile   = $user->studentProfile;
             $profileOk = $profile
                 && $profile->student_id
@@ -32,36 +33,51 @@ class EnsureProfileCompleted
                 && $profile->birth_date
                 && $profile->contact_number;
 
-            if (!$profileOk) {
-                return redirect()
-                    ->route('student.profile')
+            // 2. Survey check
+            $requiredQuestionIds = SurveyQuestion::where('is_active', true)
+                ->where('is_required', true)
+                ->pluck('id');
+
+            $surveyOk = true;
+            if ($requiredQuestionIds->isNotEmpty()) {
+                $answeredIds = SurveyAnswer::where('user_id', $user->id)
+                    ->whereIn('survey_question_id', $requiredQuestionIds)
+                    ->whereNotNull('answer')
+                    ->get()
+                    ->filter(fn($a) => !empty(array_filter((array) $a->answer, fn($v) => trim($v) !== '')))
+                    ->pluck('survey_question_id');
+                $surveyOk = $requiredQuestionIds->diff($answeredIds)->isEmpty();
+            }
+
+            // 3. Requirements check — student must upload ALL required active types
+            $requiredTypeIds = RequirementType::where('is_active', true)
+                ->where('is_required', true)
+                ->pluck('id');
+
+            $requirementsOk = true;
+            if ($requiredTypeIds->isNotEmpty()) {
+                $uploadedTypeIds = UserRequirement::where('user_id', $user->id)
+                    ->whereIn('requirement_type_id', $requiredTypeIds)
+                    ->whereNotNull('file_path')
+                    ->pluck('requirement_type_id');
+                $requirementsOk = $requiredTypeIds->diff($uploadedTypeIds)->isEmpty();
+            }
+
+            // Block on whichever is incomplete — but don't redirect away from those pages
+            if (!$profileOk && !$request->routeIs('student.profile', 'student.profile.*')) {
+                return redirect()->route('student.profile')
                     ->with('error', 'Please complete your profile before using other features.');
             }
 
-          // Profile done — check survey next,
-          // but don't block if they're already on the survey page
-          if (!$request->routeIs('student.survey.*')) {
-              $requiredQuestionIds = SurveyQuestion::where('is_active', true)
-                  ->where('is_required', true)
-                  ->pluck('id');
+            if (!$surveyOk && !$request->routeIs('student.survey.*')) {
+                return redirect()->route('student.survey.index')
+                    ->with('error', 'Please complete the health survey before using other features.');
+            }
 
-              if ($requiredQuestionIds->isNotEmpty()) {
-                  $answeredIds = SurveyAnswer::where('user_id', $user->id)
-                      ->whereIn('survey_question_id', $requiredQuestionIds)
-                      ->whereNotNull('answer')
-                      ->get()
-                      ->filter(fn($a) => !empty(array_filter((array) $a->answer, fn($v) => trim($v) !== '')))
-                      ->pluck('survey_question_id');
-
-                  $allRequiredAnswered = $requiredQuestionIds->diff($answeredIds)->isEmpty();
-
-                  if (!$allRequiredAnswered) {
-                      return redirect()
-                          ->route('student.survey.index')
-                          ->with('error', 'Please complete all required health survey questions before using other features.');
-                  }
-              }
-          }
+            if (!$requirementsOk && !$request->routeIs('student.requirements.*')) {
+                return redirect()->route('student.requirements.index')
+                    ->with('error', 'Please upload all required documents before using other features.');
+            }
         }
 
         // ── Faculty ────────────────────────────────────────────────────────
@@ -73,8 +89,7 @@ class EnsureProfileCompleted
                 && $profile->contact_number;
 
             if (!$profileOk) {
-                return redirect()
-                    ->route('faculty.profile')
+                return redirect()->route('faculty.profile')
                     ->with('error', 'Please complete your profile before using other features.');
             }
         }

@@ -19,7 +19,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
     const [status, setStatus]         = useState(filters?.status || '');
     const [programId, setProgramId]   = useState(filters?.program_id || '');
 
-    const addForm    = useForm({ name: '', description: '' });
+    const addForm    = useForm({ name: '', description: '', is_required: false });
     const reviewForm = useForm({ status: 'approved', reason: '' });
     const clearForm  = useForm({ user_type: '' });
 
@@ -53,6 +53,12 @@ export default function RequirementsIndex({ types, requirements, programs, filte
         });
     };
 
+    const toggleRequired = (type) => {
+        router.put(route('admin.requirements.types.update', type.id), {
+            is_required: !type.is_required,
+        }, { preserveScroll: true });
+    };
+
     const userTypeLabel = (val) => ({
         student:       'Students',
         faculty_staff: 'Faculty / Staff',
@@ -76,15 +82,11 @@ export default function RequirementsIndex({ types, requirements, programs, filte
         <AdminLayout title="Medical Requirements">
             <Head title="Requirements" />
 
-            {/* Page Header */}
             <div className="flex items-start justify-between gap-3 mb-6">
                 <h2 className="page-title">Medical Requirements</h2>
                 <div className="flex items-center gap-2 shrink-0">
                     {isSuperAdmin && (
-                        <button
-                            onClick={() => setShowClear(true)}
-                            className="btn-danger btn-sm flex items-center gap-1"
-                        >
+                        <button onClick={() => setShowClear(true)} className="btn-danger btn-sm flex items-center gap-1">
                             <TrashIcon className="w-4 h-4" />
                             <span className="hidden sm:inline">Clear Submissions</span>
                         </button>
@@ -98,21 +100,53 @@ export default function RequirementsIndex({ types, requirements, programs, filte
 
             {/* Requirement Types */}
             <div className="card mb-6">
-                <div className="card-header"><h3 className="font-semibold text-gray-900">Requirement Types</h3></div>
+                <div className="card-header">
+                    <h3 className="font-semibold text-gray-900">Requirement Types</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                        Required types must be uploaded by students before they can access the portal.
+                    </p>
+                </div>
                 <div className="divide-y divide-gray-100">
                     {types.map(t => (
                         <div key={t.id} className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                                <p className="font-medium text-gray-900 truncate">{t.name}</p>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    <p className="font-medium text-gray-900 truncate">{t.name}</p>
+                                    {t.is_required && (
+                                        <span className="badge badge-red text-[10px] px-1.5 py-0.5 flex-shrink-0">
+                                            Required
+                                        </span>
+                                    )}
+                                </div>
                                 {t.description && <p className="text-xs text-gray-400">{t.description}</p>}
                                 <p className="text-xs text-gray-400 mt-0.5">{t.user_requirements_count} submissions</p>
                             </div>
-                            <button
-                                onClick={() => { if (confirm('Delete this requirement type?')) router.delete(route('admin.requirements.types.destroy', t.id)); }}
-                                className="text-gray-400 hover:text-red-500 shrink-0"
-                            >
-                                <TrashIcon className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                                {/* Required toggle */}
+                                <label className="flex items-center gap-1.5 cursor-pointer select-none" title={t.is_required ? 'Mark as optional' : 'Mark as required'}>
+                                    <span className="text-xs text-gray-500 hidden sm:inline">
+                                        {t.is_required ? 'Required' : 'Optional'}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleRequired(t)}
+                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                                            t.is_required ? 'bg-red-500' : 'bg-gray-200'
+                                        }`}
+                                        aria-label="Toggle required"
+                                    >
+                                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                            t.is_required ? 'translate-x-4' : 'translate-x-1'
+                                        }`} />
+                                    </button>
+                                </label>
+                                <button
+                                    onClick={() => { if (confirm('Delete this requirement type?')) router.delete(route('admin.requirements.types.destroy', t.id)); }}
+                                    className="text-gray-400 hover:text-red-500"
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     ))}
                     {!types.length && (
@@ -188,6 +222,9 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             <div>
                                 <span className="text-gray-400">Requirement: </span>
                                 <span className="text-gray-700">{r.requirement_type?.name}</span>
+                                {r.requirement_type?.is_required && (
+                                    <span className="badge badge-red text-[10px] ml-1">Required</span>
+                                )}
                             </div>
                             <div>
                                 <span className="text-gray-400">Program: </span>
@@ -199,10 +236,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                             <div>
                                 {r.file_path ? (
-                                    <button
-                                        onClick={() => setPreviewing(r)}
-                                        className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium"
-                                    >
+                                    <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium">
                                         <EyeIcon className="w-3.5 h-3.5" />
                                         {r.original_filename || 'View file'}
                                     </button>
@@ -213,16 +247,12 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         </div>
                         {r.approval_status === 'pending' ? (
                             <div className="flex gap-2 pt-2 border-t border-gray-100">
-                                <button
-                                    onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
-                                    className="btn-success btn-sm flex-1 flex items-center justify-center gap-1"
-                                >
+                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
+                                    className="btn-success btn-sm flex-1 flex items-center justify-center gap-1">
                                     <CheckIcon className="w-4 h-4" /> Approve
                                 </button>
-                                <button
-                                    onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
-                                    className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1"
-                                >
+                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
+                                    className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1">
                                     <XMarkIcon className="w-4 h-4" /> Reject
                                 </button>
                             </div>
@@ -267,13 +297,15 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                     <td className="text-xs text-gray-500">
                                         {r.user?.student_profile?.program?.code || '—'}
                                     </td>
-                                    <td className="text-sm">{r.requirement_type?.name}</td>
+                                    <td className="text-sm">
+                                        <span>{r.requirement_type?.name}</span>
+                                        {r.requirement_type?.is_required && (
+                                            <span className="badge badge-red text-[10px] ml-1.5">Required</span>
+                                        )}
+                                    </td>
                                     <td>
                                         {r.file_path ? (
-                                            <button
-                                                onClick={() => setPreviewing(r)}
-                                                className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium"
-                                            >
+                                            <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium">
                                                 <EyeIcon className="w-3.5 h-3.5" />
                                                 {r.original_filename || 'View file'}
                                             </button>
@@ -288,16 +320,12 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                     <td>
                                         <div className="flex gap-2">
                                             {r.approval_status === 'pending' && <>
-                                                <button
-                                                    onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
-                                                    className="btn-success btn-sm px-2 py-1" title="Approve"
-                                                >
+                                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
+                                                    className="btn-success btn-sm px-2 py-1" title="Approve">
                                                     <CheckIcon className="w-3.5 h-3.5" />
                                                 </button>
-                                                <button
-                                                    onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
-                                                    className="btn-danger btn-sm px-2 py-1" title="Reject"
-                                                >
+                                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
+                                                    className="btn-danger btn-sm px-2 py-1" title="Reject">
                                                     <XMarkIcon className="w-3.5 h-3.5" />
                                                 </button>
                                             </>}
@@ -318,18 +346,13 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         </tbody>
                     </table>
                 </div>
-
-                {/* Pagination */}
                 {requirements.links?.length > 3 && (
                     <div className="px-6 py-4 flex flex-wrap justify-center gap-1 border-t border-gray-100">
                         {requirements.links.map((link, i) => (
-                            <button
-                                key={i}
-                                disabled={!link.url}
+                            <button key={i} disabled={!link.url}
                                 onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
                                 className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                                dangerouslySetInnerHTML={{ __html: link.label }} />
                         ))}
                     </div>
                 )}
@@ -339,18 +362,59 @@ export default function RequirementsIndex({ types, requirements, programs, filte
             {requirements.links?.length > 3 && (
                 <div className="md:hidden flex flex-wrap justify-center gap-1 mt-3">
                     {requirements.links.map((link, i) => (
-                        <button
-                            key={i}
-                            disabled={!link.url}
+                        <button key={i} disabled={!link.url}
                             onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
                             className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                        />
+                            dangerouslySetInnerHTML={{ __html: link.label }} />
                     ))}
                 </div>
             )}
 
-            {/* Clear Submissions Modal */}
+            {/* Add Requirement Type Modal */}
+            {showAdd && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+                        <h3 className="font-semibold mb-4">Add Requirement Type</h3>
+                        <form onSubmit={submitAdd} className="space-y-3">
+                            <div>
+                                <label className="label">Name</label>
+                                <input value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)}
+                                    className="input" placeholder="e.g. X-ray Result" />
+                                {addForm.errors.name && <p className="error-msg">{addForm.errors.name}</p>}
+                            </div>
+                            <div>
+                                <label className="label">Description</label>
+                                <textarea value={addForm.data.description} onChange={e => addForm.setData('description', e.target.value)}
+                                    className="input" rows={2} />
+                            </div>
+                            {/* is_required toggle */}
+                            <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">Required for onboarding</p>
+                                    <p className="text-xs text-gray-400">Students must upload this before accessing the portal.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => addForm.setData('is_required', !addForm.data.is_required)}
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                                        addForm.data.is_required ? 'bg-red-500' : 'bg-gray-200'
+                                    }`}
+                                >
+                                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                        addForm.data.is_required ? 'translate-x-4' : 'translate-x-1'
+                                    }`} />
+                                </button>
+                            </div>
+                            <div className="flex gap-3 pt-1">
+                                <button type="submit" disabled={addForm.processing} className="btn-primary flex-1">Add</button>
+                                <button type="button" onClick={() => { setShowAdd(false); addForm.reset(); }} className="btn-secondary flex-1">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Clear Submissions Modal — unchanged */}
             {showClear && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
@@ -370,9 +434,9 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             <div className="px-6 pb-5 space-y-3">
                                 <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Select user group to clear</p>
                                 {[
-                                    { value: 'student',       label: 'Students only',              sub: 'Clears all student requirement submissions.' },
-                                    { value: 'faculty_staff', label: 'Faculty / Staff only',        sub: 'Clears all faculty and staff submissions.' },
-                                    { value: 'both',          label: 'Students & Faculty / Staff',  sub: 'Clears every submission across all users.' },
+                                    { value: 'student',       label: 'Students only',             sub: 'Clears all student requirement submissions.' },
+                                    { value: 'faculty_staff', label: 'Faculty / Staff only',       sub: 'Clears all faculty and staff submissions.' },
+                                    { value: 'both',          label: 'Students & Faculty / Staff', sub: 'Clears every submission across all users.' },
                                 ].map(opt => (
                                     <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                                         clearForm.data.user_type === opt.value ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -387,9 +451,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                         </div>
                                     </label>
                                 ))}
-                                {clearForm.errors.user_type && (
-                                    <p className="text-xs text-red-500">{clearForm.errors.user_type}</p>
-                                )}
+                                {clearForm.errors.user_type && <p className="text-xs text-red-500">{clearForm.errors.user_type}</p>}
                                 {clearForm.data.user_type && (
                                     <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
                                         <strong>Warning:</strong> You are about to permanently delete all requirement
@@ -400,7 +462,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                             <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
                                 <button type="button" onClick={() => { setShowClear(false); clearForm.reset(); }} className="btn-secondary btn-sm">Cancel</button>
-                                <button type="submit" disabled={!clearForm.data.user_type || clearForm.processing} className="btn-danger btn-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button type="submit" disabled={!clearForm.data.user_type || clearForm.processing}
+                                    className="btn-danger btn-sm disabled:opacity-50 disabled:cursor-not-allowed">
                                     {clearForm.processing ? 'Clearing…' : 'Clear Submissions'}
                                 </button>
                             </div>
@@ -409,7 +472,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </div>
             )}
 
-            {/* File Preview Modal */}
+            {/* File Preview Modal — unchanged */}
             {previewing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
@@ -446,32 +509,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </div>
             )}
 
-            {/* Add Requirement Type Modal */}
-            {showAdd && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
-                        <h3 className="font-semibold mb-4">Add Requirement Type</h3>
-                        <form onSubmit={submitAdd} className="space-y-3">
-                            <div>
-                                <label className="label">Name</label>
-                                <input value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)}
-                                    className="input" placeholder="e.g. X-ray Result" />
-                            </div>
-                            <div>
-                                <label className="label">Description</label>
-                                <textarea value={addForm.data.description} onChange={e => addForm.setData('description', e.target.value)}
-                                    className="input" rows={2} />
-                            </div>
-                            <div className="flex gap-3">
-                                <button type="submit" disabled={addForm.processing} className="btn-primary flex-1">Add</button>
-                                <button type="button" onClick={() => setShowAdd(false)} className="btn-secondary flex-1">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Review Modal */}
+            {/* Review Modal — unchanged */}
             {reviewing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">

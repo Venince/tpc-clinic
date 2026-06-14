@@ -102,9 +102,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/requirements',                            [Admin\RequirementController::class, 'index'])->name('requirements.index');
         Route::get('/requirements/{userRequirement}/file',     [Admin\RequirementController::class, 'streamFile'])->name('requirements.file');
         Route::post('/requirements/types',                     [Admin\RequirementController::class, 'storeType'])->name('requirements.types.store');
+        Route::put('/requirements/types/{requirementType}',    [Admin\RequirementController::class, 'updateType'])->name('requirements.types.update');
         Route::delete('/requirements/types/{requirementType}', [Admin\RequirementController::class, 'destroyType'])->name('requirements.types.destroy');
         Route::post('/requirements/{userRequirement}/review',  [Admin\RequirementController::class, 'review'])->name('requirements.review');
-        Route::post('/requirements/clear-submissions', [Admin\RequirementController::class, 'clearSubmissions'])
+        Route::post('/requirements/clear-submissions',         [Admin\RequirementController::class, 'clearSubmissions'])
             ->name('requirements.clear-submissions')
             ->middleware('role:super_admin');
 
@@ -157,9 +158,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
 
         // Clinic Services
-        Route::post('/services',               [\App\Http\Controllers\Admin\ClinicServiceController::class, 'store'])->name('services.store');
-        Route::put('/services/{clinicService}',    [\App\Http\Controllers\Admin\ClinicServiceController::class, 'update'])->name('services.update');
-        Route::delete('/services/{clinicService}', [\App\Http\Controllers\Admin\ClinicServiceController::class, 'destroy'])->name('services.destroy');
+        Route::post('/services',                  [\App\Http\Controllers\Admin\ClinicServiceController::class, 'store'])->name('services.store');
+        Route::put('/services/{clinicService}',   [\App\Http\Controllers\Admin\ClinicServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{clinicService}',[\App\Http\Controllers\Admin\ClinicServiceController::class, 'destroy'])->name('services.destroy');
 
         // Settings
         Route::post('/settings/facility-photo', function (\Illuminate\Http\Request $request) {
@@ -189,9 +190,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/profile/photo',   [Student\ProfileController::class, 'uploadPhoto'])->name('profile.photo.update');
         Route::delete('/profile/photo', [Student\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
 
-        // Survey outside the gate — student can access it anytime after login
         Route::get('/survey',  [Student\SurveyController::class, 'index'])->name('survey.index');
         Route::post('/survey', [Student\SurveyController::class, 'submit'])->name('survey.submit');
+
+        Route::get('/requirements',         [Student\RequirementController::class, 'index'])->name('requirements.index');
+        Route::post('/requirements/upload', [Student\RequirementController::class, 'upload'])->name('requirements.upload');
 
         Route::get('/notifications', fn(\Illuminate\Http\Request $r) => Inertia::render('Student/Notifications', [
             'notifications' => $r->user()->notifications()->paginate(20),
@@ -213,7 +216,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             return back()->with('success', 'All notifications deleted.');
         })->name('notifications.destroyAll');
 
-        // ── Gated: requires BOTH profile AND survey completed ─────────────
+        // ── Gated: requires ALL three completed ───────────────────────────
         Route::middleware('profile.completed')->group(function () {
 
             Route::get('/dashboard', [Student\DashboardController::class, 'index'])->name('dashboard');
@@ -227,9 +230,6 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/medicine/{medicineRequest}/cancel', [Student\MedicineController::class, 'cancel'])->name('medicine.cancel');
             Route::delete('/medicine/{medicineRequest}',      [Student\MedicineController::class, 'destroy'])->name('medicine.destroy');
 
-            Route::get('/requirements',         [Student\RequirementController::class, 'index'])->name('requirements.index');
-            Route::post('/requirements/upload', [Student\RequirementController::class, 'upload'])->name('requirements.upload');
-
             Route::get('/messages',                       [Admin\MessageController::class, 'index'])->name('messages.index');
             Route::post('/messages',                      [Admin\MessageController::class, 'store'])->name('messages.store');
             Route::get('/messages/{conversation}',        [Admin\MessageController::class, 'show'])->name('messages.show');
@@ -242,7 +242,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['role:faculty_staff', 'password.changed'])
         ->prefix('faculty')->name('faculty.')->group(function () {
 
-        // ── Always accessible (no gates) ──────────────────────────────────
+        // ── Always accessible ─────────────────────────────────────────────
         Route::get('/profile',          [Faculty\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile',          [Faculty\ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/photo',   [Faculty\ProfileController::class, 'uploadPhoto'])->name('profile.photo.update');
@@ -268,7 +268,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             return back()->with('success', 'All notifications deleted.');
         })->name('notifications.destroyAll');
 
-        // ── Gated: requires profile completion ────────────────────────────
+        // ── Gated: requires profile completed ────────────────────────────
         Route::middleware('profile.completed')->group(function () {
 
             Route::get('/dashboard', [Faculty\DashboardController::class, 'index'])->name('dashboard');

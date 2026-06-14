@@ -21,6 +21,14 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
             (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); observer.unobserve(e.target); } }),
             { threshold: 0.1 }
         );
+        if (window.location.hash) {
+            const el = document.querySelector(window.location.hash);
+            if (el) {
+                setTimeout(() => {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                }, 100); // small delay to let page render first
+            }
+        }
         document.querySelectorAll('.section-animate').forEach(el => observer.observe(el));
         return () => observer.disconnect();
     }, []);
@@ -49,29 +57,46 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
         event:   'bg-purple-50 text-purple-700',
     })[c] || 'bg-gray-100 text-gray-600';
 
+    const scrollTo = (e, hash) => {
+        e.preventDefault();
+        const el = document.querySelector(hash);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     return (
         <>
             <Head title="TPC e-Clinic — Talibon Polytechnic College" />
             <div className="min-h-screen bg-white font-sans">
 
                 {/* ── Nav ── */}
-                <nav className="section-animate sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
+                <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4 md:gap-8">
                         <Link href={route('home')} className="flex items-center gap-2.5">
                             <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain" />
                             <span className="font-semibold text-gray-900 text-sm">TPC e-Clinic</span>
                         </Link>
                         <div className="hidden md:flex items-center gap-6">
-                            {[
-                                { label: 'Home',          href: route('home') },
-                                { label: 'Services',      href: '#services' },
-                                { label: 'About',         href: '#about' },
-                                { label: 'Announcements', href: route('announcements') },
-                            ].map(n => (
-                                <a key={n.label} href={n.href} className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                    {n.label}
-                                </a>
-                            ))}
+                            <a href="#top"
+                                onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
+                                Home
+                            </a>
+                            <a href="#services"
+                                onClick={e => scrollTo(e, '#services')}
+                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
+                                Services
+                            </a>
+                            <a href="#about"
+                                onClick={e => scrollTo(e, '#about')}
+                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
+                                About
+                            </a>
+                            <Link href={route('announcements')}
+                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
+                                Announcements
+                            </Link>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -81,6 +106,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                     </div>
                 </nav>
 
+                <div className="page-fade">
                 {/* ── Hero ── */}
                 <section className="section-animate grid grid-cols-1 md:grid-cols-2 items-center">
                     <div className="flex flex-col justify-center px-6 md:px-12 py-10 md:py-16">
@@ -312,7 +338,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         </div>
                     </div>
                 </footer>
-
+                </div>            
             </div>
 
             {/* ── Service Modal (admin only) ── */}
