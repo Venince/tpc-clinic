@@ -80,20 +80,6 @@ class EnsureProfileCompleted
             }
         }
 
-        // ── Faculty ────────────────────────────────────────────────────────
-        if ($role === 'faculty_staff') {
-            $profile   = $user->facultyProfile;
-            $profileOk = $profile
-                && $profile->department
-                && $profile->position
-                && $profile->contact_number;
-
-            if (!$profileOk) {
-                return redirect()->route('faculty.profile')
-                    ->with('error', 'Please complete your profile before using other features.');
-            }
-        }
-
         return $next($request);
     }
 }

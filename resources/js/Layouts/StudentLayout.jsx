@@ -50,47 +50,53 @@ function OnboardingBanner({ onboarding }) {
         },
     ];
 
-    // Any incomplete step is actionable — student picks their own order
     const nextStep = steps.find(s => !s.done);
 
     return (
-        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex-shrink-0">
-            <div className="flex items-center gap-2 mb-2">
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex-shrink-0">
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-2.5">
                 <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <p className="text-sm font-semibold text-amber-800">
+                <p className="text-xs sm:text-sm font-semibold text-amber-800">
                     Complete your setup to access all features
                 </p>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+
+            {/* Steps — always horizontal, shrink on mobile */}
+            <div className="flex items-center gap-1 sm:gap-2">
                 {steps.map((step, i) => (
-                    <div key={i} className="flex items-center gap-2">
+                    <div key={i} className="flex items-center gap-1 sm:gap-2 min-w-0">
                         {i > 0 && (
                             <div className={clsx(
-                                'h-px w-5 flex-shrink-0',
-                                steps[i - 1].done ? 'bg-green-400' : 'bg-amber-200'
+                                'h-px w-3 sm:w-5 flex-shrink-0',
+                                steps[i - 1].done ? 'bg-green-400' : 'bg-amber-300'
                             )} />
                         )}
                         {step.done ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-800 bg-green-100 border border-green-300 rounded-full px-2.5 py-1">
-                                <CheckCircleIcon className="w-3.5 h-3.5" />
-                                {step.label}
+                            <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-green-800 bg-green-100 border border-green-300 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 whitespace-nowrap">
+                                <CheckCircleIcon className="w-3 h-3 flex-shrink-0" />
+                                <span className="hidden xs:inline sm:inline">{step.label}</span>
+                                <span className="xs:hidden sm:hidden">✓</span>
                             </span>
                         ) : (
                             <Link
                                 href={step.href}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-full px-2.5 py-1 transition-colors"
+                                className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors whitespace-nowrap"
                             >
-                                <span className="w-3 h-3 rounded-full border-2 border-amber-500 flex-shrink-0" />
+                                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-amber-500 flex-shrink-0" />
                                 {step.label}
                             </Link>
                         )}
                     </div>
                 ))}
+
                 {nextStep && (
-                    <p className="ml-auto text-xs text-amber-700 hidden sm:block">
-                        Next:{' '}
-                        <Link href={nextStep.href} className="font-semibold underline underline-offset-2 hover:text-amber-900">
-                            {nextStep.label}
+                    <p className="ml-auto text-[10px] sm:text-xs text-amber-700 whitespace-nowrap pl-1">
+                        <Link
+                            href={nextStep.href}
+                            className="font-semibold underline underline-offset-2 hover:text-amber-900"
+                        >
+                            <span className="hidden sm:inline">Next: </span>{nextStep.label}
                         </Link>
                     </p>
                 )}

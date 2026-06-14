@@ -242,7 +242,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['role:faculty_staff', 'password.changed'])
         ->prefix('faculty')->name('faculty.')->group(function () {
 
-        // ── Always accessible ─────────────────────────────────────────────
         Route::get('/profile',          [Faculty\ProfileController::class, 'show'])->name('profile');
         Route::put('/profile',          [Faculty\ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/photo',   [Faculty\ProfileController::class, 'uploadPhoto'])->name('profile.photo.update');
@@ -268,33 +267,30 @@ Route::middleware(['auth', 'active'])->group(function () {
             return back()->with('success', 'All notifications deleted.');
         })->name('notifications.destroyAll');
 
-        // ── Gated: requires profile completed ────────────────────────────
-        Route::middleware('profile.completed')->group(function () {
+        // No profile.completed gate — faculty can access everything freely
+        Route::get('/dashboard', [Faculty\DashboardController::class, 'index'])->name('dashboard');
 
-            Route::get('/dashboard', [Faculty\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
 
-            Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
+        Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
+        Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
+        Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
-            Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
-            Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
-            Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
+        Route::get('/medicine',                           [Student\MedicineController::class, 'index'])->name('medicine.index');
+        Route::post('/medicine',                          [Student\MedicineController::class, 'store'])->name('medicine.store');
+        Route::post('/medicine/{medicineRequest}/cancel', [Student\MedicineController::class, 'cancel'])->name('medicine.cancel');
+        Route::delete('/medicine/{medicineRequest}',      [Student\MedicineController::class, 'destroy'])->name('medicine.destroy');
 
-            Route::get('/medicine',                           [Student\MedicineController::class, 'index'])->name('medicine.index');
-            Route::post('/medicine',                          [Student\MedicineController::class, 'store'])->name('medicine.store');
-            Route::post('/medicine/{medicineRequest}/cancel', [Student\MedicineController::class, 'cancel'])->name('medicine.cancel');
-            Route::delete('/medicine/{medicineRequest}',      [Student\MedicineController::class, 'destroy'])->name('medicine.destroy');
+        Route::get('/survey',  [Student\SurveyController::class, 'index'])->name('survey.index');
+        Route::post('/survey', [Student\SurveyController::class, 'submit'])->name('survey.submit');
 
-            Route::get('/survey',  [Student\SurveyController::class, 'index'])->name('survey.index');
-            Route::post('/survey', [Student\SurveyController::class, 'submit'])->name('survey.submit');
+        Route::get('/requirements',         [Student\RequirementController::class, 'index'])->name('requirements.index');
+        Route::post('/requirements/upload', [Student\RequirementController::class, 'upload'])->name('requirements.upload');
 
-            Route::get('/requirements',         [Student\RequirementController::class, 'index'])->name('requirements.index');
-            Route::post('/requirements/upload', [Student\RequirementController::class, 'upload'])->name('requirements.upload');
-
-            Route::get('/messages',                       [Admin\MessageController::class, 'index'])->name('messages.index');
-            Route::post('/messages',                      [Admin\MessageController::class, 'store'])->name('messages.store');
-            Route::get('/messages/{conversation}',        [Admin\MessageController::class, 'show'])->name('messages.show');
-            Route::post('/messages/{conversation}/reply', [Admin\MessageController::class, 'reply'])->name('messages.reply');
-            Route::delete('/messages/{conversation}',     [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
-        });
+        Route::get('/messages',                       [Admin\MessageController::class, 'index'])->name('messages.index');
+        Route::post('/messages',                      [Admin\MessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/{conversation}',        [Admin\MessageController::class, 'show'])->name('messages.show');
+        Route::post('/messages/{conversation}/reply', [Admin\MessageController::class, 'reply'])->name('messages.reply');
+        Route::delete('/messages/{conversation}',     [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
     });
 });
