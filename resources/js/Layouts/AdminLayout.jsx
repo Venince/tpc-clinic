@@ -5,7 +5,7 @@ import {
     HomeIcon, UsersIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentChartBarIcon, MegaphoneIcon, ChatBubbleLeftRightIcon,
     AcademicCapIcon, DocumentTextIcon, ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon,
-    IdentificationIcon, UserCircleIcon, GlobeAltIcon,
+    IdentificationIcon, UserCircleIcon, GlobeAltIcon, ClipboardDocumentCheckIcon,
 } from '@heroicons/react/24/outline';
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
@@ -19,6 +19,7 @@ const navigation = [
     { name: 'Programs',          href: 'admin.programs.index',     icon: AcademicCapIcon },
     { name: 'Faculty & Staff',   href: 'admin.faculty.index',      icon: IdentificationIcon },
     { name: 'Appointments',      href: 'admin.appointments.index', icon: CalendarIcon },
+    { name: 'Walk-in Log',       href: 'admin.walkin.index',       icon: ClipboardDocumentCheckIcon },
     { name: 'Medicine',          href: 'admin.medicine.index',     icon: BeakerIcon },
     { name: 'Medicine Requests', href: 'admin.medicine.requests',  icon: BeakerIcon },
     { name: 'Survey',            href: 'admin.survey.index',       icon: ClipboardDocumentListIcon },

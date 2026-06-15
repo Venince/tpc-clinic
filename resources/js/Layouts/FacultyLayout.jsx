@@ -4,20 +4,21 @@ import NotificationBell from '@/Components/Common/NotificationBell';
 import {
     HomeIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon,
-    ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon,
+    ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon, ClipboardDocumentCheckIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import LogoutConfirmModal from '@/Components/Common/LogoutConfirmModal';
 
 const nav = [
-    { name: 'Dashboard',    href: 'faculty.dashboard',          icon: HomeIcon },
-    { name: 'Appointments', href: 'faculty.appointments.index', icon: CalendarIcon },
-    { name: 'Medicine',     href: 'faculty.medicine.index',     icon: BeakerIcon },
-    { name: 'Health Survey',href: 'faculty.survey.index',       icon: ClipboardDocumentListIcon },
-    { name: 'Requirements', href: 'faculty.requirements.index', icon: DocumentTextIcon },
-    { name: 'Messages',     href: 'faculty.messages.index',     icon: ChatBubbleLeftRightIcon },
-    { name: 'Profile',      href: 'faculty.profile',            icon: UserCircleIcon },
+    { name: 'Dashboard',       href: 'faculty.dashboard',          icon: HomeIcon },
+    { name: 'Appointments',    href: 'faculty.appointments.index', icon: CalendarIcon },
+    { name: 'Walk-in History', href: 'faculty.walkin.index',       icon: ClipboardDocumentCheckIcon },
+    { name: 'Medicine',        href: 'faculty.medicine.index',     icon: BeakerIcon },
+    { name: 'Health Survey',   href: 'faculty.survey.index',       icon: ClipboardDocumentListIcon },
+    { name: 'Requirements',    href: 'faculty.requirements.index', icon: DocumentTextIcon },
+    { name: 'Messages',        href: 'faculty.messages.index',     icon: ChatBubbleLeftRightIcon },
+    { name: 'Profile',         href: 'faculty.profile',            icon: UserCircleIcon },
 ];
 
 export default function FacultyLayout({ children, title }) {

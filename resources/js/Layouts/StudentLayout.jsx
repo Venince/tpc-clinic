@@ -5,20 +5,21 @@ import {
     HomeIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon,
     ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon,
-    CheckCircleIcon, ExclamationTriangleIcon,
+    CheckCircleIcon, ExclamationTriangleIcon, ClipboardDocumentCheckIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import LogoutConfirmModal from '@/Components/Common/LogoutConfirmModal';
 
 const nav = [
-    { name: 'Dashboard',     href: 'student.dashboard',          icon: HomeIcon },
-    { name: 'Appointments',  href: 'student.appointments.index', icon: CalendarIcon },
-    { name: 'Medicine',      href: 'student.medicine.index',     icon: BeakerIcon },
-    { name: 'Health Survey', href: 'student.survey.index',       icon: ClipboardDocumentListIcon },
-    { name: 'Requirements',  href: 'student.requirements.index', icon: DocumentTextIcon },
-    { name: 'Messages',      href: 'student.messages.index',     icon: ChatBubbleLeftRightIcon },
-    { name: 'Profile',       href: 'student.profile',            icon: UserCircleIcon },
+    { name: 'Dashboard',       href: 'student.dashboard',          icon: HomeIcon },
+    { name: 'Appointments',    href: 'student.appointments.index', icon: CalendarIcon },
+    { name: 'Walk-in History', href: 'student.walkin.index',       icon: ClipboardDocumentCheckIcon },
+    { name: 'Medicine',        href: 'student.medicine.index',     icon: BeakerIcon },
+    { name: 'Health Survey',   href: 'student.survey.index',       icon: ClipboardDocumentListIcon },
+    { name: 'Requirements',    href: 'student.requirements.index', icon: DocumentTextIcon },
+    { name: 'Messages',        href: 'student.messages.index',     icon: ChatBubbleLeftRightIcon },
+    { name: 'Profile',         href: 'student.profile',            icon: UserCircleIcon },
 ];
 
 const ALWAYS_ACCESSIBLE = new Set([

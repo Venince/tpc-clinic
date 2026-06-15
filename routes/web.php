@@ -84,6 +84,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/appointments/{appointment}/complete', [Admin\AppointmentController::class, 'complete'])->name('appointments.complete');
         Route::delete('/appointments/{appointment}',        [Admin\AppointmentController::class, 'destroyAppointment'])->name('appointments.destroy');
 
+        // Walk-in Log
+        Route::get('/walkin',              [\App\Http\Controllers\Admin\WalkinLogController::class, 'index'])->name('walkin.index');
+        Route::post('/walkin',             [\App\Http\Controllers\Admin\WalkinLogController::class, 'store'])->name('walkin.store');
+        Route::delete('/walkin/{walkinLog}',[\App\Http\Controllers\Admin\WalkinLogController::class, 'destroy'])->name('walkin.destroy')->middleware('role:super_admin');
+
         // Medicine
         Route::get('/medicine',               [Admin\MedicineController::class, 'index'])->name('medicine.index');
         Route::post('/medicine',              [Admin\MedicineController::class, 'store'])->name('medicine.store');
@@ -226,6 +231,9 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
             Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
+            
+            Route::get('/walkin', [\App\Http\Controllers\Student\WalkinLogController::class, 'index'])->name('walkin.index');
+
             Route::get('/medicine',                           [Student\MedicineController::class, 'index'])->name('medicine.index');
             Route::post('/medicine',                          [Student\MedicineController::class, 'store'])->name('medicine.store');
             Route::post('/medicine/{medicineRequest}/cancel', [Student\MedicineController::class, 'cancel'])->name('medicine.cancel');
@@ -274,6 +282,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
         Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
         Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
+
+        Route::get('/walkin', [\App\Http\Controllers\Faculty\WalkinLogController::class, 'index'])->name('walkin.index');
 
         Route::get('/medicine',                           [Student\MedicineController::class, 'index'])->name('medicine.index');
         Route::post('/medicine',                          [Student\MedicineController::class, 'store'])->name('medicine.store');
