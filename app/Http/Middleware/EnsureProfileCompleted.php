@@ -20,7 +20,6 @@ class EnsureProfileCompleted
 
         $role = $user->role->name;
 
-        // ── Student ────────────────────────────────────────────────────────
         if ($role === 'student') {
 
             // 1. Profile check
@@ -49,9 +48,17 @@ class EnsureProfileCompleted
                 $surveyOk = $requiredQuestionIds->diff($answeredIds)->isEmpty();
             }
 
-            // 3. Requirements check — student must upload ALL required active types
+            // 3. Requirements check — filter by student's program and year level
             $requiredTypeIds = RequirementType::where('is_active', true)
                 ->where('is_required', true)
+                ->where(function ($q) use ($profile) {
+                    $q->whereNull('program_id')
+                      ->orWhere('program_id', $profile?->program_id);
+                })
+                ->where(function ($q) use ($profile) {
+                    $q->whereNull('year_level')
+                      ->orWhere('year_level', $profile?->year_level);
+                })
                 ->pluck('id');
 
             $requirementsOk = true;
@@ -63,7 +70,6 @@ class EnsureProfileCompleted
                 $requirementsOk = $requiredTypeIds->diff($uploadedTypeIds)->isEmpty();
             }
 
-            // Block on whichever is incomplete — but don't redirect away from those pages
             if (!$profileOk && !$request->routeIs('student.profile', 'student.profile.*')) {
                 return redirect()->route('student.profile')
                     ->with('error', 'Please complete your profile before using other features.');

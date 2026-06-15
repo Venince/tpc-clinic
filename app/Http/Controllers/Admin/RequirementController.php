@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\RequirementType;
 use App\Models\UserRequirement;
@@ -7,10 +8,15 @@ use App\Notifications\RequirementStatusNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class RequirementController extends Controller {
-    public function index(Request $request) {
+class RequirementController extends Controller
+{
+    public function index(Request $request)
+    {
         return Inertia::render('Admin/Requirements/Index', [
-            'types'        => RequirementType::withCount('userRequirements')->orderBy('sort_order')->get(),
+            'types'        => RequirementType::with('program:id,code,name')
+                ->withCount('userRequirements')
+                ->orderBy('sort_order')
+                ->get(),
             'requirements' => UserRequirement::with(['user.studentProfile.program', 'requirementType', 'reviewer:id,name'])
                 ->when($request->program_id, fn($q) => $q->whereHas('user.studentProfile', fn($s) => $s->where('program_id', $request->program_id)))
                 ->when($request->status,     fn($q) => $q->where('approval_status', $request->status))
@@ -20,35 +26,64 @@ class RequirementController extends Controller {
             'filters'  => $request->only('program_id', 'status', 'search'),
         ]);
     }
-    public function storeType(Request $request) {
+
+    public function storeType(Request $request)
+    {
         $request->validate([
             'name'        => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'is_required' => ['boolean'],
+            'program_id'  => ['nullable', 'exists:programs,id'],
+            'year_level'  => ['nullable', 'integer', 'min:1', 'max:6'],
         ]);
+
         RequirementType::create([
             'name'        => $request->name,
             'description' => $request->description,
             'is_required' => $request->boolean('is_required', false),
+            'program_id'  => $request->program_id ?: null,
+            'year_level'  => $request->year_level  ?: null,
             'sort_order'  => RequirementType::max('sort_order') + 1,
         ]);
+
         return back()->with('success', 'Requirement type added.');
     }
 
-    public function updateType(Request $request, RequirementType $requirementType) {
+    public function updateType(Request $request, RequirementType $requirementType)
+    {
         $request->validate([
             'is_required' => ['required', 'boolean'],
         ]);
+
         $requirementType->update(['is_required' => $request->boolean('is_required')]);
+
         return back()->with('success', 'Requirement type updated.');
     }
 
-    public function destroyType(RequirementType $requirementType) { $requirementType->delete(); return back()->with('success','Requirement type deleted.'); }
-    public function review(Request $request, UserRequirement $userRequirement) {
-        $request->validate(['status'=>['required','in:approved,rejected'],'reason'=>['required_if:status,rejected','nullable','string','max:500']]);
-        $userRequirement->update(['approval_status'=>$request->status,'verification_status'=>$request->status==='approved'?'verified':'rejected','rejection_reason'=>$request->reason,'reviewed_by'=>$request->user()->id,'reviewed_at'=>now()]);
+    public function destroyType(RequirementType $requirementType)
+    {
+        $requirementType->delete();
+        return back()->with('success', 'Requirement type deleted.');
+    }
+
+    public function review(Request $request, UserRequirement $userRequirement)
+    {
+        $request->validate([
+            'status' => ['required', 'in:approved,rejected'],
+            'reason' => ['required_if:status,rejected', 'nullable', 'string', 'max:500'],
+        ]);
+
+        $userRequirement->update([
+            'approval_status'     => $request->status,
+            'verification_status' => $request->status === 'approved' ? 'verified' : 'rejected',
+            'rejection_reason'    => $request->reason,
+            'reviewed_by'         => $request->user()->id,
+            'reviewed_at'         => now(),
+        ]);
+
         $userRequirement->user->notify(new RequirementStatusNotification($userRequirement->load('requirementType')));
-        return back()->with('success',"Requirement {$request->status}.");
+
+        return back()->with('success', "Requirement {$request->status}.");
     }
 
     public function clearSubmissions(Request $request): \Illuminate\Http\RedirectResponse
@@ -56,41 +91,37 @@ class RequirementController extends Controller {
         $request->validate([
             'user_type' => ['required', 'in:student,faculty_staff,both'],
         ]);
- 
-        // Super admin only
+
         abort_unless($request->user()->role?->name === 'super_admin', 403, 'Super admin only.');
- 
+
         $roleMap = match ($request->user_type) {
             'student'       => ['student'],
             'faculty_staff' => ['faculty_staff'],
             'both'          => ['student', 'faculty_staff'],
         };
- 
+
         $submissions = UserRequirement::whereHas(
-            'user.role',
-            fn($q) => $q->whereIn('name', $roleMap)
+            'user.role', fn($q) => $q->whereIn('name', $roleMap)
         )->get();
- 
+
         $count = $submissions->count();
- 
-        // Delete physical files
+
         foreach ($submissions as $submission) {
             if ($submission->file_path) {
                 \Illuminate\Support\Facades\Storage::disk('private')->delete($submission->file_path);
             }
         }
- 
+
         UserRequirement::whereHas(
-            'user.role',
-            fn($q) => $q->whereIn('name', $roleMap)
+            'user.role', fn($q) => $q->whereIn('name', $roleMap)
         )->delete();
- 
+
         $label = match ($request->user_type) {
             'student'       => 'student',
             'faculty_staff' => 'faculty/staff',
             'both'          => 'all',
         };
- 
+
         return back()->with('success', "Cleared {$count} {$label} requirement submission(s).");
     }
 

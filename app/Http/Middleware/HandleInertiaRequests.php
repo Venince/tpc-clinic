@@ -47,6 +47,14 @@ class HandleInertiaRequests extends Middleware
 
             $requiredTypeIds = \App\Models\RequirementType::where('is_active', true)
                 ->where('is_required', true)
+                ->where(function ($q) use ($profile) {
+                    $q->whereNull('program_id')
+                    ->orWhere('program_id', $profile?->program_id);
+                })
+                ->where(function ($q) use ($profile) {
+                    $q->whereNull('year_level')
+                    ->orWhere('year_level', $profile?->year_level);
+                })
                 ->pluck('id');
 
             $requirementsOk = true;

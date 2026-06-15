@@ -19,7 +19,13 @@ export default function RequirementsIndex({ types, requirements, programs, filte
     const [status, setStatus]         = useState(filters?.status || '');
     const [programId, setProgramId]   = useState(filters?.program_id || '');
 
-    const addForm    = useForm({ name: '', description: '', is_required: false });
+    const addForm = useForm({
+        name:        '',
+        description: '',
+        is_required: false,
+        program_id:  '',
+        year_level:  '',
+    });
     const reviewForm = useForm({ status: 'approved', reason: '' });
     const clearForm  = useForm({ user_type: '' });
 
@@ -109,18 +115,27 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 <div className="divide-y divide-gray-100">
                     {types.map(t => (
                         <div key={t.id} className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <p className="font-medium text-gray-900 truncate">{t.name}</p>
-                                    {t.is_required && (
-                                        <span className="badge badge-red text-[10px] px-1.5 py-0.5 flex-shrink-0">
-                                            Required
-                                        </span>
-                                    )}
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="font-medium text-gray-900 truncate">{t.name}</p>
+                                        {t.is_required && (
+                                            <span className="badge badge-red text-[10px] px-1.5 py-0.5 flex-shrink-0">Required</span>
+                                        )}
+                                        {t.program ? (
+                                            <span className="badge badge-blue text-[10px] px-1.5 py-0.5 flex-shrink-0">
+                                                {t.program.code}{t.year_level ? ` · Year ${t.year_level}` : ''}
+                                            </span>
+                                        ) : t.year_level ? (
+                                            <span className="badge badge-blue text-[10px] px-1.5 py-0.5 flex-shrink-0">
+                                                Year {t.year_level} (All Programs)
+                                            </span>
+                                        ) : (
+                                            <span className="badge badge-gray text-[10px] px-1.5 py-0.5 flex-shrink-0">All Students</span>
+                                        )}
+                                    </div>
+                                    {t.description && <p className="text-xs text-gray-400">{t.description}</p>}
+                                    <p className="text-xs text-gray-400 mt-0.5">{t.user_requirements_count} submissions</p>
                                 </div>
-                                {t.description && <p className="text-xs text-gray-400">{t.description}</p>}
-                                <p className="text-xs text-gray-400 mt-0.5">{t.user_requirements_count} submissions</p>
-                            </div>
                             <div className="flex items-center gap-3 flex-shrink-0">
                                 {/* Required toggle */}
                                 <label className="flex items-center gap-1.5 cursor-pointer select-none" title={t.is_required ? 'Mark as optional' : 'Mark as required'}>
@@ -387,11 +402,40 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                 <textarea value={addForm.data.description} onChange={e => addForm.setData('description', e.target.value)}
                                     className="input" rows={2} />
                             </div>
+
+                            {/* Targeting */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="label">Program <span className="text-gray-400 font-normal">(optional)</span></label>
+                                    <select value={addForm.data.program_id} onChange={e => addForm.setData('program_id', e.target.value)} className="input">
+                                        <option value="">All Programs</option>
+                                        {programs.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+                                    </select>
+                                    {addForm.errors.program_id && <p className="error-msg">{addForm.errors.program_id}</p>}
+                                </div>
+                                <div>
+                                    <label className="label">Year Level <span className="text-gray-400 font-normal">(optional)</span></label>
+                                    <select value={addForm.data.year_level} onChange={e => addForm.setData('year_level', e.target.value)} className="input">
+                                        <option value="">All Years</option>
+                                        {[1,2,3,4,5,6].map(y => <option key={y} value={y}>Year {y}</option>)}
+                                    </select>
+                                    {addForm.errors.year_level && <p className="error-msg">{addForm.errors.year_level}</p>}
+                                </div>
+                            </div>
+
+                            {/* Scope summary */}
+                            <p className="text-xs text-gray-400 bg-gray-50 rounded px-3 py-2">
+                                {!addForm.data.program_id && !addForm.data.year_level
+                                    ? 'Applies to all students.'
+                                    : `Applies to ${addForm.data.program_id ? programs.find(p => p.id == addForm.data.program_id)?.code ?? 'selected program' : 'all programs'}${addForm.data.year_level ? `, Year ${addForm.data.year_level}` : ''} students only.`
+                                }
+                            </p>
+
                             {/* is_required toggle */}
                             <div className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
                                 <div>
                                     <p className="text-sm font-medium text-gray-900">Required for onboarding</p>
-                                    <p className="text-xs text-gray-400">Students must upload this before accessing the portal.</p>
+                                    <p className="text-xs text-gray-400">Targeted students must upload this before accessing the portal.</p>
                                 </div>
                                 <button
                                     type="button"
@@ -405,6 +449,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                     }`} />
                                 </button>
                             </div>
+
                             <div className="flex gap-3 pt-1">
                                 <button type="submit" disabled={addForm.processing} className="btn-primary flex-1">Add</button>
                                 <button type="button" onClick={() => { setShowAdd(false); addForm.reset(); }} className="btn-secondary flex-1">Cancel</button>
