@@ -35,6 +35,7 @@ class EnsureProfileCompleted
             // 2. Survey check
             $requiredQuestionIds = SurveyQuestion::where('is_active', true)
                 ->where('is_required', true)
+                ->where('target_role', 'student')
                 ->pluck('id');
 
             $surveyOk = true;

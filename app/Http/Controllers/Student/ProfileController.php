@@ -64,6 +64,7 @@ class ProfileController extends Controller
 
         $requiredIds = SurveyQuestion::where('is_active', true)
             ->where('is_required', true)
+            ->where('target_role', 'student')
             ->pluck('id');
 
         $answeredIds = SurveyAnswer::where('user_id', $user->id)

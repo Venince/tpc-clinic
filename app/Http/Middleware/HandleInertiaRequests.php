@@ -33,6 +33,7 @@ class HandleInertiaRequests extends Middleware
             if ($profileOk) {
                 $requiredIds = \App\Models\SurveyQuestion::where('is_active', true)
                     ->where('is_required', true)
+                    ->where('target_role', 'student')
                     ->pluck('id');
                 if ($requiredIds->isEmpty()) {
                     $surveyOk = true;
