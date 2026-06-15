@@ -72,7 +72,7 @@ export default function Login({ status, lockout_seconds = 0 }) {
                             value={data.email}
                             onChange={e => setData('email', e.target.value)}
                             className={`input pl-9 ${errors.email ? 'input-error' : ''}`}
-                            placeholder="you@tpc.edu.ph"
+                            placeholder="you@gmail.com"
                             autoFocus
                             disabled={isLockedOut}
                         />

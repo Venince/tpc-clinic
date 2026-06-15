@@ -23,7 +23,7 @@ export default function ForgotPassword({ status }) {
                             value={data.email}
                             onChange={e => setData('email', e.target.value)}
                             className={`input pl-9 ${errors.email ? 'input-error' : ''}`}
-                            placeholder="you@tpc.edu.ph"
+                            placeholder="you@gmail.com"
                             autoFocus
                         />
                     </div>
