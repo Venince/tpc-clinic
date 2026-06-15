@@ -21,14 +21,14 @@ function StatCard({ icon: Icon, label, value, sub, color = 'clinic' }) {
         purple: 'bg-purple-50 text-purple-600',
     };
     return (
-        <div className="stat-card flex-col sm:flex-row items-start sm:items-center gap-2 p-3 sm:p-4">
+        <div className="stat-card flex-col items-start gap-2 p-3 sm:p-4">
             <div className={`stat-icon ${colors[color]} shrink-0`}>
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Icon className="w-5 h-5" />
             </div>
-            <div className="min-w-0">
-                <p className="stat-value text-lg sm:text-2xl">{value?.toLocaleString()}</p>
-                <p className="stat-label text-xs truncate">{label}</p>
-                {sub && <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>}
+            <div className="min-w-0 w-full">
+                <p className="stat-value text-xl sm:text-2xl leading-tight">{value?.toLocaleString()}</p>
+                <p className="stat-label text-xs leading-tight mt-0.5">{label}</p>
+                {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
             </div>
         </div>
     );
@@ -115,32 +115,13 @@ function PregnancyAlert({ students, faculty, counts }) {
     );
 }
 
-// ── Floating tooltip rendered outside Recharts ──────────────────────────
 const tooltipCSS = `
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to   { opacity: 0; }
-}
-@keyframes dotFadeIn {
-    from { opacity: 0; r: 0; }
-    to   { opacity: 1; r: 5; }
-}
-@keyframes dotFadeOut {
-    from { opacity: 1; r: 5; }
-    to   { opacity: 0; r: 0; }
-}
-@keyframes barFadeIn {
-    from { opacity: 0.2; }
-    to   { opacity: 1; }
-}
-@keyframes barFadeOut {
-    from { opacity: 1; }
-    to   { opacity: 0.2; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dotFadeIn { from { opacity: 0; r: 0; } to { opacity: 1; r: 5; } }
+@keyframes dotFadeOut { from { opacity: 1; r: 5; } to { opacity: 0; r: 0; } }
+@keyframes barFadeIn { from { opacity: 0.2; } to { opacity: 1; } }
+@keyframes barFadeOut { from { opacity: 1; } to { opacity: 0.2; } }
 `;
 
 function FloatingTooltip({ containerRef, index, data, renderContent, direction = 'horizontal' }) {
@@ -165,14 +146,11 @@ function FloatingTooltip({ containerRef, index, data, renderContent, direction =
         }
 
         const id = Date.now();
-
-        // Mark all existing items as fading out, add new one fading in
         setItems(prev => [
             ...prev.map(item => ({ ...item, fading: true })),
             { id, index, x, y, fading: false },
         ]);
 
-        // Remove faded-out items after animation completes
         const cleanup = setTimeout(() => {
             setItems(prev => prev.filter(item => item.id === id));
         }, 1300);
@@ -208,13 +186,45 @@ function FloatingTooltip({ containerRef, index, data, renderContent, direction =
     );
 }
 
+// Mobile-friendly appointment row card
+function AppointmentCard({ appointment, statusBadge }) {
+    const a = appointment;
+    return (
+        <div className="p-3 border-b border-gray-100 last:border-b-0">
+            <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="font-medium text-gray-900 text-sm">{a.patient}</p>
+                {statusBadge(a.status)}
+            </div>
+            <p className="text-xs text-gray-500 mb-1">{a.purpose}</p>
+            <p className="text-xs text-gray-400">{a.date} · {a.time}</p>
+        </div>
+    );
+}
+
+// Pie chart legend rendered below chart instead of inline labels
+function PieLegend({ data }) {
+    return (
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2 px-2">
+            {data?.map((entry, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                    <span className="text-xs text-gray-600 truncate max-w-[80px]">{entry.program}</span>
+                    <span className="text-xs text-gray-400">
+                        {entry.total}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function Dashboard({ stats, appointmentTrend, medicineStock, programDist, recentAppointments }) {
     const statusBadge = (s) => {
         const map = { pending:'badge-yellow', approved:'badge-green', declined:'badge-red', completed:'badge-purple', cancelled:'badge-gray' };
         return <span className={`badge ${map[s] || 'badge-gray'}`}>{s}</span>;
     };
 
-    // ── Appointment Trends sweep ─────────────────────────────────────────
     const [trendIndex, setTrendIndex] = useState(0);
     const trendPaused = useRef(false);
     const trendContainerRef = useRef(null);
@@ -228,7 +238,6 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
         return () => clearInterval(id);
     }, [appointmentTrend]);
 
-    // ── Medicine Stock sweep ─────────────────────────────────────────────
     const [stockIndex, setStockIndex] = useState(0);
     const stockPaused = useRef(false);
     const stockContainerRef = useRef(null);
@@ -242,12 +251,22 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
         return () => clearInterval(id);
     }, [medicineStock]);
 
+    // Truncate long medicine names on mobile
+    const truncateName = (name, maxLen = 12) =>
+        name?.length > maxLen ? name.slice(0, maxLen) + '…' : name;
+
+    // Dynamic Y-axis width based on longest medicine name
+    const yAxisWidth = medicineStock?.reduce((max, m) => {
+        const len = (m.name || '').length;
+        return len > max ? len : max;
+    }, 0) > 10 ? 90 : 70;
+
     return (
         <AdminLayout title="Dashboard">
             <Head title="Dashboard" />
 
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+            {/* Stat cards — 2 cols on all mobile, 4 on xl */}
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
                 <StatCard icon={UsersIcon}       label="Total Students"      value={stats.total_students}          color="clinic" />
                 <StatCard icon={UsersIcon}       label="Total Faculty/Staff" value={stats.total_faculty}           color="purple" />
                 <StatCard icon={AcademicCapIcon} label="Active Programs"     value={stats.total_programs}          color="green" />
@@ -255,13 +274,13 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                     sub={`${stats.appointments.pending} pending`} color="yellow" />
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
-                <StatCard icon={BeakerIcon}              label="Total Medicines" value={stats.medicine.total}        color="clinic" />
-                <StatCard icon={ExclamationTriangleIcon} label="Low Stock"       value={stats.medicine.low_stock}   color="yellow" />
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <StatCard icon={BeakerIcon}              label="Total Medicines" value={stats.medicine.total}         color="clinic" />
+                <StatCard icon={ExclamationTriangleIcon} label="Low Stock"       value={stats.medicine.low_stock}    color="yellow" />
                 <StatCard icon={ExclamationTriangleIcon} label="Out of Stock"    value={stats.medicine.out_of_stock} color="red" />
                 <StatCard icon={HeartIcon}               label="Pregnant"
                     value={stats.pregnancy.students + stats.pregnancy.faculty}
-                    sub={`${stats.pregnancy.students} students, ${stats.pregnancy.faculty} faculty`} color="red" />
+                    sub={`${stats.pregnancy.students}s · ${stats.pregnancy.faculty}f`} color="red" />
             </div>
 
             {(stats.pregnancy.students > 0 || stats.pregnancy.faculty > 0) && (
@@ -273,18 +292,17 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
             )}
 
             {/* Charts row */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
 
-                {/* ── Appointment Trend ── */}
+                {/* Appointment Trend */}
                 <div className="card"
                     onMouseEnter={() => { trendPaused.current = true; }}
                     onMouseLeave={() => { trendPaused.current = false; }}
                 >
                     <div className="card-header">
-                        <h3 className="font-semibold text-gray-900">Appointment Trends (6 months)</h3>
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Appointment Trends (6 months)</h3>
                     </div>
                     <div className="card-body pt-2">
-                        {/* wrapper must be relative so FloatingTooltip positions inside it */}
                         <div className="relative" ref={trendContainerRef}>
                             <FloatingTooltip
                                 containerRef={trendContainerRef}
@@ -299,84 +317,55 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                                     </>
                                 )}
                             />
-                            <ResponsiveContainer width="100%" height={220}>
+                            <ResponsiveContainer width="100%" height={200}>
                                 <LineChart
                                     data={appointmentTrend}
-                                    margin={{ left: -20 }}
+                                    margin={{ left: -20, right: 8, top: 8, bottom: 0 }}
                                     onMouseMove={(state) => {
                                         if (trendPaused.current && state?.activeTooltipIndex != null)
                                             setTrendIndex(state.activeTooltipIndex);
                                     }}
                                 >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                                    <YAxis tick={{ fontSize: 11 }} />
+                                    <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                                    <YAxis tick={{ fontSize: 10 }} width={28} />
                                     <Tooltip content={() => null} />
-                                    <Legend />
-                                    <Line type="monotone" dataKey="pending" stroke="#f59e0b" strokeWidth={2}
-                                        dot={(props) => {
-                                            const { cx, cy, index } = props;
-                                            const isActive = index === trendIndex;
-                                            return (
-                                                <circle
-                                                    key={`pending-${index}-${isActive}`}
-                                                    cx={cx} cy={cy} r={5}
-                                                    fill="#f59e0b" stroke="#fff" strokeWidth={2}
-                                                    style={{
-                                                        animation: `${isActive ? 'dotFadeIn' : 'dotFadeOut'} 1200ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-                                                    }}
-                                                />
-                                            );
-                                        }}
-                                        isAnimationActive={false}
-                                    />
-                                    <Line type="monotone" dataKey="approved" stroke="#10b981" strokeWidth={2}
-                                        dot={(props) => {
-                                            const { cx, cy, index } = props;
-                                            const isActive = index === trendIndex;
-                                            return (
-                                                <circle
-                                                    key={`approved-${index}-${isActive}`}
-                                                    cx={cx} cy={cy} r={5}
-                                                    fill="#10b981" stroke="#fff" strokeWidth={2}
-                                                    style={{
-                                                        animation: `${isActive ? 'dotFadeIn' : 'dotFadeOut'} 1200ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-                                                    }}
-                                                />
-                                            );
-                                        }}
-                                        isAnimationActive={false}
-                                    />
-                                    <Line type="monotone" dataKey="declined" stroke="#ef4444" strokeWidth={2}
-                                        dot={(props) => {
-                                            const { cx, cy, index } = props;
-                                            const isActive = index === trendIndex;
-                                            return (
-                                                <circle
-                                                    key={`declined-${index}-${isActive}`}
-                                                    cx={cx} cy={cy} r={5}
-                                                    fill="#ef4444" stroke="#fff" strokeWidth={2}
-                                                    style={{
-                                                        animation: `${isActive ? 'dotFadeIn' : 'dotFadeOut'} 1200ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-                                                    }}
-                                                />
-                                            );
-                                        }}
-                                        isAnimationActive={false}
-                                    />
+                                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                                    {['pending', 'approved', 'declined'].map((key, ki) => {
+                                        const colors = { pending: '#f59e0b', approved: '#10b981', declined: '#ef4444' };
+                                        return (
+                                            <Line key={key} type="monotone" dataKey={key} stroke={colors[key]} strokeWidth={2}
+                                                dot={(props) => {
+                                                    const { cx, cy, index } = props;
+                                                    const isActive = index === trendIndex;
+                                                    return (
+                                                        <circle
+                                                            key={`${key}-${index}-${isActive}`}
+                                                            cx={cx} cy={cy} r={5}
+                                                            fill={colors[key]} stroke="#fff" strokeWidth={2}
+                                                            style={{
+                                                                animation: `${isActive ? 'dotFadeIn' : 'dotFadeOut'} 1200ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+                                                            }}
+                                                        />
+                                                    );
+                                                }}
+                                                isAnimationActive={false}
+                                            />
+                                        );
+                                    })}
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
                 </div>
 
-                {/* ── Medicine Stock ── */}
+                {/* Medicine Stock */}
                 <div className="card"
                     onMouseEnter={() => { stockPaused.current = true; }}
                     onMouseLeave={() => { stockPaused.current = false; }}
                 >
                     <div className="card-header">
-                        <h3 className="font-semibold text-gray-900">Medicine Stock Overview</h3>
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Medicine Stock Overview</h3>
                     </div>
                     <div className="card-body pt-2">
                         <div className="relative" ref={stockContainerRef}>
@@ -395,19 +384,24 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                                     );
                                 }}
                             />
-                            <ResponsiveContainer width="100%" height={220}>
+                            <ResponsiveContainer width="100%" height={Math.max(200, (medicineStock?.length || 5) * 28)}>
                                 <BarChart
-                                    data={medicineStock}
+                                    data={medicineStock?.map(m => ({ ...m, name: truncateName(m.name) }))}
                                     layout="vertical"
-                                    margin={{ left: -10 }}
+                                    margin={{ left: 0, right: 8, top: 4, bottom: 4 }}
                                     onMouseMove={(state) => {
                                         if (stockPaused.current && state?.activeTooltipIndex != null)
                                             setStockIndex(state.activeTooltipIndex);
                                     }}
                                 >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                    <XAxis type="number" tick={{ fontSize: 11 }} />
-                                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={80} />
+                                    <XAxis type="number" tick={{ fontSize: 10 }} />
+                                    <YAxis
+                                        dataKey="name"
+                                        type="category"
+                                        tick={{ fontSize: 9 }}
+                                        width={yAxisWidth}
+                                    />
                                     <Tooltip content={() => null} />
                                     <Bar dataKey="quantity" radius={[0, 4, 4, 0]} isAnimationActive={false}>
                                         {medicineStock?.map((m, i) => {
@@ -432,25 +426,51 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
             </div>
 
             {/* Program distribution + Recent appointments */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
                 <div className="card">
-                    <div className="card-header"><h3 className="font-semibold text-gray-900">Students by Program</h3></div>
-                    <div className="card-body pt-2 flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height={200}>
+                    <div className="card-header">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Students by Program</h3>
+                    </div>
+                    <div className="card-body pt-2">
+                        <ResponsiveContainer width="100%" height={180}>
                             <PieChart>
-                                <Pie data={programDist} dataKey="total" nameKey="program" cx="50%" cy="50%" outerRadius={70}
-                                    label={({ program, percent }) => `${program} ${(percent * 100).toFixed(0)}%`}>
+                                <Pie
+                                    data={programDist}
+                                    dataKey="total"
+                                    nameKey="program"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={70}
+                                    label={false}
+                                >
                                     {programDist?.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                                 </Pie>
-                                <Tooltip />
+                                <Tooltip
+                                    formatter={(value, name) => [value, name]}
+                                />
                             </PieChart>
                         </ResponsiveContainer>
+                        <PieLegend data={programDist} />
                     </div>
                 </div>
 
                 <div className="card xl:col-span-2">
-                    <div className="card-header"><h3 className="font-semibold text-gray-900">Recent Appointments</h3></div>
-                    <div className="overflow-x-auto">
+                    <div className="card-header">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Recent Appointments</h3>
+                    </div>
+
+                    {/* Mobile card list — hidden on sm+ */}
+                    <div className="sm:hidden">
+                        {recentAppointments?.map(a => (
+                            <AppointmentCard key={a.id} appointment={a} statusBadge={statusBadge} />
+                        ))}
+                        {!recentAppointments?.length && (
+                            <p className="text-center text-gray-400 py-6 text-sm">No appointments yet</p>
+                        )}
+                    </div>
+
+                    {/* Table — hidden on mobile */}
+                    <div className="hidden sm:block overflow-x-auto">
                         <table className="table">
                             <thead><tr>
                                 <th className="whitespace-nowrap">Patient</th>
