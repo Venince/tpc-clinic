@@ -455,22 +455,8 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                 </div>
 
                 <div className="card xl:col-span-2">
-                    <div className="card-header">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Recent Appointments</h3>
-                    </div>
-
-                    {/* Mobile card list — hidden on sm+ */}
-                    <div className="sm:hidden">
-                        {recentAppointments?.map(a => (
-                            <AppointmentCard key={a.id} appointment={a} statusBadge={statusBadge} />
-                        ))}
-                        {!recentAppointments?.length && (
-                            <p className="text-center text-gray-400 py-6 text-sm">No appointments yet</p>
-                        )}
-                    </div>
-
-                    {/* Table — hidden on mobile */}
-                    <div className="hidden sm:block overflow-x-auto">
+                    <div className="card-header"><h3 className="font-semibold text-gray-900">Recent Appointments</h3></div>
+                    <div className="overflow-x-auto">
                         <table className="table">
                             <thead><tr>
                                 <th className="whitespace-nowrap">Patient</th>
