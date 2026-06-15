@@ -3,6 +3,18 @@ import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
 import { CalendarIcon, ClockIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
+const fmtDate = (raw) => {
+    if (!raw) return '—';
+    const d = new Date(raw);
+    if (isNaN(d)) return raw;
+    return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' });
+};
+
+const fmtTime = (raw) => {
+    if (!raw) return '—';
+    return String(raw).slice(0, 5);
+};
+
 export default function FacultyAppointments({ appointments, slots }) {
     const [showBook, setShowBook] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({ appointment_slot_id: '', purpose: '', notes: '' });
@@ -39,8 +51,8 @@ export default function FacultyAppointments({ appointments, slots }) {
                         {slots.slice(0, 8).map(slot => (
                             <button key={slot.id} onClick={() => { setData('appointment_slot_id', slot.id); setShowBook(true); }}
                                 className="text-left p-3 rounded-lg border border-clinic-200 bg-clinic-50 hover:bg-clinic-100 transition-colors">
-                                <p className="text-xs font-semibold text-clinic-700">{new Date(slot.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                <p className="text-xs text-clinic-600 mt-0.5">{slot.start_time} – {slot.end_time}</p>
+                                <p className="text-xs font-semibold text-clinic-700">{fmtDate(slot.date)}</p>
+                                <p className="text-xs text-clinic-600 mt-0.5">{fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}</p>
                                 <p className="text-xs text-gray-400 mt-1">{slot.available_slots ?? slot.max_appointments - slot.booked_count} slot(s) left</p>
                             </button>
                         ))}
@@ -63,9 +75,9 @@ export default function FacultyAppointments({ appointments, slots }) {
                         </div>
                         <div className="flex items-center gap-1 text-xs text-gray-500">
                             <CalendarIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                            {a.slot?.date}
+                            {fmtDate(a.slot?.date)}
                             <ClockIcon className="w-3.5 h-3.5 flex-shrink-0 ml-2" />
-                            {a.slot?.start_time}
+                            {fmtTime(a.slot?.start_time)}
                         </div>
                         {a.status === 'declined' && a.decline_reason && (
                             <p className="text-xs text-red-500">Reason: {a.decline_reason}</p>
@@ -97,8 +109,8 @@ export default function FacultyAppointments({ appointments, slots }) {
                             {appointments.data.map(a => (
                                 <tr key={a.id}>
                                     <td className="font-medium">{a.purpose}</td>
-                                    <td>{a.slot?.date}</td>
-                                    <td>{a.slot?.start_time}</td>
+                                    <td>{fmtDate(a.slot?.date)}</td>
+                                    <td>{fmtTime(a.slot?.start_time)}</td>
                                     <td>
                                         {statusBadge(a.status)}
                                         {a.status === 'declined' && a.decline_reason && (
@@ -142,7 +154,7 @@ export default function FacultyAppointments({ appointments, slots }) {
                                     <option value="">— Choose a slot —</option>
                                     {slots.map(s => (
                                         <option key={s.id} value={s.id}>
-                                            {s.date} · {s.start_time}–{s.end_time} ({(s.available_slots ?? s.max_appointments - s.booked_count)} available)
+                                            {fmtDate(s.date)} · {fmtTime(s.start_time)}–{fmtTime(s.end_time)} ({(s.available_slots ?? s.max_appointments - s.booked_count)} available)
                                         </option>
                                     ))}
                                 </select>
