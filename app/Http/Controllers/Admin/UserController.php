@@ -42,11 +42,13 @@ class UserController extends Controller
         ]);
     }
 
-    public function create()
+        public function create(Request $request)
     {
-        return Inertia::render('Admin/Users/Create', [
-            'roles' => Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name']),
-        ]);
+        $roles = $request->user()->isSuperAdmin()
+            ? Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name'])
+            : Role::whereNotIn('name', ['super_admin', 'admin'])->get(['id', 'name', 'display_name']);
+
+        return Inertia::render('Admin/Users/Create', ['roles' => $roles]);
     }
 
     public function importForm()
@@ -179,7 +181,11 @@ class UserController extends Controller
     {
         $request->validate([
             'file' => ['required', 'file', 'mimes:txt', 'max:2048'],
-            'role' => ['required', Rule::in(['student', 'faculty_staff'])],
+            'role' => ['required', Rule::in(
+                $request->user()->isSuperAdmin()
+                    ? ['student', 'faculty_staff', 'admin']
+                    : ['student', 'faculty_staff']
+            )],
         ]);
 
         // Normalize line endings, split, trim, remove blanks, cap at 500

@@ -56,15 +56,9 @@ export default function CreateUser({ roles }) {
                     <div className="card-body text-center py-8">
                         <p className="text-sm font-medium text-gray-700 mb-1">Bulk Import via TXT file</p>
                         <p className="text-xs text-gray-400 mb-4">Upload a .txt file with one email per line</p>
-                        <form method="POST" action={route('admin.users.import')} encType="multipart/form-data" className="flex flex-col items-center gap-3">
-                            <input type="hidden" name="_token" value={document.querySelector('meta[name=csrf-token]')?.content} />
-                            <select name="role" className="input w-48 text-sm">
-                                <option value="student">Student</option>
-                                <option value="faculty_staff">Faculty/Staff</option>
-                            </select>
-                            <input type="file" name="file" accept=".txt" className="text-sm text-gray-500" />
-                            <button type="submit" className="btn-secondary btn-sm">Import</button>
-                        </form>
+                        <Link href={route('admin.users.import')} className="btn-secondary btn-sm">
+                            Go to Bulk Import
+                        </Link>
                     </div>
                 </div>
             </div>

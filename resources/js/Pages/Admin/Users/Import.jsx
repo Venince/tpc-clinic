@@ -15,6 +15,16 @@ export default function UsersImport({ roles }) {
         });
     };
 
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) setData('file', file);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
     return (
         <AdminLayout title="Bulk Import Users">
             <Head title="Bulk Import" />
@@ -54,7 +64,11 @@ export default function UsersImport({ roles }) {
                                 {/* File */}
                                 <div>
                                     <label className="label">Email List File (.txt) <span className="text-red-500">*</span></label>
-                                    <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${data.file ? 'border-clinic-400 bg-clinic-50' : 'border-gray-200 hover:border-clinic-300'}`}>
+                                    <div
+                                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${data.file ? 'border-clinic-400 bg-clinic-50' : 'border-gray-200 hover:border-clinic-300'}`}
+                                        onDrop={handleDrop}
+                                        onDragOver={handleDragOver}
+                                    >
                                         {data.file ? (
                                             <div className="flex items-center justify-center gap-3">
                                                 <DocumentTextIcon className="w-8 h-8 text-clinic-500" />
