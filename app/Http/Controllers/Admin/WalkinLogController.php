@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Medicine;
 use App\Models\User;
 use App\Models\WalkinLog;
+use App\Notifications\WalkinLogNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -30,8 +32,8 @@ class WalkinLogController extends Controller
             ->withQueryString();
 
         return Inertia::render('Admin/WalkinLog/Index', [
-            'logs'    => $logs,
-            'stats'   => [
+            'logs'  => $logs,
+            'stats' => [
                 'today'      => WalkinLog::whereDate('visited_at', today())->count(),
                 'this_month' => WalkinLog::whereMonth('visited_at', now()->month)
                                     ->whereYear('visited_at', now()->year)->count(),
@@ -94,7 +96,7 @@ class WalkinLogController extends Controller
             $medicine->decrement('quantity', $item['quantity']);
         }
 
-        WalkinLog::create([
+        $log = WalkinLog::create([
             'user_id'             => $data['user_id'],
             'logged_by'           => $request->user()->id,
             'visited_at'          => $data['visited_at'],
@@ -105,6 +107,10 @@ class WalkinLogController extends Controller
             'medicines_dispensed' => !empty($dispensed) ? $dispensed : null,
             'notes'               => $data['notes']        ?? null,
         ]);
+
+        // Notify the patient
+        $patient = User::find($data['user_id']);
+        $patient?->notify(new WalkinLogNotification($log));
 
         return back()->with('success', 'Walk-in log recorded successfully.');
     }

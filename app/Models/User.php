@@ -60,4 +60,9 @@ class User extends Authenticatable
             ? asset('storage/' . $this->profile_photo_path)
             : null;
     }
+
+    public function walkinLogs()
+    {
+        return $this->hasMany(\App\Models\WalkinLog::class, 'user_id');
+    }
 }

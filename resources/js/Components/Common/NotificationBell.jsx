@@ -5,31 +5,49 @@ import { BellIcon as BellSolid } from '@heroicons/react/24/solid';
 
 // Maps notification type + role to the correct route
 function resolveUrl(notif, role) {
-    if (!role) return null; 
+    if (!role) return null;
     const { type, record_id, conversation_id } = notif.data ?? {};
     const convId  = conversation_id ?? record_id;
     const isAdmin = role === 'admin' || role === 'super_admin';
     const prefix  = isAdmin ? 'admin' : (role === 'faculty_staff' ? 'faculty' : role);
 
     switch (type) {
+        case 'WalkinLogNotification':
+            // Deep-link: open walk-in history with the specific log highlighted
+            if (record_id) {
+                return role === 'faculty_staff'
+                    ? route('faculty.walkin.index', { highlight: record_id })
+                    : route('student.walkin.index', { highlight: record_id });
+            }
+            return role === 'faculty_staff'
+                ? route('faculty.walkin.index')
+                : route('student.walkin.index');
+
         case 'NewMessageNotification':
             return convId
                 ? route(`${prefix}.messages.show`, convId)
                 : route(`${prefix}.messages.index`);
+
         case 'AppointmentStatusNotification':
             return route(`${prefix}.appointments.index`);
+
         case 'MedicineRequestStatusNotification':
             return isAdmin
                 ? route('admin.medicine.requests')
                 : route(`${prefix}.medicine.index`);
+
         case 'NewMedicineRequestNotification':
             return route('admin.medicine.requests');
+
         case 'LowStockAlertNotification':
             return route('admin.medicine.index');
+
         case 'RequirementStatusNotification':
             return route(`${prefix}.requirements.index`);
+
         case 'ReportReadyNotification':
             return route('admin.reports.index');
+
         default:
             return null;
     }
@@ -37,9 +55,9 @@ function resolveUrl(notif, role) {
 
 function timeAgo(dateStr) {
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-    if (diff < 60)   return 'just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400)return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
 }
 
@@ -48,8 +66,8 @@ export default function NotificationBell({ notificationsRoute, role }) {
     const [open, setOpen]   = useState(false);
     const ref               = useRef(null);
 
-    const unread  = notifications?.unread_count ?? 0;
-    const latest  = notifications?.latest ?? [];
+    const unread = notifications?.unread_count ?? 0;
+    const latest = notifications?.latest ?? [];
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -120,8 +138,7 @@ export default function NotificationBell({ notificationsRoute, role }) {
                                 </div>
                             )}
                             {latest.map(notif => {
-                                const url    = resolveUrl(notif, role);
-                                const isNew  = !notif.read_at;
+                                const isNew = !notif.read_at;
                                 return (
                                     <button
                                         key={notif.id}

@@ -9,28 +9,47 @@ function resolveUrl(notif, role) {
     const prefix  = isAdmin ? 'admin' : (role === 'faculty_staff' ? 'faculty' : role);
 
     switch (type) {
+        case 'WalkinLogNotification':
+            // Deep-link: navigate directly to the walk-in history page and
+            // highlight the specific log entry so it auto-expands and scrolls into view.
+            if (record_id) {
+                return role === 'faculty_staff'
+                    ? route('faculty.walkin.index', { highlight: record_id })
+                    : route('student.walkin.index', { highlight: record_id });
+            }
+            return role === 'faculty_staff'
+                ? route('faculty.walkin.index')
+                : route('student.walkin.index');
+
         case 'NewMessageNotification':
             return convId
                 ? route(`${prefix}.messages.show`, convId)
                 : route(`${prefix}.messages.index`);
+
         case 'AppointmentStatusNotification':
             return route(`${prefix}.appointments.index`);
+
         case 'MedicineRequestStatusNotification':
             return isAdmin
                 ? route('admin.medicine.requests')
                 : route(`${prefix}.medicine.index`);
+
         case 'LowStockAlertNotification':
             return route('admin.medicine.index');
+
         case 'RequirementStatusNotification':
             return route(`${prefix}.requirements.index`);
+
         case 'ReportReadyNotification':
             return route('admin.reports.index');
+
         default:
             return null;
     }
 }
 
 const typeLabel = {
+    WalkinLogNotification:             'Walk-in Visit',
     NewMessageNotification:            'Message',
     AppointmentStatusNotification:     'Appointment',
     MedicineRequestStatusNotification: 'Medicine',
@@ -40,6 +59,7 @@ const typeLabel = {
 };
 
 const typeBadgeColor = {
+    WalkinLogNotification:             'bg-green-100 text-green-700',
     NewMessageNotification:            'bg-blue-100 text-blue-700',
     AppointmentStatusNotification:     'bg-green-100 text-green-700',
     MedicineRequestStatusNotification: 'bg-yellow-100 text-yellow-700',
@@ -108,7 +128,6 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                         const type   = n.data?.type;
                         const isNew  = !n.read_at;
                         const url    = resolveUrl(n, role);
-                        // Sender info optionally embedded in notification data
                         const sender = n.data?.sender ?? null;
 
                         return (
@@ -127,7 +146,6 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
 
                                     {/* Content */}
                                     <div className="flex-1 min-w-0">
-                                        {/* Badge + unread dot (when avatar replaces the dot) */}
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                             {sender && isNew && (
                                                 <span className="w-2 h-2 rounded-full bg-clinic-500 flex-shrink-0" />
@@ -142,10 +160,16 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                                             </span>
                                         </div>
 
-                                        {/* Message */}
                                         <p className={`text-sm break-words leading-snug ${isNew ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
                                             {n.data?.message ?? 'New notification'}
                                         </p>
+
+                                        {/* sub-line (e.g. "Diagnosis: … · 1 medicine dispensed") */}
+                                        {n.data?.sub && (
+                                            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                                                {n.data.sub}
+                                            </p>
+                                        )}
 
                                         {/* Mobile action row */}
                                         <div className="flex items-center gap-3 mt-2 sm:hidden">

@@ -3,9 +3,20 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import {
     PlusIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon,
-    XMarkIcon, MagnifyingGlassIcon,
+    XMarkIcon, MagnifyingGlassIcon, FunnelIcon, HeartIcon, BeakerIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+
+/* ── small reusable bits ── */
+function VitalPill({ label, value }) {
+    if (!value) return null;
+    return (
+        <span className="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-full px-2.5 py-1 text-xs text-gray-700">
+            <span className="text-gray-400 font-medium">{label}</span>
+            <span className="font-semibold text-gray-900">{value}</span>
+        </span>
+    );
+}
 
 function DetailCard({ label, value }) {
     if (!value) return null;
@@ -17,39 +28,42 @@ function DetailCard({ label, value }) {
     );
 }
 
+function RoleBadge({ role }) {
+    return (
+        <span className={`badge text-[10px] ${role === 'student' ? 'badge-blue' : 'badge-purple'}`}>
+            {role === 'student' ? 'Student' : 'Faculty'}
+        </span>
+    );
+}
+
+/* ── main component ── */
 export default function WalkinLogIndex({ logs, stats, users, medicines, filters }) {
     const { auth } = usePage().props;
     const isSuperAdmin = auth?.user?.role?.name === 'super_admin';
 
-    const [showCreate,       setShowCreate]       = useState(false);
-    const [expanded,         setExpanded]         = useState(null);
-    const [patientSearch,    setPatientSearch]    = useState('');
-    const [showPatientDrop,  setShowPatientDrop]  = useState(false);
-    const [search,           setSearch]           = useState(filters?.search    || '');
-    const [dateFrom,         setDateFrom]         = useState(filters?.date_from || '');
-    const [dateTo,           setDateTo]           = useState(filters?.date_to   || '');
-    const [userType,         setUserType]         = useState(filters?.user_type || '');
+    const [showCreate,      setShowCreate]      = useState(false);
+    const [expanded,        setExpanded]        = useState(null);
+    const [showFilters,     setShowFilters]     = useState(false);
+    const [patientSearch,   setPatientSearch]   = useState('');
+    const [showPatientDrop, setShowPatientDrop] = useState(false);
+    const [search,          setSearch]          = useState(filters?.search    || '');
+    const [dateFrom,        setDateFrom]        = useState(filters?.date_from || '');
+    const [dateTo,          setDateTo]          = useState(filters?.date_to   || '');
+    const [userType,        setUserType]        = useState(filters?.user_type || '');
+
+    const hasActiveFilters = search || dateFrom || dateTo || userType;
 
     const now = new Date();
-    const localDT = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-        .toISOString().slice(0, 16);
+    const localDT = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        user_id:              '',
-        visited_at:           localDT,
-        chief_complaint:      '',
-        vital_signs: {
-            blood_pressure: '', temperature: '',
-            pulse_rate: '', o2_saturation: '', weight: '',
-        },
-        diagnosis:            '',
-        treatment:            '',
-        medicines_dispensed:  [],
-        notes:                '',
+        user_id: '', visited_at: localDT, chief_complaint: '',
+        vital_signs: { blood_pressure: '', temperature: '', pulse_rate: '', o2_saturation: '', weight: '' },
+        diagnosis: '', treatment: '', medicines_dispensed: [], notes: '',
     });
 
-    const selectedPatient  = users.find(u => u.id == data.user_id);
-    const filteredUsers    = users.filter(u =>
+    const selectedPatient = users.find(u => u.id == data.user_id);
+    const filteredUsers   = users.filter(u =>
         u.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
         u.email.toLowerCase().includes(patientSearch.toLowerCase())
     ).slice(0, 8);
@@ -89,41 +103,78 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
         return parts.join(' · ') || '—';
     };
 
-    const roleBadge = (role) => (
-        <span className={`badge text-[10px] ${role === 'student' ? 'badge-blue' : 'badge-purple'}`}>
-            {role === 'student' ? 'Student' : 'Faculty'}
-        </span>
-    );
+    const hasVitals = (vs) => vs && Object.values(vs).some(Boolean);
+
+    const formatDate = (dt) => new Date(dt).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formatTime = (dt) => new Date(dt).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+
+    const paginationButtons = (extraParams = {}) =>
+        logs.links?.length > 3 && (
+            <div className="flex flex-wrap justify-center gap-1 py-3 px-4">
+                {logs.links.map((link, i) => (
+                    <button key={i} disabled={!link.url}
+                        onClick={() => link.url && router.get(link.url, { search, date_from: dateFrom, date_to: dateTo, user_type: userType, ...extraParams })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            link.active ? 'bg-clinic-600 text-white' : 'bg-white border border-gray-200 hover:bg-gray-50 text-gray-600'
+                        } disabled:opacity-40 disabled:cursor-not-allowed`}
+                        dangerouslySetInnerHTML={{ __html: link.label }} />
+                ))}
+            </div>
+        );
 
     return (
         <AdminLayout title="Walk-in Log">
             <Head title="Walk-in Log" />
 
-            <div className="flex items-start justify-between gap-3 mb-6">
+            {/* ── Page header ── */}
+            <div className="flex items-start justify-between gap-3 mb-5">
                 <div>
                     <h2 className="page-title">Walk-in Log</h2>
                     <p className="page-subtitle">Record and track unscheduled clinic visits</p>
                 </div>
-                <button onClick={() => setShowCreate(true)} className="btn-primary btn-sm whitespace-nowrap">
-                    <PlusIcon className="w-4 h-4 mr-1 inline" /> Log Walk-in
+                <button onClick={() => setShowCreate(true)} className="btn-primary btn-sm whitespace-nowrap flex-shrink-0">
+                    <PlusIcon className="w-4 h-4 mr-1 inline" />
+                    <span className="hidden sm:inline">Log Walk-in</span>
+                    <span className="sm:hidden">Log</span>
                 </button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            {/* ── Stats ── */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
                 {[['Today', stats.today], ['This Month', stats.this_month], ['Total', stats.total]].map(([label, val]) => (
-                    <div key={label} className="card p-4 text-center">
-                        <p className="text-2xl font-bold text-gray-900">{val}</p>
-                        <p className="text-sm text-gray-500">{label}</p>
+                    <div key={label} className="card p-3 sm:p-4 text-center">
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900">{val}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{label}</p>
                     </div>
                 ))}
             </div>
 
-            {/* Filters */}
+            {/* ── Filters ── */}
             <div className="card mb-4">
-                <div className="card-body">
-                    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                        <div className="flex-1 min-w-0">
+                {/* Filter toggle header (mobile) */}
+                <button
+                    type="button"
+                    onClick={() => setShowFilters(v => !v)}
+                    className="sm:hidden w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700"
+                >
+                    <span className="flex items-center gap-2">
+                        <FunnelIcon className="w-4 h-4 text-gray-400" />
+                        Filters
+                        {hasActiveFilters && (
+                            <span className="bg-clinic-600 text-white text-[10px] font-semibold rounded-full px-1.5 py-0.5">
+                                ON
+                            </span>
+                        )}
+                    </span>
+                    {showFilters
+                        ? <ChevronUpIcon className="w-4 h-4 text-gray-400" />
+                        : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
+                </button>
+
+                <div className={`px-4 pb-4 pt-3 sm:block ${showFilters ? 'block' : 'hidden sm:block'}`}>
+                    <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-3">
+                        {/* Search */}
+                        <div className="sm:flex-1 sm:min-w-0">
                             <label className="label">Search</label>
                             <div className="relative">
                                 <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -132,7 +183,9 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                     className="input pl-9" placeholder="Search by name or email…" />
                             </div>
                         </div>
-                        <div className="flex gap-3 flex-wrap items-end">
+
+                        {/* Date range + type — 2-col grid on mobile */}
+                        <div className="grid grid-cols-2 sm:flex gap-3 sm:items-end">
                             <div>
                                 <label className="label">From</label>
                                 <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input" />
@@ -149,9 +202,9 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                     <option value="faculty_staff">Faculty/Staff</option>
                                 </select>
                             </div>
-                            <div className="flex gap-2">
-                                <button onClick={applyFilters} className="btn-primary btn-sm">Filter</button>
-                                {(search || dateFrom || dateTo || userType) && (
+                            <div className="flex gap-2 items-end">
+                                <button onClick={applyFilters} className="btn-primary btn-sm flex-1 sm:flex-none">Filter</button>
+                                {hasActiveFilters && (
                                     <button onClick={clearFilters} className="btn-secondary btn-sm">Clear</button>
                                 )}
                             </div>
@@ -160,60 +213,113 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                 </div>
             </div>
 
-            {/* Mobile Cards */}
-            <div className="md:hidden space-y-3">
-                {logs.data.map(log => (
-                    <div key={log.id} className="card">
-                        <div className="p-4 flex items-start justify-between cursor-pointer"
-                            onClick={() => setExpanded(expanded === log.id ? null : log.id)}>
-                            <div className="flex items-center gap-3 min-w-0">
-                                <UserAvatar user={log.user} size="sm" className="flex-shrink-0" />
-                                <div className="min-w-0">
-                                    <p className="font-medium text-sm text-gray-900 truncate">{log.user?.name}</p>
-                                    <p className="text-xs text-gray-500 truncate">{log.chief_complaint}</p>
-                                    <p className="text-xs text-gray-300">{new Date(log.visited_at).toLocaleString()}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0 ml-2">
-                                {roleBadge(log.user?.role?.name)}
-                                {expanded === log.id
-                                    ? <ChevronUpIcon className="w-4 h-4 text-gray-400" />
-                                    : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
-                            </div>
-                        </div>
-                        {expanded === log.id && (
-                            <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-2 bg-gray-50">
-                                {log.vital_signs && Object.values(log.vital_signs).some(Boolean) && (
-                                    <div><p className="text-xs text-gray-400">Vital Signs</p><p className="text-sm text-gray-900">{formatVitals(log.vital_signs)}</p></div>
-                                )}
-                                {log.diagnosis && <div><p className="text-xs text-gray-400">Diagnosis</p><p className="text-sm text-gray-900">{log.diagnosis}</p></div>}
-                                {log.treatment && <div><p className="text-xs text-gray-400">Treatment</p><p className="text-sm text-gray-900">{log.treatment}</p></div>}
-                                {log.medicines_dispensed?.length > 0 && (
-                                    <div>
-                                        <p className="text-xs text-gray-400">Medicines Given</p>
-                                        {log.medicines_dispensed.map((m, i) => (
-                                            <p key={i} className="text-sm text-gray-900">{m.name} — {m.quantity} {m.unit}</p>
-                                        ))}
+            {/* ── Log list — unified card approach (mobile-first, table on lg+) ── */}
+
+            {/* Mobile + Tablet cards (hidden on lg) */}
+            <div className="lg:hidden space-y-3">
+                {logs.data.map(log => {
+                    const isOpen = expanded === log.id;
+                    const vs = log.vital_signs;
+                    return (
+                        <div key={log.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <button
+                                type="button"
+                                className="w-full text-left px-4 py-4 flex items-start gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors focus:outline-none"
+                                onClick={() => setExpanded(isOpen ? null : log.id)}
+                                aria-expanded={isOpen}
+                            >
+                                <UserAvatar user={log.user} size="sm" className="flex-shrink-0 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="font-semibold text-sm text-gray-900 truncate">{log.user?.name}</p>
+                                        <RoleBadge role={log.user?.role?.name} />
                                     </div>
-                                )}
-                                {log.notes && <div><p className="text-xs text-gray-400">Notes</p><p className="text-sm text-gray-900">{log.notes}</p></div>}
-                                <p className="text-xs text-gray-300">Logged by {log.logged_by?.name}</p>
-                                {isSuperAdmin && (
-                                    <button onClick={() => { if (confirm('Delete this log?')) router.delete(route('admin.walkin.destroy', log.id)); }}
-                                        className="btn-danger btn-sm mt-1">
-                                        <TrashIcon className="w-4 h-4 mr-1 inline" /> Delete
-                                    </button>
-                                )}
-                            </div>
-                        )}
+                                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">{log.chief_complaint}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs text-gray-400">{formatDate(log.visited_at)}</span>
+                                        <span className="text-xs text-gray-300">·</span>
+                                        <span className="text-xs text-gray-400">{formatTime(log.visited_at)}</span>
+                                    </div>
+                                    {!isOpen && hasVitals(vs) && (
+                                        <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
+                                            <HeartIcon className="w-3 h-3" /> Vitals recorded
+                                        </p>
+                                    )}
+                                </div>
+                                <span className="flex-shrink-0 mt-1">
+                                    {isOpen
+                                        ? <ChevronUpIcon className="w-4 h-4 text-gray-400" />
+                                        : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
+                                </span>
+                            </button>
+
+                            {isOpen && (
+                                <div className="border-t border-gray-100 bg-gray-50 px-4 py-4 space-y-4">
+                                    {hasVitals(vs) && (
+                                        <div>
+                                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-2">Vital Signs</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <VitalPill label="BP"    value={vs.blood_pressure} />
+                                                <VitalPill label="Temp"  value={vs.temperature ? `${vs.temperature}°C` : null} />
+                                                <VitalPill label="Pulse" value={vs.pulse_rate ? `${vs.pulse_rate} bpm` : null} />
+                                                <VitalPill label="O2"    value={vs.o2_saturation ? `${vs.o2_saturation}%` : null} />
+                                                <VitalPill label="Wt"    value={vs.weight ? `${vs.weight} kg` : null} />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {log.diagnosis && <DetailCard label="Diagnosis" value={log.diagnosis} />}
+                                        {log.treatment && <DetailCard label="Treatment" value={log.treatment} />}
+                                        {log.notes     && <DetailCard label="Notes"     value={log.notes} />}
+                                    </div>
+
+                                    {log.medicines_dispensed?.length > 0 && (
+                                        <div>
+                                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-2 flex items-center gap-1">
+                                                <BeakerIcon className="w-3 h-3" /> Medicines Given
+                                            </p>
+                                            <div className="space-y-1.5">
+                                                {log.medicines_dispensed.map((m, i) => (
+                                                    <div key={i} className="flex items-center justify-between bg-white border border-gray-100 rounded-lg px-3 py-2">
+                                                        <span className="text-sm text-gray-900 font-medium">{m.name}</span>
+                                                        <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">{m.quantity} {m.unit}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[11px] text-gray-400">
+                                            Logged by <span className="font-medium">{log.logged_by?.name}</span>
+                                        </p>
+                                        {isSuperAdmin && (
+                                            <button
+                                                onClick={() => { if (confirm('Delete this log?')) router.delete(route('admin.walkin.destroy', log.id)); }}
+                                                className="btn-danger btn-sm text-xs">
+                                                <TrashIcon className="w-3.5 h-3.5 mr-1 inline" /> Delete
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+
+                {!logs.data.length && (
+                    <div className="bg-white rounded-xl border border-dashed border-gray-200 px-6 py-14 text-center">
+                        <p className="text-sm font-medium text-gray-400">No walk-in logs found.</p>
                     </div>
-                ))}
-                {!logs.data.length && <div className="card p-8 text-center text-gray-400">No walk-in logs found.</div>}
+                )}
+                {paginationButtons()}
             </div>
 
-            {/* Desktop */}
-            <div className="card hidden md:block">
+            {/* ── Desktop table (lg+) ── */}
+            <div className="card hidden lg:block">
                 <div className="divide-y divide-gray-100">
+                    {/* Table header */}
                     <div className="px-6 py-3 grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wide bg-gray-50">
                         <div className="col-span-3">Patient</div>
                         <div className="col-span-3">Chief Complaint</div>
@@ -221,98 +327,90 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                         <div className="col-span-2">Date & Time</div>
                         <div className="col-span-1"></div>
                     </div>
-                    {logs.data.map(log => (
-                        <div key={log.id}>
-                            <div className="px-6 py-4 grid grid-cols-12 gap-4 hover:bg-gray-50 cursor-pointer"
-                                onClick={() => setExpanded(expanded === log.id ? null : log.id)}>
-                                <div className="col-span-3 flex items-center gap-2.5 min-w-0">
-                                    <UserAvatar user={log.user} size="sm" className="flex-shrink-0" />
-                                    <div className="min-w-0">
-                                        <p className="font-medium text-sm text-gray-900 truncate">{log.user?.name}</p>
-                                        {roleBadge(log.user?.role?.name)}
+
+                    {logs.data.map(log => {
+                        const isOpen = expanded === log.id;
+                        const vs = log.vital_signs;
+                        return (
+                            <div key={log.id}>
+                                <div
+                                    className="px-6 py-4 grid grid-cols-12 gap-4 hover:bg-gray-50 cursor-pointer"
+                                    onClick={() => setExpanded(isOpen ? null : log.id)}
+                                >
+                                    <div className="col-span-3 flex items-center gap-2.5 min-w-0">
+                                        <UserAvatar user={log.user} size="sm" className="flex-shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-sm text-gray-900 truncate">{log.user?.name}</p>
+                                            <RoleBadge role={log.user?.role?.name} />
+                                        </div>
+                                    </div>
+                                    <div className="col-span-3 flex items-center">
+                                        <p className="text-sm text-gray-900 line-clamp-2">{log.chief_complaint}</p>
+                                    </div>
+                                    <div className="col-span-3 flex items-center">
+                                        <p className="text-xs text-gray-500">{formatVitals(vs)}</p>
+                                    </div>
+                                    <div className="col-span-2 flex items-center">
+                                        <div>
+                                            <p className="text-sm text-gray-900">{formatDate(log.visited_at)}</p>
+                                            <p className="text-xs text-gray-400">{formatTime(log.visited_at)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="col-span-1 flex items-center gap-2 justify-end">
+                                        {isOpen ? <ChevronUpIcon className="w-4 h-4 text-gray-400" /> : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
+                                        {isSuperAdmin && (
+                                            <button onClick={e => { e.stopPropagation(); if (confirm('Delete this log?')) router.delete(route('admin.walkin.destroy', log.id)); }}
+                                                className="text-gray-400 hover:text-red-500">
+                                                <TrashIcon className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="col-span-3 flex items-center">
-                                    <p className="text-sm text-gray-900 line-clamp-2">{log.chief_complaint}</p>
-                                </div>
-                                <div className="col-span-3 flex items-center">
-                                    <p className="text-xs text-gray-500">{formatVitals(log.vital_signs)}</p>
-                                </div>
-                                <div className="col-span-2 flex items-center">
-                                    <div>
-                                        <p className="text-sm text-gray-900">{new Date(log.visited_at).toLocaleDateString()}</p>
-                                        <p className="text-xs text-gray-400">{new Date(log.visited_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+
+                                {isOpen && (
+                                    <div className="px-6 pb-5 bg-gray-50 border-t border-gray-100">
+                                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 pt-3">
+                                            <DetailCard label="Diagnosis" value={log.diagnosis} />
+                                            <DetailCard label="Treatment" value={log.treatment} />
+                                            <DetailCard label="Notes"     value={log.notes} />
+                                            {hasVitals(vs) && (
+                                                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                                                    <p className="text-xs font-medium text-gray-500 mb-2">Vital Signs</p>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        <VitalPill label="BP"    value={vs.blood_pressure} />
+                                                        <VitalPill label="Temp"  value={vs.temperature ? `${vs.temperature}°C` : null} />
+                                                        <VitalPill label="Pulse" value={vs.pulse_rate ? `${vs.pulse_rate} bpm` : null} />
+                                                        <VitalPill label="O2"    value={vs.o2_saturation ? `${vs.o2_saturation}%` : null} />
+                                                        <VitalPill label="Wt"    value={vs.weight ? `${vs.weight} kg` : null} />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {log.medicines_dispensed?.length > 0 && (
+                                                <div className="bg-white rounded-lg p-3 border border-gray-100">
+                                                    <p className="text-xs font-medium text-gray-500 mb-1">Medicines Dispensed</p>
+                                                    {log.medicines_dispensed.map((m, i) => (
+                                                        <p key={i} className="text-sm text-gray-900">{m.name} — {m.quantity} {m.unit}</p>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-3">
+                                            Logged by <span className="font-medium">{log.logged_by?.name}</span>
+                                        </p>
                                     </div>
-                                </div>
-                                <div className="col-span-1 flex items-center gap-2 justify-end">
-                                    {expanded === log.id ? <ChevronUpIcon className="w-4 h-4 text-gray-400" /> : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
-                                    {isSuperAdmin && (
-                                        <button onClick={e => { e.stopPropagation(); if (confirm('Delete this log?')) router.delete(route('admin.walkin.destroy', log.id)); }}
-                                            className="text-gray-400 hover:text-red-500">
-                                            <TrashIcon className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
+                                )}
                             </div>
-                            {expanded === log.id && (
-                                <div className="px-6 pb-5 bg-gray-50 border-t border-gray-100">
-                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
-                                        <DetailCard label="Diagnosis" value={log.diagnosis} />
-                                        <DetailCard label="Treatment" value={log.treatment} />
-                                        <DetailCard label="Notes" value={log.notes} />
-                                        {log.vital_signs && Object.values(log.vital_signs).some(Boolean) && (
-                                            <div className="bg-white rounded-lg p-3 border border-gray-100">
-                                                <p className="text-xs font-medium text-gray-500 mb-1">Vital Signs</p>
-                                                {log.vital_signs.blood_pressure && <p className="text-sm text-gray-900">BP: {log.vital_signs.blood_pressure}</p>}
-                                                {log.vital_signs.temperature    && <p className="text-sm text-gray-900">Temp: {log.vital_signs.temperature}°C</p>}
-                                                {log.vital_signs.pulse_rate     && <p className="text-sm text-gray-900">Pulse: {log.vital_signs.pulse_rate} bpm</p>}
-                                                {log.vital_signs.o2_saturation  && <p className="text-sm text-gray-900">O2 Sat: {log.vital_signs.o2_saturation}%</p>}
-                                                {log.vital_signs.weight         && <p className="text-sm text-gray-900">Weight: {log.vital_signs.weight} kg</p>}
-                                            </div>
-                                        )}
-                                        {log.medicines_dispensed?.length > 0 && (
-                                            <div className="bg-white rounded-lg p-3 border border-gray-100">
-                                                <p className="text-xs font-medium text-gray-500 mb-1">Medicines Dispensed</p>
-                                                {log.medicines_dispensed.map((m, i) => (
-                                                    <p key={i} className="text-sm text-gray-900">{m.name} — {m.quantity} {m.unit}</p>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-gray-400 mt-3">Logged by {log.logged_by?.name}</p>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        );
+                    })}
+
                     {!logs.data.length && (
                         <div className="px-6 py-12 text-center text-gray-400">No walk-in logs found.</div>
                     )}
                 </div>
-                {logs.links?.length > 3 && (
-                    <div className="px-6 py-4 flex flex-wrap justify-center gap-1 border-t border-gray-100">
-                        {logs.links.map((link, i) => (
-                            <button key={i} disabled={!link.url}
-                                onClick={() => link.url && router.get(link.url, { search, date_from: dateFrom, date_to: dateTo, user_type: userType })}
-                                className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
-                                dangerouslySetInnerHTML={{ __html: link.label }} />
-                        ))}
-                    </div>
-                )}
+                {paginationButtons()}
             </div>
 
-            {/* Mobile Pagination */}
-            {logs.links?.length > 3 && (
-                <div className="md:hidden flex flex-wrap justify-center gap-1 mt-3">
-                    {logs.links.map((link, i) => (
-                        <button key={i} disabled={!link.url}
-                            onClick={() => link.url && router.get(link.url, { search, date_from: dateFrom, date_to: dateTo, user_type: userType })}
-                            className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
-                            dangerouslySetInnerHTML={{ __html: link.label }} />
-                    ))}
-                </div>
-            )}
-
-            {/* Create Modal */}
+            {/* ── Create Modal ── */}
             {showCreate && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-xl shadow-xl max-h-[95vh] flex flex-col">
@@ -428,24 +526,48 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                     )}
                                     <div className="space-y-2">
                                         {data.medicines_dispensed.map((item, i) => (
-                                            <div key={i} className="flex gap-2 items-center">
-                                                <select value={item.medicine_id}
-                                                    onChange={e => updateMedicine(i, 'medicine_id', e.target.value)}
-                                                    className="input flex-1 text-sm">
-                                                    <option value="">— Select medicine —</option>
-                                                    {medicines.map(m => (
-                                                        <option key={m.id} value={m.id}>
-                                                            {m.name} ({m.quantity} {m.unit} available)
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                <input type="number" min="1" value={item.quantity}
-                                                    onChange={e => updateMedicine(i, 'quantity', parseInt(e.target.value) || 1)}
-                                                    className="input w-20 text-sm" placeholder="Qty" />
-                                                <button type="button" onClick={() => removeMedicine(i)}
-                                                    className="text-gray-400 hover:text-red-500 flex-shrink-0">
-                                                    <XMarkIcon className="w-4 h-4" />
-                                                </button>
+                                            <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2.5 bg-gray-50">
+                                                {/* Medicine select + remove */}
+                                                <div className="flex items-center gap-2">
+                                                    <select value={item.medicine_id}
+                                                        onChange={e => updateMedicine(i, 'medicine_id', e.target.value)}
+                                                        className="input flex-1 text-sm min-w-0">
+                                                        <option value="">— Select medicine —</option>
+                                                        {medicines.map(m => (
+                                                            <option key={m.id} value={m.id}>
+                                                                {m.name} ({m.quantity} {m.unit} available)
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <button type="button" onClick={() => removeMedicine(i)}
+                                                        className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                                        <XMarkIcon className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                {/* Quantity stepper */}
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-gray-500 font-medium">Quantity</span>
+                                                    <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateMedicine(i, 'quantity', Math.max(1, (item.quantity || 1) - 1))}
+                                                            className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors text-lg font-medium select-none"
+                                                        >
+                                                            −
+                                                        </button>
+                                                        <span className="w-10 text-center text-sm font-semibold text-gray-900 select-none">
+                                                            {item.quantity || 1}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => updateMedicine(i, 'quantity', (item.quantity || 1) + 1)}
+                                                            className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors text-lg font-medium select-none"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
