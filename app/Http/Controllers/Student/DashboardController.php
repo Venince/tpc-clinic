@@ -7,6 +7,7 @@ use App\Models\MedicineRequest;
 use App\Models\SurveyAnswer;
 use App\Models\SurveyQuestion;
 use App\Models\UserRequirement;
+use App\Models\WalkinLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -56,6 +57,8 @@ class DashboardController extends Controller
                 ->pluck('total', 'approval_status'),
             'recentAppointments' => Appointment::where('user_id', $user->id)->with('slot')->latest()->limit(3)->get(),
             'announcements'      => Announcement::published()->notExpired()->latest('published_at')->limit(3)->get(),
+            'recentWalkins'      => WalkinLog::where('user_id', $user->id)->latest('visited_at')->limit(3)->get(),
+            'walkinCount'        => WalkinLog::where('user_id', $user->id)->count(),
         ]);
     }
 }
