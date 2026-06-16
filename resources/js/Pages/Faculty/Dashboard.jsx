@@ -50,6 +50,27 @@ export default function FacultyDashboard({ profile, pendingAppointments, medicin
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Announcements */}
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <MegaphoneIcon className="w-4 h-4 text-clinic-500" /> Announcements
+                        </h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {announcements?.map(a => (
+                            <div key={a.id} className="px-4 sm:px-6 py-3">
+                                <p className="text-sm font-medium text-gray-900">{a.title}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{a.content}</p>
+                                <p className="text-xs text-gray-400 mt-1">{new Date(a.published_at).toLocaleDateString()}</p>
+                            </div>
+                        ))}
+                        {!announcements?.length && (
+                            <div className="px-6 py-8 text-center text-gray-400 text-sm">No announcements.</div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Recent Appointments */}
                 <div className="card">
                     <div className="card-header flex items-center justify-between">
@@ -71,27 +92,6 @@ export default function FacultyDashboard({ profile, pendingAppointments, medicin
                         ))}
                         {!recentAppointments?.length && (
                             <div className="px-6 py-8 text-center text-gray-400 text-sm">No appointments yet.</div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Announcements */}
-                <div className="card">
-                    <div className="card-header">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                            <MegaphoneIcon className="w-4 h-4 text-clinic-500" /> Announcements
-                        </h3>
-                    </div>
-                    <div className="divide-y divide-gray-100">
-                        {announcements?.map(a => (
-                            <div key={a.id} className="px-4 sm:px-6 py-3">
-                                <p className="text-sm font-medium text-gray-900">{a.title}</p>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{a.content}</p>
-                                <p className="text-xs text-gray-400 mt-1">{new Date(a.published_at).toLocaleDateString()}</p>
-                            </div>
-                        ))}
-                        {!announcements?.length && (
-                            <div className="px-6 py-8 text-center text-gray-400 text-sm">No announcements.</div>
                         )}
                     </div>
                 </div>

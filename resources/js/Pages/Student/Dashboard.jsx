@@ -98,6 +98,26 @@ export default function StudentDashboard({ profile, profileCompleted, appointmen
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Announcements */}
+                <div className="card">
+                    <div className="card-header flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <MegaphoneIcon className="w-4 h-4 text-clinic-500" /> Announcements
+                        </h3>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {announcements?.length ? announcements.map(a => (
+                            <div key={a.id} className="px-4 sm:px-6 py-3">
+                                <p className="text-sm font-medium text-gray-900">{a.title}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{a.content}</p>
+                                <p className="text-xs text-gray-400 mt-1">{new Date(a.published_at).toLocaleDateString()}</p>
+                            </div>
+                        )) : (
+                            <div className="px-6 py-8 text-center text-gray-400 text-sm">No announcements</div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Recent Appointments */}
                 <div className={`card ${!bothCompleted ? 'opacity-40 pointer-events-none select-none' : ''}`}>
                     <div className="card-header flex items-center justify-between">
@@ -121,26 +141,6 @@ export default function StudentDashboard({ profile, profileCompleted, appointmen
                                 No appointments yet.{' '}
                                 <Link href={route('student.appointments.index')} className="text-clinic-600 hover:underline">Book one</Link>
                             </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Announcements */}
-                <div className="card">
-                    <div className="card-header flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                            <MegaphoneIcon className="w-4 h-4 text-clinic-500" /> Announcements
-                        </h3>
-                    </div>
-                    <div className="divide-y divide-gray-100">
-                        {announcements?.length ? announcements.map(a => (
-                            <div key={a.id} className="px-4 sm:px-6 py-3">
-                                <p className="text-sm font-medium text-gray-900">{a.title}</p>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{a.content}</p>
-                                <p className="text-xs text-gray-400 mt-1">{new Date(a.published_at).toLocaleDateString()}</p>
-                            </div>
-                        )) : (
-                            <div className="px-6 py-8 text-center text-gray-400 text-sm">No announcements</div>
                         )}
                     </div>
                 </div>
