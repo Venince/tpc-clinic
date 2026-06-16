@@ -22,7 +22,7 @@ class ReportController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'type'    => ['required', Rule::in(['student_health', 'faculty_health', 'appointment', 'medicine', 'pregnancy', 'survey'])],
+            'type'    => ['required', Rule::in(['student_health', 'faculty_health', 'appointment', 'medicine', 'pregnancy', 'survey', 'walkin_log'])],
             'title'   => ['required', 'string', 'max:255'],
             'format'  => ['required', Rule::in(['pdf', 'excel'])],
             'filters' => ['nullable', 'array'],

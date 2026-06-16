@@ -10,6 +10,7 @@ const REPORT_TYPES = [
     { value: 'medicine',        label: 'Medicine' },
     { value: 'pregnancy',       label: 'Pregnancy' },
     { value: 'survey',          label: 'Survey' },
+    { value: 'walkin_log',      label: 'Walk-in Log' },
 ];
 
 const STATUS_STYLES = {

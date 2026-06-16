@@ -70,6 +70,18 @@ class GenerateReportJob implements ShouldQueue
                         return $q;
                     })
                     ->toArray(),
+                
+                'walkin_log' => \App\Models\WalkinLog::with(['user', 'loggedBy'])
+                    ->when(isset($filters['date_from']), fn($q) => $q->whereDate('visited_at', '>=', $filters['date_from']))
+                    ->when(isset($filters['date_to']),   fn($q) => $q->whereDate('visited_at', '<=', $filters['date_to']))
+                    ->when(isset($filters['logged_by']), fn($q) => $q->where('logged_by', $filters['logged_by']))
+                    ->latest('visited_at')
+                    ->get()
+                    ->map(fn($log) => array_merge($log->toArray(), [
+                        'logged_by_name' => $log->loggedBy?->name,
+                        'user'           => ['id' => $log->user?->id, 'name' => $log->user?->name, 'email' => $log->user?->email],
+                    ]))
+                    ->toArray(),
 
                 default => [],
             };
@@ -83,6 +95,7 @@ class GenerateReportJob implements ShouldQueue
                     'medicine'       => new \App\Exports\MedicineInventoryExport($filters),
                     'pregnancy'      => new \App\Exports\PregnancyReportExport(),
                     'survey'         => new \App\Exports\SurveyReportExport(),
+                    'walkin_log'     => new \App\Exports\WalkinLogExport($filters),
                     default          => null,
                 };
 
