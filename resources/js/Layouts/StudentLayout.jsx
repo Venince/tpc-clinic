@@ -48,28 +48,29 @@ function OnboardingBanner({ onboarding }) {
                     Complete your setup to access all features
                 </p>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-                {steps.map((step, i) => (
-                    <div key={i} className="flex items-center gap-1 sm:gap-2 min-w-0">
-                        {i > 0 && (
-                            <div className={clsx('h-px w-3 sm:w-5 flex-shrink-0', steps[i - 1].done ? 'bg-green-400' : 'bg-amber-300')} />
-                        )}
-                        {step.done ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-green-800 bg-green-100 border border-green-300 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 whitespace-nowrap">
-                                <CheckCircleIcon className="w-3 h-3 flex-shrink-0" />
-                                <span className="hidden xs:inline sm:inline">{step.label}</span>
-                                <span className="xs:hidden sm:hidden">✓</span>
-                            </span>
-                        ) : (
-                            <Link href={step.href} className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors whitespace-nowrap">
-                                <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-amber-500 flex-shrink-0" />
-                                {step.label}
-                            </Link>
-                        )}
-                    </div>
-                ))}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {steps.map((step, i) => (
+                        <div key={i} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                            {i > 0 && (
+                                <div className={clsx('h-px w-3 sm:w-5 flex-shrink-0', steps[i - 1].done ? 'bg-green-400' : 'bg-amber-300')} />
+                            )}
+                            {step.done ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-green-800 bg-green-100 border border-green-300 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 whitespace-nowrap">
+                                    <CheckCircleIcon className="w-3 h-3 flex-shrink-0" />
+                                    {step.label}
+                                </span>
+                            ) : (
+                                <Link href={step.href} className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors whitespace-nowrap">
+                                    <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-amber-500 flex-shrink-0" />
+                                    {step.label}
+                                </Link>
+                            )}
+                        </div>
+                    ))}
+                </div>
                 {nextStep && (
-                    <p className="ml-auto text-[10px] sm:text-xs text-amber-700 whitespace-nowrap pl-1">
+                    <p className="sm:ml-auto text-[10px] sm:text-xs text-amber-700 whitespace-nowrap">
                         <Link href={nextStep.href} className="font-semibold underline underline-offset-2 hover:text-amber-900">
                             <span className="hidden sm:inline">Next: </span>{nextStep.label}
                         </Link>
@@ -176,14 +177,16 @@ export default function StudentLayout({ children, title }) {
             </div>
 
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500">
+                <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500 flex-shrink-0">
                             <Bars3Icon className="w-6 h-6" />
                         </button>
-                        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
+                        <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{title}</h1>
                     </div>
-                    <NotificationBell notificationsRoute="student.notifications" role="student" />
+                    <div className="flex-shrink-0">
+                        <NotificationBell notificationsRoute="student.notifications" role="student" />
+                    </div>
                 </header>
 
                 <OnboardingBanner onboarding={onboarding} />

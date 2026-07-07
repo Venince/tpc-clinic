@@ -115,7 +115,7 @@ export default function NotificationBell({ notificationsRoute, role }) {
                     {/* Mobile backdrop */}
                     <div className="fixed inset-0 bg-black/30 z-40 sm:hidden" onClick={() => setOpen(false)} />
 
-                    <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-16 sm:top-full sm:mt-2 sm:w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+                    <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-14 sm:top-full sm:mt-2 sm:w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
                         {/* Header */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                             <span className="font-semibold text-gray-900 text-sm">Notifications</span>
@@ -130,7 +130,7 @@ export default function NotificationBell({ notificationsRoute, role }) {
                         </div>
 
                         {/* List */}
-                        <div className="max-h-[60vh] sm:max-h-80 overflow-y-auto divide-y divide-gray-50">
+                        <div className="max-h-[60dvh] sm:max-h-80 overflow-y-auto divide-y divide-gray-50">
                             {latest.length === 0 && (
                                 <div className="px-4 py-8 text-center text-gray-400 text-sm">
                                     <BellIcon className="w-8 h-8 mx-auto mb-2 text-gray-200" />
