@@ -83,7 +83,11 @@ class UserController extends Controller
             'is_active'             => true,
         ]);
 
-        SendCredentialsEmail::dispatch($user, $password);
+        try {
+            SendCredentialsEmail::dispatch($user, $password);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Credentials email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        }
 
         AuditLog::create([
             'user_id'    => $request->user()->id,
@@ -218,7 +222,11 @@ class UserController extends Controller
                 'is_active'             => true,
             ]);
 
-            SendCredentialsEmail::dispatch($user, $password);
+            try {
+                SendCredentialsEmail::dispatch($user, $password);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Credentials email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
             $results['created']++;
         }
 
