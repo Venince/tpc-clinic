@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import NotificationBell from '@/Components/Common/NotificationBell';
+import PushNotificationPrompt from '@/Components/Common/PushNotificationPrompt';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import {
     HomeIcon, UsersIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
@@ -115,12 +116,13 @@ export default function AdminLayout({ children, title }) {
                         </button>
                         <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
                     </div>
-                    <NotificationBell notificationsRoute="admin.notifications" role={auth.user?.role?.name} />
+                    <NotificationBell notificationsRoute="admin.notifications" role={auth.user?.role?.name} userId={auth.user?.id} />
                 </header>
 
                 {/* p-4 on mobile, p-6 on sm+ */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <div key={url} className="page-fade h-full">
+                    <div key={url} className="page-fade h-full space-y-4">
+                        <PushNotificationPrompt />
                         {children}
                     </div>
                 </main>

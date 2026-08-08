@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
-class NewMessageNotification extends Notification implements ShouldQueue
+class AnnouncementNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -20,29 +20,20 @@ class NewMessageNotification extends Notification implements ShouldQueue
 
     public function toArray(object $notifiable): array
     {
-        $sender = $this->record->sender ?? null;
-        $senderName = $sender?->name ?? 'Someone';
-        $conversationId = $this->record->conversation_id ?? $this->record->id ?? null;
-
         return [
-            'type'            => 'NewMessageNotification',
-            'record_id'       => $conversationId,
-            'message'         => "{$senderName} sent you a message.",
-            'sender_name'     => $senderName,
-            'conversation_id' => $conversationId,
+            'type'      => 'AnnouncementNotification',
+            'record_id' => $this->record->id ?? null,
+            'message'   => "New announcement: {$this->record->title}",
         ];
     }
 
     public function toWebPush(object $notifiable, $notification): WebPushMessage
     {
-        $sender = $this->record->sender ?? null;
-        $senderName = $sender?->name ?? 'Someone';
-
         return (new WebPushMessage)
-            ->title('New message')
+            ->title('New announcement')
             ->icon('/images/tpc-logo.png')
-            ->body("{$senderName} sent you a message.")
+            ->body($this->record->title)
             ->data(['notification_id' => $notification->id])
-            ->options(['TTL' => 300]);
+            ->options(['TTL' => 86400]);
     }
 }

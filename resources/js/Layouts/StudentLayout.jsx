@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import NotificationBell from '@/Components/Common/NotificationBell';
+import PushNotificationPrompt from '@/Components/Common/PushNotificationPrompt';
 import {
     HomeIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon,
@@ -185,7 +186,7 @@ export default function StudentLayout({ children, title }) {
                         <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{title}</h1>
                     </div>
                     <div className="flex-shrink-0">
-                        <NotificationBell notificationsRoute="student.notifications" role="student" />
+                        <NotificationBell notificationsRoute="student.notifications" role="student" userId={auth.user?.id} />
                     </div>
                 </header>
 
@@ -193,7 +194,10 @@ export default function StudentLayout({ children, title }) {
 
                 {/* p-4 on mobile, p-6 on sm+ — pages that need full-height use -m-4 sm:-m-6 */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <div key={url} className="page-fade h-full">{children}</div>
+                    <div key={url} className="page-fade h-full space-y-4">
+                        <PushNotificationPrompt />
+                        {children}
+                    </div>
                 </main>
             </div>
 

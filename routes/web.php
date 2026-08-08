@@ -50,6 +50,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/change-password',  [AuthController::class, 'showChangePassword'])->name('password.change');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('password.change.update');
 
+    Route::post('/push-subscriptions', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])
+        ->name('push-subscriptions.store');
+    Route::delete('/push-subscriptions', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])
+        ->name('push-subscriptions.destroy');
+
     // ─── Admin ─────────────────────────────────────────────────────────────
     Route::middleware(['role:admin,super_admin', 'password.changed'])
         ->prefix('admin')->name('admin.')->group(function () {

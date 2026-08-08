@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { BellIcon } from '@heroicons/react/24/outline';
 import { BellIcon as BellSolid } from '@heroicons/react/24/solid';
+import toast from 'react-hot-toast';
 
 // Maps notification type + role to the correct route
 function resolveUrl(notif, role) {
@@ -48,6 +49,9 @@ function resolveUrl(notif, role) {
         case 'ReportReadyNotification':
             return route('admin.reports.index');
 
+        case 'AnnouncementNotification':
+            return route('announcements');
+
         default:
             return null;
     }
@@ -61,7 +65,7 @@ function timeAgo(dateStr) {
     return `${Math.floor(diff / 86400)}d ago`;
 }
 
-export default function NotificationBell({ notificationsRoute, role }) {
+export default function NotificationBell({ notificationsRoute, role, userId }) {
     const { notifications } = usePage().props;
     const [open, setOpen]   = useState(false);
     const ref               = useRef(null);
@@ -75,6 +79,23 @@ export default function NotificationBell({ notificationsRoute, role }) {
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    // Live updates: listen on this user's private channel for newly created
+    // notifications and refresh the shared Inertia prop + show a toast.
+    useEffect(() => {
+        if (!userId || !window.Echo) return;
+
+        const channel = window.Echo.private(`App.Models.User.${userId}`);
+
+        channel.notification((notif) => {
+            toast(notif.message ?? 'New notification', { icon: '🔔' });
+            router.reload({ only: ['notifications'], preserveScroll: true, preserveState: true });
+        });
+
+        return () => {
+            window.Echo.leave(`private-App.Models.User.${userId}`);
+        };
+    }, [userId]);
 
     const markRead = (id) => {
         router.post(route(`${notificationsRoute}.read`, id), {}, {
