@@ -120,8 +120,8 @@ export default function AdminLayout({ children, title }) {
                 </header>
 
                 {/* p-4 on mobile, p-6 on sm+ */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <div key={url} className="page-fade h-full space-y-4">
+                <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+                    <div key={url} className="page-fade h-full space-y-4 min-w-0">
                         <PushNotificationPrompt />
                         {children}
                     </div>

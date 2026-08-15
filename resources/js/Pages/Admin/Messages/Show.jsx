@@ -94,6 +94,8 @@ export default function MessagesShow({ conversation, messages }) {
                 <div className="px-4 py-3 bg-white border-t border-gray-200 flex-shrink-0">
                     <form onSubmit={submit} className="flex gap-2 items-end">
                         <textarea
+                            id="reply-body"
+                            name="body"
                             value={data.body}
                             onChange={e => setData('body', e.target.value)}
                             onKeyDown={handleKeyDown}

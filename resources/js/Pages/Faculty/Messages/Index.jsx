@@ -1,9 +1,11 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
 import { PlusIcon, ChatBubbleLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function FacultyMessagesIndex({ conversations, contacts }) {
+    const { auth } = usePage().props;
     const [recipientSearch, setRecipientSearch] = useState('');
     const [showContacts, setShowContacts] = useState(false);
 
@@ -40,27 +42,33 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
 
             <div className="card">
                 <div className="divide-y divide-gray-100">
-                    {conversations.data?.map(c => (
-                        <div key={c.id} className="flex items-center gap-2 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors group">
-                            <Link href={route('faculty.messages.show', c.id)} className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-1 min-w-0 gap-1 sm:gap-0">
-                                <div className="min-w-0">
-                                    <p className="font-medium text-gray-900 truncate">{c.subject}</p>
-                                    <p className="text-xs text-gray-400 mt-0.5 truncate">{c.participants?.map(p => p.name).join(', ')}</p>
-                                </div>
-                                <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right flex-shrink-0 sm:ml-3 gap-2 sm:gap-0">
-                                    {c.unread > 0 && <span className="badge badge-red text-xs">{c.unread} new</span>}
-                                    <p className="text-xs text-gray-400 sm:mt-1">{c.last_message_at ? new Date(c.last_message_at).toLocaleDateString() : ''}</p>
-                                </div>
-                            </Link>
-                            <button
-                                onClick={() => setConfirmDelete(c)}
-                                className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg flex-shrink-0"
-                                title="Delete conversation"
-                            >
-                                <TrashIcon className="w-4 h-4" />
-                            </button>
-                        </div>
-                    ))}
+                    {conversations.data?.map(c => {
+                        const other = c.participants?.find(p => p.id !== auth.user?.id) ?? c.participants?.[0];
+                        return (
+                            <div key={c.id} className="flex items-center gap-2 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors group">
+                                <Link href={route('faculty.messages.show', c.id)} className="flex items-start gap-3 flex-1 min-w-0">
+                                    <UserAvatar user={other} size="md" className="mt-0.5 flex-shrink-0" />
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-1 min-w-0 gap-1 sm:gap-0">
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-gray-900 truncate">{c.subject}</p>
+                                            <p className="text-xs text-gray-400 mt-0.5 truncate">{c.participants?.map(p => p.name).join(', ')}</p>
+                                        </div>
+                                        <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right flex-shrink-0 sm:ml-3 gap-2 sm:gap-0">
+                                            {c.unread > 0 && <span className="badge badge-red text-xs">{c.unread} new</span>}
+                                            <p className="text-xs text-gray-400 sm:mt-1">{c.last_message_at ? new Date(c.last_message_at).toLocaleDateString() : ''}</p>
+                                        </div>
+                                    </div>
+                                </Link>
+                                <button
+                                    onClick={() => setConfirmDelete(c)}
+                                    className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg flex-shrink-0"
+                                    title="Delete conversation"
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </button>
+                            </div>
+                        );
+                    })}
                     {!conversations.data?.length && (
                         <div className="px-6 py-12 text-center">
                             <ChatBubbleLeftIcon className="w-10 h-10 text-gray-300 mx-auto mb-3" />
@@ -78,8 +86,10 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
                         <h3 className="font-semibold mb-4">New Message to Clinic</h3>
                         <form onSubmit={submit} className="space-y-3">
                             <div className="relative">
-                                <label className="label">To</label>
+                                <label className="label" htmlFor="recipient-search">To</label>
                                 <input
+                                    id="recipient-search"
+                                    name="recipient-search"
                                     type="text"
                                     value={recipientSearch}
                                     onChange={e => {
@@ -115,10 +125,13 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
                                                     setRecipientSearch(c.name);
                                                     setShowContacts(false);
                                                 }}
-                                                className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                                                className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center gap-2.5"
                                             >
-                                                <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                                                <p className="text-xs text-gray-400">{c.email}</p>
+                                                <UserAvatar user={c} size="xs" className="flex-shrink-0" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                                                    <p className="text-xs text-gray-400">{c.email}</p>
+                                                </div>
                                             </button>
                                         )) : (
                                             <p className="px-4 py-3 text-sm text-gray-400">No contacts found.</p>
@@ -128,13 +141,13 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
                                 {errors.recipient_id && <p className="error-msg">{errors.recipient_id}</p>}
                             </div>
                             <div>
-                                <label className="label">Subject</label>
-                                <input value={data.subject} onChange={e => setData('subject', e.target.value)} className="input" />
+                                <label className="label" htmlFor="new-message-subject">Subject</label>
+                                <input id="new-message-subject" name="subject" value={data.subject} onChange={e => setData('subject', e.target.value)} className="input" />
                                 {errors.subject && <p className="error-msg">{errors.subject}</p>}
                             </div>
                             <div>
-                                <label className="label">Message</label>
-                                <textarea value={data.body} onChange={e => setData('body', e.target.value)} className="input" rows={4} />
+                                <label className="label" htmlFor="new-message-body">Message</label>
+                                <textarea id="new-message-body" name="body" value={data.body} onChange={e => setData('body', e.target.value)} className="input" rows={4} />
                                 {errors.body && <p className="error-msg">{errors.body}</p>}
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3">

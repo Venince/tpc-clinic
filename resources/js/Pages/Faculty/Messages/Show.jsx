@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useEffect, useRef } from 'react';
 import { ArrowLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function FacultyMessageShow({ conversation, messages }) {
     const { auth } = usePage().props;
@@ -28,6 +29,7 @@ export default function FacultyMessageShow({ conversation, messages }) {
         }
     };
 
+    const otherParticipant = conversation.participants?.find(p => p.id !== auth.user?.id);
     const orderedMessages = [...(messages.data ?? [])].reverse();
 
     return (
@@ -44,16 +46,12 @@ export default function FacultyMessageShow({ conversation, messages }) {
                     >
                         <ArrowLeftIcon className="w-5 h-5" />
                     </Link>
+                    <UserAvatar user={otherParticipant} size="sm" className="flex-shrink-0" />
                     <div className="min-w-0">
                         <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
-                            {conversation.subject}
+                            {otherParticipant?.name ?? conversation.subject}
                         </p>
-                        <p className="text-xs text-gray-400 truncate">
-                            {conversation.participants
-                                ?.filter(p => p.id !== auth.user?.id)
-                                .map(p => p.name)
-                                .join(', ')}
-                        </p>
+                        <p className="text-xs text-gray-400 truncate">{conversation.subject}</p>
                     </div>
                 </div>
 
@@ -63,6 +61,9 @@ export default function FacultyMessageShow({ conversation, messages }) {
                         const isOwn = msg.sender_id === auth.user.id;
                         return (
                             <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                                {!isOwn && (
+                                    <UserAvatar user={msg.sender} size="sm" className="flex-shrink-0 mb-0.5" />
+                                )}
                                 <div className={`max-w-[80%] sm:max-w-[65%] flex flex-col gap-0.5 ${isOwn ? 'items-end' : 'items-start'}`}>
                                     {!isOwn && (
                                         <p className="text-xs text-gray-500 px-1">{msg.sender?.name}</p>
@@ -78,6 +79,9 @@ export default function FacultyMessageShow({ conversation, messages }) {
                                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
+                                {isOwn && (
+                                    <UserAvatar user={auth.user} size="sm" className="flex-shrink-0 mb-0.5" />
+                                )}
                             </div>
                         );
                     })}
@@ -88,6 +92,8 @@ export default function FacultyMessageShow({ conversation, messages }) {
                 <div className="px-4 py-3 bg-white border-t border-gray-200 flex-shrink-0">
                     <form onSubmit={submit} className="flex gap-2 items-end">
                         <textarea
+                            id="reply-body"
+                            name="body"
                             value={data.body}
                             onChange={e => setData('body', e.target.value)}
                             onKeyDown={handleKeyDown}

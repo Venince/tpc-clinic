@@ -114,10 +114,10 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </div>
                 <div className="divide-y divide-gray-100">
                     {types.map(t => (
-                        <div key={t.id} className="px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+                        <div key={t.id} className="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="font-medium text-gray-900 truncate">{t.name}</p>
+                                        <p className="font-medium text-gray-900 break-words">{t.name}</p>
                                         {t.is_required && (
                                             <span className="badge badge-red text-[10px] px-1.5 py-0.5 flex-shrink-0">Required</span>
                                         )}
@@ -133,10 +133,10 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                             <span className="badge badge-gray text-[10px] px-1.5 py-0.5 flex-shrink-0">All Students</span>
                                         )}
                                     </div>
-                                    {t.description && <p className="text-xs text-gray-400">{t.description}</p>}
+                                    {t.description && <p className="text-xs text-gray-400 break-words">{t.description}</p>}
                                     <p className="text-xs text-gray-400 mt-0.5">{t.user_requirements_count} submissions</p>
                                 </div>
-                            <div className="flex items-center gap-3 flex-shrink-0">
+                            <div className="flex items-center gap-3 flex-shrink-0 self-start sm:self-center">
                                 {/* Required toggle */}
                                 <label className="flex items-center gap-1.5 cursor-pointer select-none" title={t.is_required ? 'Mark as optional' : 'Mark as required'}>
                                     <span className="text-xs text-gray-500 hidden sm:inline">
@@ -249,11 +249,11 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                 <span className="text-gray-400">Uploaded: </span>
                                 <span className="text-gray-700">{new Date(r.created_at).toLocaleDateString()}</span>
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 {r.file_path ? (
-                                    <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium">
-                                        <EyeIcon className="w-3.5 h-3.5" />
-                                        {r.original_filename || 'View file'}
+                                    <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0">
+                                        <EyeIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                                        <span className="truncate">{r.original_filename || 'View file'}</span>
                                     </button>
                                 ) : (
                                     <span className="text-xs text-gray-400">No file</span>
@@ -318,11 +318,11 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                             <span className="badge badge-red text-[10px] ml-1.5">Required</span>
                                         )}
                                     </td>
-                                    <td>
+                                    <td className="max-w-[10rem]">
                                         {r.file_path ? (
-                                            <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium">
-                                                <EyeIcon className="w-3.5 h-3.5" />
-                                                {r.original_filename || 'View file'}
+                                            <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0">
+                                                <EyeIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                                                <span className="truncate">{r.original_filename || 'View file'}</span>
                                             </button>
                                         ) : (
                                             <span className="text-xs text-gray-400">No file</span>

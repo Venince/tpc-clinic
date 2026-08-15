@@ -64,6 +64,8 @@ export default function MessagesIndex({ conversations, contacts }) {
                     <div className="relative">
                         <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
+                            id="conversation-search"
+                            name="conversation-search"
                             value={conversationSearch}
                             onChange={e => setConversationSearch(e.target.value)}
                             className="input pl-9 w-full"
@@ -155,8 +157,10 @@ export default function MessagesIndex({ conversations, contacts }) {
                         <form onSubmit={submit} className="px-5 py-4 space-y-4">
                             {/* Recipient */}
                             <div className="relative">
-                                <label className="label">To</label>
+                                <label className="label" htmlFor="recipient-search">To</label>
                                 <input
+                                    id="recipient-search"
+                                    name="recipient-search"
                                     type="text"
                                     value={recipientSearch}
                                     onChange={e => {
@@ -199,14 +203,14 @@ export default function MessagesIndex({ conversations, contacts }) {
                             </div>
 
                             <div>
-                                <label className="label">Subject</label>
-                                <input value={data.subject} onChange={e => setData('subject', e.target.value)} className={`input ${errors.subject ? 'input-error' : ''}`} placeholder="What's this about?" />
+                                <label className="label" htmlFor="new-message-subject">Subject</label>
+                                <input id="new-message-subject" name="subject" value={data.subject} onChange={e => setData('subject', e.target.value)} className={`input ${errors.subject ? 'input-error' : ''}`} placeholder="What's this about?" />
                                 {errors.subject && <p className="error-msg">{errors.subject}</p>}
                             </div>
 
                             <div>
-                                <label className="label">Message</label>
-                                <textarea value={data.body} onChange={e => setData('body', e.target.value)} className={`input ${errors.body ? 'input-error' : ''}`} rows={4} placeholder="Write your message…" />
+                                <label className="label" htmlFor="new-message-body">Message</label>
+                                <textarea id="new-message-body" name="body" value={data.body} onChange={e => setData('body', e.target.value)} className={`input ${errors.body ? 'input-error' : ''}`} rows={4} placeholder="Write your message…" />
                                 {errors.body && <p className="error-msg">{errors.body}</p>}
                             </div>
 
