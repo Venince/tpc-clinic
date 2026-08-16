@@ -80,7 +80,8 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                         </tr></thead>
                         <tbody>
                             {users.data.map(user => (
-                                <tr key={user.id}>
+                                <tr key={user.id} className="hover:bg-clinic-50 cursor-pointer transition-colors"
+                                    onClick={() => router.visit(route('admin.users.show', user.id))}>
                                     <td className="whitespace-nowrap">
                                         <div className="flex items-center gap-2.5">
                                             <UserAvatar user={user} size="sm" onClick={() => setViewingPhoto(user)} />
@@ -100,15 +101,15 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                                         <div className="flex items-center gap-2">
                                             {user.role?.name !== 'super_admin' || auth.user.role === 'super_admin' ? (
                                                 <>
-                                                    <Link href={route('admin.users.edit', user.id)} className="text-gray-400 hover:text-clinic-600 transition-colors">
+                                                    <Link href={route('admin.users.edit', user.id)} onClick={e => e.stopPropagation()} className="text-gray-400 hover:text-clinic-600 transition-colors">
                                                         <PencilIcon className="w-4 h-4" />
                                                     </Link>
                                                     {user.id !== auth.user.id && (
-                                                        <button onClick={() => toggleActive(user)} className={`text-xs px-2 py-1 rounded whitespace-nowrap ${user.is_active ? 'text-red-500 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}>
+                                                        <button onClick={e => { e.stopPropagation(); toggleActive(user); }} className={`text-xs px-2 py-1 rounded whitespace-nowrap ${user.is_active ? 'text-red-500 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}>
                                                             {user.is_active ? 'Deactivate' : 'Activate'}
                                                         </button>
                                                     )}
-                                                    <button onClick={() => deleteUser(user)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                                    <button onClick={e => { e.stopPropagation(); deleteUser(user); }} className="text-gray-400 hover:text-red-500 transition-colors">
                                                         <TrashIcon className="w-4 h-4" />
                                                     </button>
                                                 </>

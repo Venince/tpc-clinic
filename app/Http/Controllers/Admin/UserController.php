@@ -24,8 +24,10 @@ class UserController extends Controller
             ->when($request->search, fn($q) => $q->where(fn($s) => $s
                 ->where('name', 'like', "%{$request->search}%")
                 ->orWhere('email', 'like', "%{$request->search}%")))
-            ->when($request->role && ($isSuperAdmin || $request->role !== 'super_admin'),
-                fn($q) => $q->whereHas('role', fn($r) => $r->where('name', $request->role)))
+            ->when(
+                $request->role && ($isSuperAdmin || $request->role !== 'super_admin'),
+                fn($q) => $q->whereHas('role', fn($r) => $r->where('name', $request->role))
+            )
             ->when($request->filled('is_active'), fn($q) => $q->where('is_active', $request->boolean('is_active')))
             ->latest()
             ->paginate(15)
@@ -36,13 +38,13 @@ class UserController extends Controller
             : Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name']);
 
         return Inertia::render('Admin/Users/Index', [
-            'users'   => $users,
+            'users' => $users,
             'filters' => $request->only('search', 'role', 'is_active'),
-            'roles'   => $roles,
+            'roles' => $roles,
         ]);
     }
 
-        public function create(Request $request)
+    public function create(Request $request)
     {
         $roles = $request->user()->isSuperAdmin()
             ? Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name'])
@@ -62,25 +64,25 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
                 'email',
                 Rule::unique('users')->whereNull('deleted_at'),
             ],
-            'role'  => ['required', Rule::in(['student', 'faculty_staff', 'admin'])],
+            'role' => ['required', Rule::in(['student', 'faculty_staff', 'admin'])],
         ]);
 
-        $role     = Role::where('name', $data['role'])->firstOrFail();
+        $role = Role::where('name', $data['role'])->firstOrFail();
         $password = Str::random(12);
 
         $user = User::create([
-            'name'                  => $data['name'],
-            'email'                 => $data['email'],
-            'role_id'               => $role->id,
-            'password'              => Hash::make($password),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'role_id' => $role->id,
+            'password' => Hash::make($password),
             'force_password_change' => true,
-            'is_active'             => true,
+            'is_active' => true,
         ]);
 
         try {
@@ -90,10 +92,10 @@ class UserController extends Controller
         }
 
         AuditLog::create([
-            'user_id'    => $request->user()->id,
-            'action'     => 'user_created',
+            'user_id' => $request->user()->id,
+            'action' => 'user_created',
             'model_type' => 'User',
-            'model_id'   => $user->id,
+            'model_id' => $user->id,
             'ip_address' => $request->ip(),
         ]);
 
@@ -105,8 +107,23 @@ class UserController extends Controller
         abort_if($user->role->name === 'super_admin' && !request()->user()->isSuperAdmin(), 403);
 
         return Inertia::render('Admin/Users/Edit', [
-            'user'  => $user->load('role', 'studentProfile.program', 'facultyProfile'),
+            'user' => $user->load('role', 'studentProfile.program', 'facultyProfile'),
             'roles' => Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name']),
+        ]);
+    }
+
+    public function show(Request $request, User $user)
+    {
+        abort_if($user->role->name === 'super_admin' && !$request->user()->isSuperAdmin(), 403);
+
+        $user->load(['role', 'studentProfile.program', 'facultyProfile']);
+
+        return Inertia::render('Admin/Users/Show', [
+            'user' => $user,
+            'appointments' => $user->appointments()->with('slot')->latest()->get(),
+            'medicineRequests' => $user->medicineRequests()->with('medicine')->latest()->get(),
+            'surveyAnswers' => $user->surveyAnswers()->with('question')->get(),
+            'requirements' => $user->requirements()->with('requirementType')->latest()->get(),
         ]);
     }
 
@@ -115,8 +132,8 @@ class UserController extends Controller
         abort_if($user->role->name === 'super_admin' && !$request->user()->isSuperAdmin(), 403);
 
         $data = $request->validate([
-            'name'      => ['required', 'string', 'max:255'],
-            'email'     => [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
                 'required',
                 'email',
                 Rule::unique('users')->ignore($user->id)->whereNull('deleted_at'),
@@ -127,10 +144,10 @@ class UserController extends Controller
         $user->update($data);
 
         AuditLog::create([
-            'user_id'    => $request->user()->id,
-            'action'     => 'user_updated',
+            'user_id' => $request->user()->id,
+            'action' => 'user_updated',
             'model_type' => 'User',
-            'model_id'   => $user->id,
+            'model_id' => $user->id,
             'ip_address' => $request->ip(),
         ]);
 
@@ -150,10 +167,10 @@ class UserController extends Controller
         $user->delete();
 
         AuditLog::create([
-            'user_id'    => $request->user()->id,
-            'action'     => 'user_deleted',
+            'user_id' => $request->user()->id,
+            'action' => 'user_deleted',
             'model_type' => 'User',
-            'model_id'   => $user->id,
+            'model_id' => $user->id,
             'ip_address' => $request->ip(),
         ]);
 
@@ -171,10 +188,10 @@ class UserController extends Controller
         $user->update(['is_active' => !$user->is_active]);
 
         AuditLog::create([
-            'user_id'    => $request->user()->id,
-            'action'     => $user->is_active ? 'user_activated' : 'user_deactivated',
+            'user_id' => $request->user()->id,
+            'action' => $user->is_active ? 'user_activated' : 'user_deactivated',
             'model_type' => 'User',
-            'model_id'   => $user->id,
+            'model_id' => $user->id,
             'ip_address' => $request->ip(),
         ]);
 
@@ -185,19 +202,22 @@ class UserController extends Controller
     {
         $request->validate([
             'file' => ['required', 'file', 'mimes:txt', 'max:2048'],
-            'role' => ['required', Rule::in(
-                $request->user()->isSuperAdmin()
+            'role' => [
+                'required',
+                Rule::in(
+                    $request->user()->isSuperAdmin()
                     ? ['student', 'faculty_staff', 'admin']
                     : ['student', 'faculty_staff']
-            )],
+                )
+            ],
         ]);
 
         // Normalize line endings, split, trim, remove blanks, cap at 500
-        $raw    = file_get_contents($request->file('file')->getRealPath());
-        $lines  = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw)));
+        $raw = file_get_contents($request->file('file')->getRealPath());
+        $lines = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw)));
         $emails = array_slice(array_values($lines), 0, 500);
 
-        $role    = Role::where('name', $request->role)->firstOrFail();
+        $role = Role::where('name', $request->role)->firstOrFail();
         $results = ['created' => 0, 'skipped' => 0, 'failed' => 0];
 
         foreach ($emails as $email) {
@@ -213,13 +233,13 @@ class UserController extends Controller
             }
 
             $password = Str::random(12);
-            $user     = User::create([
-                'name'                  => ucwords(str_replace(['.', '_', '-'], ' ', explode('@', $email)[0])),
-                'email'                 => $email,
-                'role_id'               => $role->id,
-                'password'              => Hash::make($password),
+            $user = User::create([
+                'name' => ucwords(str_replace(['.', '_', '-'], ' ', explode('@', $email)[0])),
+                'email' => $email,
+                'role_id' => $role->id,
+                'password' => Hash::make($password),
                 'force_password_change' => true,
-                'is_active'             => true,
+                'is_active' => true,
             ]);
 
             try {
@@ -231,10 +251,10 @@ class UserController extends Controller
         }
 
         AuditLog::create([
-            'user_id'    => $request->user()->id,
-            'action'     => 'bulk_import',
+            'user_id' => $request->user()->id,
+            'action' => 'bulk_import',
             'model_type' => 'User',
-            'model_id'   => null,
+            'model_id' => null,
             'ip_address' => $request->ip(),
         ]);
 
