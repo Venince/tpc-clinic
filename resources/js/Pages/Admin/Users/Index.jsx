@@ -3,10 +3,12 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import PhotoLightbox from '@/Components/Common/PhotoLightbox';
 
 export default function UsersIndex({ users, filters, roles, auth }) {
     const [search, setSearch] = useState(filters.search || '');
     const [role,   setRole]   = useState(filters.role   || '');
+    const [viewingPhoto, setViewingPhoto] = useState(null);
     const { post, delete: destroy } = useForm();
 
     const applyFilters = () => router.get(route('admin.users.index'), { search, role }, { preserveState: true });
@@ -81,7 +83,7 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                                 <tr key={user.id}>
                                     <td className="whitespace-nowrap">
                                         <div className="flex items-center gap-2.5">
-                                            <UserAvatar user={user} size="sm" />
+                                            <UserAvatar user={user} size="sm" onClick={() => setViewingPhoto(user)} />
                                             <span className="font-medium text-gray-900">{user.name}</span>
                                         </div>
                                     </td>
@@ -136,6 +138,12 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                     </div>
                 </div>
             </div>
+
+            <PhotoLightbox
+                photoUrl={viewingPhoto?.profile_photo_url}
+                name={viewingPhoto?.name}
+                onClose={() => setViewingPhoto(null)}
+            />
         </AdminLayout>
     );
 }
