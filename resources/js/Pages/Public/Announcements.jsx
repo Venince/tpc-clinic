@@ -54,6 +54,11 @@ export default function PublicAnnouncements({ announcements }) {
                             className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
                             ← Home
                         </Link>
+                        <Link href={route('announcements')}
+                            className="md:hidden p-2 text-clinic-600"
+                            title="Announcements">
+                            <MegaphoneIcon className="w-5 h-5" />
+                        </Link>
                         <Link href={route('login')}
                             className="bg-clinic-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-clinic-700 transition-colors">
                             Sign in

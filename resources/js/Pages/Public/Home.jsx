@@ -100,6 +100,11 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
+                        <Link href={route('announcements')}
+                            className="md:hidden p-2 text-gray-500 hover:text-clinic-600 transition-colors"
+                            title="Announcements">
+                            <MegaphoneIcon className="w-5 h-5" />
+                        </Link>
                         <Link href={route('login')} className="bg-clinic-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-clinic-700 transition-colors">
                             Sign in
                         </Link>
