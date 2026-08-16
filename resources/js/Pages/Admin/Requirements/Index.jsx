@@ -1,9 +1,10 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
     PlusIcon, TrashIcon, CheckIcon, XMarkIcon,
-    EyeIcon, MagnifyingGlassIcon, ExclamationTriangleIcon,
+    EyeIcon, MagnifyingGlassIcon, ExclamationTriangleIcon, ArrowDownIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 
@@ -91,6 +92,13 @@ export default function RequirementsIndex({ types, requirements, programs, filte
             <div className="flex items-start justify-between gap-3 mb-6">
                 <h2 className="page-title">Medical Requirements</h2>
                 <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={() => document.getElementById('submissions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        className="btn-secondary btn-sm flex items-center gap-1"
+                    >
+                        <ArrowDownIcon className="w-4 h-4" />
+                        <span className="hidden sm:inline">Jump to Submissions</span>
+                    </button>
                     {isSuperAdmin && (
                         <button onClick={() => setShowClear(true)} className="btn-danger btn-sm flex items-center gap-1">
                             <TrashIcon className="w-4 h-4" />
@@ -175,10 +183,12 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 <div className="card-body">
                     <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                         <div className="flex-1 min-w-0">
-                            <label className="label">Search</label>
+                            <label className="label" htmlFor="filter-search">Search</label>
                             <div className="relative">
                                 <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
+                                    id="filter-search"
+                                    name="filter-search"
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && applyFilters()}
@@ -189,8 +199,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         </div>
                         <div className="flex gap-3 flex-wrap">
                             <div>
-                                <label className="label">Status</label>
-                                <select value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-auto">
+                                <label className="label" htmlFor="filter-status">Status</label>
+                                <select id="filter-status" name="filter-status" value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-auto">
                                     <option value="">All Statuses</option>
                                     <option value="pending">Pending</option>
                                     <option value="approved">Approved</option>
@@ -198,8 +208,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                 </select>
                             </div>
                             <div>
-                                <label className="label">Program</label>
-                                <select value={programId} onChange={e => setProgramId(e.target.value)} className="input w-full sm:w-auto">
+                                <label className="label" htmlFor="filter-program">Program</label>
+                                <select id="filter-program" name="filter-program" value={programId} onChange={e => setProgramId(e.target.value)} className="input w-full sm:w-auto">
                                     <option value="">All Programs</option>
                                     {programs.map(p => <option key={p.id} value={p.id}>{p.code}</option>)}
                                 </select>
@@ -215,8 +225,9 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </div>
             </div>
 
-            {/* Submissions — Mobile Cards */}
-            <div className="md:hidden space-y-3 mb-4">
+            <div id="submissions">
+                {/* Submissions — Mobile Cards */}
+                <div className="md:hidden space-y-3 mb-4">
                 <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-900">Submissions</h3>
                     <span className="text-xs text-gray-400">{requirements.total} total</span>
@@ -372,6 +383,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                     </div>
                 )}
             </div>
+            </div>
 
             {/* Mobile Pagination */}
             {requirements.links?.length > 3 && (
@@ -386,8 +398,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
             )}
 
             {/* Add Requirement Type Modal */}
-            {showAdd && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
+            {showAdd && createPortal(
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4 overflow-y-auto">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
                         <h3 className="font-semibold mb-4">Add Requirement Type</h3>
                         <form onSubmit={submitAdd} className="space-y-3">
@@ -456,12 +468,13 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {/* Clear Submissions Modal — unchanged */}
-            {showClear && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
+            {/* Clear Submissions Modal */}
+            {showClear && createPortal(
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4 overflow-y-auto">
                     <div className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
                         <div className="flex items-start gap-3 px-6 pt-6 pb-4">
                             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -514,11 +527,12 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {/* File Preview Modal — unchanged */}
-            {previewing && (
+            {/* File Preview Modal */}
+            {previewing && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
                         <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-gray-100">
@@ -551,13 +565,14 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             )}
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {/* Review Modal — unchanged */}
-            {reviewing && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+            {/* Review Modal */}
+            {reviewing && createPortal(
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl my-auto">
                         <h3 className="font-semibold mb-1">Review Submission</h3>
                         <p className="text-sm text-gray-500 mb-4">
                             {reviewing.user?.name} — {reviewing.requirement_type?.name}
@@ -587,7 +602,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </AdminLayout>
     );
