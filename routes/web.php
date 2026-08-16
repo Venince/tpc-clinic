@@ -119,6 +119,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('/requirements/types/{requirementType}',    [Admin\RequirementController::class, 'updateType'])->name('requirements.types.update');
         Route::delete('/requirements/types/{requirementType}', [Admin\RequirementController::class, 'destroyType'])->name('requirements.types.destroy');
         Route::post('/requirements/{userRequirement}/review',  [Admin\RequirementController::class, 'review'])->name('requirements.review');
+        Route::delete('/requirements/{userRequirement}',       [Admin\RequirementController::class, 'destroy'])
+            ->name('requirements.destroy')
+            ->middleware('role:super_admin');
         Route::post('/requirements/clear-submissions',         [Admin\RequirementController::class, 'clearSubmissions'])
             ->name('requirements.clear-submissions')
             ->middleware('role:super_admin');

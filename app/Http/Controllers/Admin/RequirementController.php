@@ -86,6 +86,23 @@ class RequirementController extends Controller
         return back()->with('success', "Requirement {$request->status}.");
     }
 
+    public function destroy(Request $request, UserRequirement $userRequirement)
+    {
+        abort_unless($request->user()->role?->name === 'super_admin', 403, 'Super admin only.');
+
+        if ($userRequirement->approval_status === 'pending') {
+            return back()->with('error', 'Only approved or rejected submissions can be deleted.');
+        }
+
+        if ($userRequirement->file_path) {
+            \Illuminate\Support\Facades\Storage::disk('private')->delete($userRequirement->file_path);
+        }
+
+        $userRequirement->delete();
+
+        return back()->with('success', 'Submission deleted.');
+    }
+
     public function clearSubmissions(Request $request): \Illuminate\Http\RedirectResponse
     {
         $request->validate([

@@ -262,9 +262,9 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                             <div className="min-w-0">
                                 {r.file_path ? (
-                                    <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0">
-                                        <EyeIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                                        <span className="truncate">{r.original_filename || 'View file'}</span>
+                                    <button onClick={() => setPreviewing(r)} className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0 text-left">
+                                        <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                        <span className="break-all">{r.original_filename || 'View file'}</span>
                                     </button>
                                 ) : (
                                     <span className="text-xs text-gray-400">No file</span>
@@ -283,8 +283,19 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                 </button>
                             </div>
                         ) : (
-                            <div className="pt-2 border-t border-gray-100 text-xs text-gray-400 italic">
-                                {r.reviewer?.name ? `Reviewed by ${r.reviewer.name}` : '—'}
+                            <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                                <p className="text-xs text-gray-400 italic">
+                                    {r.reviewer?.name ? `Reviewed by ${r.reviewer.name}` : '—'}
+                                </p>
+                                {isSuperAdmin && (
+                                    <button
+                                        onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
+                                        className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium flex-shrink-0"
+                                        title="Delete submission"
+                                    >
+                                        <TrashIcon className="w-3.5 h-3.5" /> Delete
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -331,9 +342,9 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                     </td>
                                     <td className="max-w-[10rem]">
                                         {r.file_path ? (
-                                            <button onClick={() => setPreviewing(r)} className="flex items-center gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0">
-                                                <EyeIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                                                <span className="truncate">{r.original_filename || 'View file'}</span>
+                                            <button onClick={() => setPreviewing(r)} className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0 text-left">
+                                                <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                                <span className="break-all">{r.original_filename || 'View file'}</span>
                                             </button>
                                         ) : (
                                             <span className="text-xs text-gray-400">No file</span>
@@ -344,7 +355,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                     </td>
                                     <td>{statusBadge(r.approval_status)}</td>
                                     <td>
-                                        <div className="flex gap-2">
+                                        <div className="flex items-center gap-2">
                                             {r.approval_status === 'pending' && <>
                                                 <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
                                                     className="btn-success btn-sm px-2 py-1" title="Approve">
@@ -359,6 +370,15 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                                 <span className="text-xs text-gray-400 italic">
                                                     {r.reviewer?.name ? `by ${r.reviewer.name}` : '—'}
                                                 </span>
+                                            )}
+                                            {r.approval_status !== 'pending' && isSuperAdmin && (
+                                                <button
+                                                    onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
+                                                    className="text-gray-400 hover:text-red-600 p-1"
+                                                    title="Delete submission"
+                                                >
+                                                    <TrashIcon className="w-3.5 h-3.5" />
+                                                </button>
                                             )}
                                         </div>
                                     </td>
@@ -589,8 +609,8 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                             {reviewForm.data.status === 'rejected' && (
                                 <div>
-                                    <label className="label">Rejection Reason</label>
-                                    <textarea value={reviewForm.data.reason} onChange={e => reviewForm.setData('reason', e.target.value)}
+                                    <label className="label" htmlFor="rejection-reason">Rejection Reason</label>
+                                    <textarea id="rejection-reason" name="rejection-reason" value={reviewForm.data.reason} onChange={e => reviewForm.setData('reason', e.target.value)}
                                         className="input" rows={2} required />
                                 </div>
                             )}
