@@ -175,10 +175,13 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                     <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-3">
                         {/* Search */}
                         <div className="sm:flex-1 sm:min-w-0">
-                            <label className="label">Search</label>
+                            <label className="label" htmlFor="walkin-search">Search</label>
                             <div className="relative">
                                 <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input value={search} onChange={e => setSearch(e.target.value)}
+                                <input
+                                    id="walkin-search"
+                                    name="walkin-search"
+                                    value={search} onChange={e => setSearch(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && applyFilters()}
                                     className="input pl-9" placeholder="Search by name or email…" />
                             </div>
@@ -187,16 +190,16 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                         {/* Date range + type — 2-col grid on mobile */}
                         <div className="grid grid-cols-2 sm:flex gap-3 sm:items-end">
                             <div>
-                                <label className="label">From</label>
-                                <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input" />
+                                <label className="label" htmlFor="walkin-date-from">From</label>
+                                <input id="walkin-date-from" name="walkin-date-from" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input" />
                             </div>
                             <div>
-                                <label className="label">To</label>
-                                <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input" />
+                                <label className="label" htmlFor="walkin-date-to">To</label>
+                                <input id="walkin-date-to" name="walkin-date-to" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input" />
                             </div>
                             <div>
-                                <label className="label">Type</label>
-                                <select value={userType} onChange={e => setUserType(e.target.value)} className="input">
+                                <label className="label" htmlFor="walkin-user-type">Type</label>
+                                <select id="walkin-user-type" name="walkin-user-type" value={userType} onChange={e => setUserType(e.target.value)} className="input">
                                     <option value="">All</option>
                                     <option value="student">Student</option>
                                     <option value="faculty_staff">Faculty/Staff</option>

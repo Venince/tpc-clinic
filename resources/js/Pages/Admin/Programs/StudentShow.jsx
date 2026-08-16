@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import PhotoLightbox from '@/Components/Common/PhotoLightbox';
 import { useRef, useState, useEffect } from 'react';
 import {
     ArrowLeftIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
@@ -57,6 +58,7 @@ export default function StudentShow({ student, appointments, medicineRequests, s
     const printRef = useRef(null);
     const [menuOpen, setMenuOpen] = useState(false);
     const [downloading, setDownloading] = useState(false);
+    const [photoOpen, setPhotoOpen] = useState(false);
 
     useEffect(() => {
         const close = () => setMenuOpen(false);
@@ -167,7 +169,7 @@ export default function StudentShow({ student, appointments, medicineRequests, s
                 <div className="card mb-6 print-card">
                     <div className="card-body">
                         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
-                            <UserAvatar user={u} size="xl" className="flex-shrink-0" />
+                            <UserAvatar user={u} size="xl" className="flex-shrink-0" onClick={() => setPhotoOpen(true)} />
                             <div className="flex-1 min-w-0 w-full">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 justify-center sm:justify-start">
                                     <h2 className="text-xl font-bold text-gray-900 break-words">{u?.name}</h2>
@@ -283,6 +285,12 @@ export default function StudentShow({ student, appointments, medicineRequests, s
                     </SectionCard>
                 </div>
             </div>
+
+            <PhotoLightbox
+                photoUrl={photoOpen ? u?.profile_photo_url : null}
+                name={u?.name}
+                onClose={() => setPhotoOpen(false)}
+            />
         </AdminLayout>
     );
 }

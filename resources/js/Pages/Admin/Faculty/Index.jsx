@@ -3,9 +3,11 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import PhotoLightbox from '@/Components/Common/PhotoLightbox';
 
 export default function Faculty({ faculty }) {
     const [search, setSearch] = useState('');
+    const [viewingPhoto, setViewingPhoto] = useState(null);
 
     const filtered = faculty.filter(fp => {
         const q = search.toLowerCase();
@@ -34,6 +36,8 @@ export default function Faculty({ faculty }) {
                     <div className="relative w-full sm:max-w-sm">
                         <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
+                            id="faculty-search"
+                            name="faculty-search"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             className="input pl-9 pr-20 sm:pr-24 w-full text-sm"
@@ -68,7 +72,7 @@ export default function Faculty({ faculty }) {
                                         onClick={() => router.visit(route('admin.faculty.show', fp.id))}>
                                         <td className="px-4 py-2 whitespace-nowrap">
                                             <div className="flex items-center gap-2.5">
-                                                <UserAvatar user={fp.user} size="sm" />
+                                                <UserAvatar user={fp.user} size="sm" onClick={() => setViewingPhoto(fp.user)} />
                                                 <span className="font-medium text-gray-900">{fp.user?.name}</span>
                                             </div>
                                         </td>
@@ -102,6 +106,12 @@ export default function Faculty({ faculty }) {
                     </div>
                 )}
             </div>
+
+            <PhotoLightbox
+                photoUrl={viewingPhoto?.profile_photo_url}
+                name={viewingPhoto?.name}
+                onClose={() => setViewingPhoto(null)}
+            />
         </AdminLayout>
     );
 }

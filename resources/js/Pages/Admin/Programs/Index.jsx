@@ -3,11 +3,13 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon, UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import PhotoLightbox from '@/Components/Common/PhotoLightbox';
 
 export default function Programs({ programs }) {
     const [modal, setModal]       = useState(null);
     const [expanded, setExpanded] = useState(null);
     const [searches, setSearches] = useState({});
+    const [viewingPhoto, setViewingPhoto] = useState(null);
     const { data, setData, post, put, processing, errors, reset } = useForm({ code: '', name: '', description: '', is_active: true });
 
     const open = (p) => {
@@ -139,7 +141,7 @@ export default function Programs({ programs }) {
                                                                 onClick={() => router.visit(route('admin.programs.students.show', sp.id))}>
                                                                 <td className="px-4 py-2 whitespace-nowrap">
                                                                     <div className="flex items-center gap-2">
-                                                                        <UserAvatar user={sp.user} size="xs" />
+                                                                        <UserAvatar user={sp.user} size="xs" onClick={() => setViewingPhoto(sp.user)} />
                                                                         <span className="font-medium text-gray-900">{sp.user?.name}</span>
                                                                     </div>
                                                                 </td>
@@ -211,6 +213,12 @@ export default function Programs({ programs }) {
                     </div>
                 </div>
             )}
+
+            <PhotoLightbox
+                photoUrl={viewingPhoto?.profile_photo_url}
+                name={viewingPhoto?.name}
+                onClose={() => setViewingPhoto(null)}
+            />
         </AdminLayout>
     );
 }
