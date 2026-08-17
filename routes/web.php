@@ -70,6 +70,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/users/{user}/edit',  [Admin\UserController::class, 'edit'])->name('users.edit');
         Route::get('/users/{user}',       [Admin\UserController::class, 'show'])->name('users.show');
         Route::put('/users/{user}',       [Admin\UserController::class, 'update'])->name('users.update');
+        Route::put('/users/{user}/password', [Admin\UserController::class, 'updatePassword'])->name('users.password');
         Route::delete('/users/{user}',    [Admin\UserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{user}/toggle-active', [Admin\UserController::class, 'toggleActive'])->name('users.toggle');
 

@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
 use App\Jobs\SendCredentialsEmail;
+use App\Notifications\PasswordChangedByAdminNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -152,6 +153,32 @@ class UserController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User updated.');
+    }
+
+    public function updatePassword(Request $request, User $user)
+    {
+        abort_if($user->role->name === 'super_admin' && !$request->user()->isSuperAdmin(), 403);
+
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->update([
+            'password' => Hash::make($data['password']),
+            'force_password_change' => true,
+        ]);
+
+        $user->notify(new PasswordChangedByAdminNotification($request->user()));
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'password_changed_by_admin',
+            'model_type' => 'User',
+            'model_id' => $user->id,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('success', "Password updated for {$user->name}. They will be asked to set a new password on next login.");
     }
 
     public function destroy(Request $request, User $user)
