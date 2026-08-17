@@ -109,7 +109,7 @@ export default function StudentProfile({ profile, programs }) {
                                     className={`input ${errors.year_level ? 'input-error' : ''}`}
                                 >
                                     <option value="">— Select —</option>
-                                    {[1, 2, 3, 4, 5, 6].map(y => (
+                                    {[1, 2, 3, 4].map(y => (
                                         <option key={y} value={y}>Year {y}</option>
                                     ))}
                                 </select>
