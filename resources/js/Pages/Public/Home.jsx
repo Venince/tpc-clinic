@@ -220,9 +220,6 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                                         </div>
                                     )}
                                 </div>
-                                <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-clinic-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.5 12.75l6 6 9-13.5" /></svg>
-                                </div>
                                 <div>
                                     <h3 className="font-semibold text-gray-900 text-sm mb-1">{s.title}</h3>
                                     <p className="text-xs text-gray-500 leading-relaxed">{s.description}</p>

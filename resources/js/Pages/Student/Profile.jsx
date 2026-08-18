@@ -66,8 +66,11 @@ export default function StudentProfile({ profile, programs }) {
 
                             {/* --- Account --- */}
                             <div className="sm:col-span-2">
-                                <label className="label">Full Name <Req /></label>
+                                <label className="label" htmlFor="name">Full Name <Req /></label>
                                 <input
+                                    id="name"
+                                    name="name"
+                                    autoComplete="name"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
                                     className={`input ${errors.name ? 'input-error' : ''}`}
@@ -78,8 +81,11 @@ export default function StudentProfile({ profile, programs }) {
 
                             {/* --- Enrollment --- */}
                             <div>
-                                <label className="label">Student ID <Req /></label>
+                                <label className="label" htmlFor="student_id">Student ID <Req /></label>
                                 <input
+                                    id="student_id"
+                                    name="student_id"
+                                    autoComplete="off"
                                     value={data.student_id}
                                     onChange={e => setData('student_id', e.target.value)}
                                     className={`input ${errors.student_id ? 'input-error' : ''}`}
@@ -88,8 +94,10 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.student_id && <p className="error-msg">{errors.student_id}</p>}
                             </div>
                             <div>
-                                <label className="label">Program <Req /></label>
+                                <label className="label" htmlFor="program_id">Program <Req /></label>
                                 <select
+                                    id="program_id"
+                                    name="program_id"
                                     value={data.program_id}
                                     onChange={e => setData('program_id', e.target.value)}
                                     className={`input ${errors.program_id ? 'input-error' : ''}`}
@@ -102,8 +110,10 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.program_id && <p className="error-msg">{errors.program_id}</p>}
                             </div>
                             <div>
-                                <label className="label">Year Level <Req /></label>
+                                <label className="label" htmlFor="year_level">Year Level <Req /></label>
                                 <select
+                                    id="year_level"
+                                    name="year_level"
                                     value={data.year_level}
                                     onChange={e => setData('year_level', e.target.value)}
                                     className={`input ${errors.year_level ? 'input-error' : ''}`}
@@ -116,8 +126,11 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.year_level && <p className="error-msg">{errors.year_level}</p>}
                             </div>
                             <div>
-                                <label className="label">Block <Req /></label>
+                                <label className="label" htmlFor="block">Block <Req /></label>
                                 <input
+                                    id="block"
+                                    name="block"
+                                    autoComplete="off"
                                     value={data.block}
                                     onChange={e => setData('block', e.target.value)}
                                     className={`input ${errors.block ? 'input-error' : ''}`}
@@ -128,9 +141,12 @@ export default function StudentProfile({ profile, programs }) {
 
                             {/* --- Health --- */}
                             <div>
-                                <label className="label">Birth Date <Req /></label>
+                                <label className="label" htmlFor="birth_date">Birth Date <Req /></label>
                                 <input
+                                    id="birth_date"
+                                    name="birth_date"
                                     type="date"
+                                    autoComplete="bday"
                                     value={data.birth_date}
                                     onChange={e => setData('birth_date', e.target.value)}
                                     className={`input ${errors.birth_date ? 'input-error' : ''}`}
@@ -138,8 +154,10 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.birth_date && <p className="error-msg">{errors.birth_date}</p>}
                             </div>
                             <div>
-                                <label className="label">Sex <Req /></label>
+                                <label className="label" htmlFor="sex">Sex <Req /></label>
                                 <select
+                                    id="sex"
+                                    name="sex"
                                     value={data.sex}
                                     onChange={e => {
                                         setData('sex', e.target.value);
@@ -158,8 +176,11 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.sex && <p className="error-msg">{errors.sex}</p>}
                             </div>
                             <div>
-                                <label className="label">Contact Number <Req /></label>
+                                <label className="label" htmlFor="contact_number">Contact Number <Req /></label>
                                 <input
+                                    id="contact_number"
+                                    name="contact_number"
+                                    autoComplete="tel"
                                     value={data.contact_number}
                                     onChange={e => setData('contact_number', e.target.value)}
                                     className={`input ${errors.contact_number ? 'input-error' : ''}`}
@@ -168,8 +189,10 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.contact_number && <p className="error-msg">{errors.contact_number}</p>}
                             </div>
                             <div>
-                                <label className="label">Civil Status <Req /></label>
+                                <label className="label" htmlFor="civil_status">Civil Status <Req /></label>
                                 <select
+                                    id="civil_status"
+                                    name="civil_status"
                                     value={data.civil_status}
                                     onChange={e => setData('civil_status', e.target.value)}
                                     className={`input ${errors.civil_status ? 'input-error' : ''}`}
@@ -181,8 +204,11 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.civil_status && <p className="error-msg">{errors.civil_status}</p>}
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="label">Address <Req /></label>
+                                <label className="label" htmlFor="address">Address <Req /></label>
                                 <textarea
+                                    id="address"
+                                    name="address"
+                                    autoComplete="street-address"
                                     value={data.address}
                                     onChange={e => setData('address', e.target.value)}
                                     className={`input ${errors.address ? 'input-error' : ''}`}
@@ -191,8 +217,11 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.address && <p className="error-msg">{errors.address}</p>}
                             </div>
                             <div>
-                                <label className="label">Guardian Name <Req /></label>
+                                <label className="label" htmlFor="guardian_name">Guardian Name <Req /></label>
                                 <input
+                                    id="guardian_name"
+                                    name="guardian_name"
+                                    autoComplete="off"
                                     value={data.guardian_name}
                                     onChange={e => setData('guardian_name', e.target.value)}
                                     className={`input ${errors.guardian_name ? 'input-error' : ''}`}
@@ -200,8 +229,11 @@ export default function StudentProfile({ profile, programs }) {
                                 {errors.guardian_name && <p className="error-msg">{errors.guardian_name}</p>}
                             </div>
                             <div>
-                                <label className="label">Guardian Contact <Req /></label>
+                                <label className="label" htmlFor="guardian_contact">Guardian Contact <Req /></label>
                                 <input
+                                    id="guardian_contact"
+                                    name="guardian_contact"
+                                    autoComplete="off"
                                     value={data.guardian_contact}
                                     onChange={e => setData('guardian_contact', e.target.value)}
                                     className={`input ${errors.guardian_contact ? 'input-error' : ''}`}
@@ -218,6 +250,7 @@ export default function StudentProfile({ profile, programs }) {
                                         <input
                                             type="checkbox"
                                             id="is_pregnant"
+                                            name="is_pregnant"
                                             checked={data.is_pregnant}
                                             onChange={e => {
                                                 setData('is_pregnant', e.target.checked);
@@ -231,8 +264,10 @@ export default function StudentProfile({ profile, programs }) {
                                     </div>
                                     {data.is_pregnant && (
                                         <div>
-                                            <label className="label">Expected Due Date <span className="text-gray-400 text-xs">(optional)</span></label>
+                                            <label className="label" htmlFor="pregnancy_due_date">Expected Due Date <span className="text-gray-400 text-xs">(optional)</span></label>
                                             <input
+                                                id="pregnancy_due_date"
+                                                name="pregnancy_due_date"
                                                 type="date"
                                                 value={data.pregnancy_due_date}
                                                 onChange={e => setData('pregnancy_due_date', e.target.value)}
