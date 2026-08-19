@@ -15,11 +15,14 @@ export default function ForgotPassword({ status }) {
 
             <form onSubmit={e => { e.preventDefault(); post(route('password.email')); }} className="space-y-4">
                 <div>
-                    <label className="label">Email address</label>
+                    <label className="label" htmlFor="email">Email address</label>
                     <div className="relative">
                         <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
+                            id="email"
+                            name="email"
                             type="email"
+                            autoComplete="email"
                             value={data.email}
                             onChange={e => setData('email', e.target.value)}
                             className={`input pl-9 ${errors.email ? 'input-error' : ''}`}

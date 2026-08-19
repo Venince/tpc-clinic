@@ -64,11 +64,14 @@ export default function Login({ status, lockout_seconds = 0 }) {
 
             <form onSubmit={submit} className="space-y-4">
                 <div>
-                    <label className="label">Email address</label>
+                    <label className="label" htmlFor="email">Email address</label>
                     <div className="relative">
                         <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
+                            id="email"
+                            name="email"
                             type="email"
+                            autoComplete="email"
                             value={data.email}
                             onChange={e => setData('email', e.target.value)}
                             className={`input pl-9 ${errors.email ? 'input-error' : ''}`}
@@ -84,7 +87,7 @@ export default function Login({ status, lockout_seconds = 0 }) {
 
                 <div>
                     <div className="flex items-center justify-between mb-1">
-                        <label className="label mb-0">Password</label>
+                        <label className="label mb-0" htmlFor="password">Password</label>
                         <Link href={route('password.request')} className="text-xs text-clinic-600 hover:text-clinic-700 transition-colors">
                             Forgot password?
                         </Link>
@@ -92,7 +95,10 @@ export default function Login({ status, lockout_seconds = 0 }) {
                     <div className="relative">
                         <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
+                            id="password"
+                            name="password"
                             type="password"
+                            autoComplete="current-password"
                             value={data.password}
                             onChange={e => setData('password', e.target.value)}
                             className={`input pl-9 ${errors.password ? 'input-error' : ''}`}

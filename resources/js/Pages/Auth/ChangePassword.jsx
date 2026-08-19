@@ -25,14 +25,17 @@ export default function ChangePassword() {
 
             <form onSubmit={submit} className="space-y-4">
                 {[
-                    { key: 'current_password', label: 'Current / Temporary Password', placeholder: 'Enter your temporary password' },
-                    { key: 'password', label: 'New Password', placeholder: 'At least 8 chars, mixed case + numbers' },
-                    { key: 'password_confirmation', label: 'Confirm New Password', placeholder: 'Repeat new password' },
-                ].map(({ key, label, placeholder }) => (
+                    { key: 'current_password', label: 'Current / Temporary Password', placeholder: 'Enter your temporary password', autoComplete: 'current-password' },
+                    { key: 'password', label: 'New Password', placeholder: 'At least 8 chars, mixed case + numbers', autoComplete: 'new-password' },
+                    { key: 'password_confirmation', label: 'Confirm New Password', placeholder: 'Repeat new password', autoComplete: 'new-password' },
+                ].map(({ key, label, placeholder, autoComplete }) => (
                     <div key={key}>
-                        <label className="label">{label}</label>
+                        <label className="label" htmlFor={key}>{label}</label>
                         <input
+                            id={key}
+                            name={key}
                             type="password"
+                            autoComplete={autoComplete}
                             value={data[key]}
                             onChange={e => setData(key, e.target.value)}
                             className={`input ${errors[key] ? 'input-error' : ''}`}
