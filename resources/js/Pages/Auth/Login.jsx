@@ -1,6 +1,6 @@
 import { useForm, Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { EnvelopeIcon, LockClosedIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, LockClosedIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 
 export default function Login({ status, lockout_seconds = 0 }) {
@@ -10,6 +10,7 @@ export default function Login({ status, lockout_seconds = 0 }) {
     });
 
     const [lockoutSeconds, setLockoutSeconds] = useState(lockout_seconds);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (lockout_seconds <= 0) return;
@@ -97,14 +98,29 @@ export default function Login({ status, lockout_seconds = 0 }) {
                         <input
                             id="password"
                             name="password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             autoComplete="current-password"
                             value={data.password}
                             onChange={e => setData('password', e.target.value)}
-                            className={`input pl-9 ${errors.password ? 'input-error' : ''}`}
+                            className={`input pl-9 pr-10 ${errors.password ? 'input-error' : ''}`}
                             placeholder="••••••••"
                             disabled={isLockedOut}
                         />
+                        <button
+                            type="button"
+                            tabIndex={-1}
+                            aria-label="Hold to show password"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 select-none"
+                            onMouseDown={() => setShowPassword(true)}
+                            onMouseUp={() => setShowPassword(false)}
+                            onMouseLeave={() => setShowPassword(false)}
+                            onTouchStart={(e) => { e.preventDefault(); setShowPassword(true); }}
+                            onTouchEnd={() => setShowPassword(false)}
+                            onTouchCancel={() => setShowPassword(false)}
+                            disabled={isLockedOut}
+                        >
+                            {showPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                        </button>
                     </div>
                     {errors.password && <p className="error-msg">{errors.password}</p>}
                 </div>
