@@ -5,8 +5,10 @@ import { CalendarIcon, CheckIcon, XMarkIcon, TrashIcon } from '@heroicons/react/
 import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function AppointmentsIndex({ appointments, filters, stats, isSuperAdmin }) {
-    const [status, setStatus] = useState(filters.status || '');
-    const [date,   setDate]   = useState(filters.date   || '');
+    const [status, setStatus]     = useState(filters.status || '');
+    const [dateFrom, setDateFrom] = useState(filters.date_from || '');
+    const [dateTo, setDateTo]     = useState(filters.date_to   || '');
+    const [search, setSearch]     = useState(filters.search || '');
     const [declineId,   setDeclineId]   = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const { data, setData, post, processing, reset } = useForm({ reason: '' });
@@ -31,6 +33,9 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
 
     const canDelete = (a) => isSuperAdmin && ['declined', 'completed', 'cancelled'].includes(a.status);
 
+    const applyFilters = () => router.get(route('admin.appointments.index'), { status, date_from: dateFrom, date_to: dateTo, search }, { preserveState: true });
+    const clearFilters = () => { setStatus(''); setDateFrom(''); setDateTo(''); setSearch(''); router.get(route('admin.appointments.index')); };
+
     return (
         <AdminLayout title="Appointments">
             <Head title="Appointments" />
@@ -47,22 +52,39 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
 
             {/* Actions row */}
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 mb-6 sm:items-end">
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
                     <div className="flex-1 sm:flex-none">
-                        <label className="label text-xs">Status</label>
-                        <select value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-36">
+                        <label htmlFor="filter-search" className="label text-xs">Patient</label>
+                        <input
+                            id="filter-search"
+                            name="search"
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') applyFilters(); }}
+                            placeholder="Name or email…"
+                            className="input w-full sm:w-48"
+                        />
+                    </div>
+                    <div className="flex-1 sm:flex-none">
+                        <label htmlFor="filter-status" className="label text-xs">Status</label>
+                        <select id="filter-status" name="status" value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-36">
                             <option value="">All</option>
                             {['pending','approved','declined','completed','cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>
                     <div className="flex-1 sm:flex-none">
-                        <label className="label text-xs">Date</label>
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="input w-full" />
+                        <label htmlFor="filter-date-from" className="label text-xs">From</label>
+                        <input id="filter-date-from" name="date_from" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="input w-full" />
+                    </div>
+                    <div className="flex-1 sm:flex-none">
+                        <label htmlFor="filter-date-to" className="label text-xs">To</label>
+                        <input id="filter-date-to" name="date_to" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="input w-full" />
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={() => router.get(route('admin.appointments.index'), { status, date }, { preserveState: true })} className="btn-primary btn-sm flex-1 sm:flex-none">Filter</button>
-                    <button onClick={() => { setStatus(''); setDate(''); router.get(route('admin.appointments.index')); }} className="btn-secondary btn-sm flex-1 sm:flex-none">Clear</button>
+                    <button onClick={applyFilters} className="btn-primary btn-sm flex-1 sm:flex-none">Filter</button>
+                    <button onClick={clearFilters} className="btn-secondary btn-sm flex-1 sm:flex-none">Clear</button>
                 </div>
                 <Link href={route('admin.appointments.calendar')} className="btn-secondary btn-sm sm:ml-auto justify-center">
                     <CalendarIcon className="w-4 h-4 mr-1" /> Calendar View
@@ -125,6 +147,19 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                         </tbody>
                     </table>
                 </div>
+                {appointments.links.length > 3 && (
+                    <div className="flex flex-wrap items-center justify-center gap-1 py-4 border-t border-gray-100">
+                        {appointments.links.map((link, i) => (
+                            <button
+                                key={i}
+                                disabled={!link.url}
+                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
+                                className={`px-3 py-1 text-sm rounded ${link.active ? 'bg-clinic-600 text-white' : link.url ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Decline modal */}
@@ -133,7 +168,8 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-3">Decline Appointment</h3>
                         <form onSubmit={decline}>
-                            <textarea value={data.reason} onChange={e => setData('reason', e.target.value)}
+                            <label htmlFor="decline-reason" className="sr-only">Reason for declining</label>
+                            <textarea id="decline-reason" name="reason" value={data.reason} onChange={e => setData('reason', e.target.value)}
                                 className="input" rows={3} placeholder="Reason for declining…" required />
                             <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                 <button type="submit" disabled={processing} className="btn-danger flex-1 sm:flex-none">

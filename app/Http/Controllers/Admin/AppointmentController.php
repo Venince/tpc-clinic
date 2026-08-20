@@ -19,13 +19,19 @@ class AppointmentController extends Controller
         // profile_photo_path must be included so the profile_photo_url accessor
         // (added via $appends on User) has the data it needs to build the URL.
         $appointments = Appointment::with(['user:id,name,email,profile_photo_path', 'slot', 'reviewer:id,name'])
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->date,   fn($q) => $q->whereHas('slot', fn($s) => $s->whereDate('date', $request->date)))
+            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('date_from'), fn($q) => $q->whereHas('slot', fn($s) => $s->whereDate('date', '>=', $request->date_from)))
+            ->when($request->filled('date_to'),   fn($q) => $q->whereHas('slot', fn($s) => $s->whereDate('date', '<=', $request->date_to)))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = trim($request->string('search'));
+                $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%"));
+            })
             ->latest()->paginate(15)->withQueryString();
 
         return Inertia::render('Admin/Appointments/Index', [
             'appointments' => $appointments,
-            'filters'      => $request->only('status', 'date'),
+            'filters'      => $request->only('status', 'date_from', 'date_to', 'search'),
             'isSuperAdmin' => $request->user()->isSuperAdmin(),
             'stats'        => [
                 'pending'   => Appointment::where('status', 'pending')->count(),

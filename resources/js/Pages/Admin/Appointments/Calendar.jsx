@@ -172,8 +172,10 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                         <h3 className="font-semibold text-gray-900 mb-4">Create Appointment Slot</h3>
                         <form onSubmit={submit} className="space-y-3">
                             <div>
-                                <label className="label">Date</label>
+                                <label htmlFor="slot-date" className="label">Date</label>
                                 <input
+                                    id="slot-date"
+                                    name="date"
                                     type="date"
                                     value={data.date}
                                     onChange={e => setData('date', e.target.value)}
@@ -191,15 +193,15 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                                 { key:'max_appointments', label:'Max Appointments', type:'number' },
                             ].map(({ key, label, type }) => (
                                 <div key={key}>
-                                    <label className="label">{label}</label>
-                                    <input type={type} value={data[key]} onChange={e => setData(key, e.target.value)}
+                                    <label htmlFor={`slot-${key}`} className="label">{label}</label>
+                                    <input id={`slot-${key}`} name={key} type={type} value={data[key]} onChange={e => setData(key, e.target.value)}
                                         className={`input ${errors[key] ? 'input-error' : ''}`} min={type==='number' ? 1 : undefined} />
                                     {errors[key] && <p className="error-msg">{errors[key]}</p>}
                                 </div>
                             ))}
                             <div>
-                                <label className="label">Notes (optional)</label>
-                                <textarea value={data.notes} onChange={e => setData('notes', e.target.value)} className="input" rows={2} />
+                                <label htmlFor="slot-notes" className="label">Notes (optional)</label>
+                                <textarea id="slot-notes" name="notes" value={data.notes} onChange={e => setData('notes', e.target.value)} className="input" rows={2} />
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                 <button
