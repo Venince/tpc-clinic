@@ -31,7 +31,23 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
         });
     };
 
-    const canDelete = (a) => isSuperAdmin && ['declined', 'completed', 'cancelled'].includes(a.status);
+    const formatDate = (isoDate) => {
+        if (!isoDate) return '—';
+        // Take the date portion only (YYYY-MM-DD) to avoid timezone-shifting the day
+        // when the backend serializes the 'date' cast as a full ISO datetime.
+        const [y, m, d] = isoDate.slice(0, 10).split('-');
+        return new Date(y, m - 1, d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    };
+
+    const isPast = (a) => {
+        if (!a.slot?.date) return false;
+        const [y, m, d] = a.slot.date.slice(0, 10).split('-').map(Number);
+        const slotDay = new Date(y, m - 1, d);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        return slotDay < today;
+    };
+
+    const canDelete = (a) => isSuperAdmin && ['declined', 'completed', 'cancelled'].includes(a.status) && !isPast(a);
 
     const applyFilters = () => router.get(route('admin.appointments.index'), { status, date_from: dateFrom, date_to: dateTo, search }, { preserveState: true });
     const clearFilters = () => { setStatus(''); setDateFrom(''); setDateTo(''); setSearch(''); router.get(route('admin.appointments.index')); };
@@ -115,7 +131,7 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                                     </td>
                                     <td className="whitespace-nowrap">{a.purpose}</td>
                                     <td className="whitespace-nowrap">
-                                        <p className="text-sm">{a.slot?.date}</p>
+                                        <p className="text-sm">{formatDate(a.slot?.date)}</p>
                                         <p className="text-xs text-gray-400">{a.slot?.start_time} – {a.slot?.end_time}</p>
                                     </td>
                                     <td className="whitespace-nowrap">{statusBadge(a.status)}</td>

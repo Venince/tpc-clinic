@@ -89,7 +89,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/appointments/{appointment}/approve',  [Admin\AppointmentController::class, 'approve'])->name('appointments.approve');
         Route::post('/appointments/{appointment}/decline',  [Admin\AppointmentController::class, 'decline'])->name('appointments.decline');
         Route::post('/appointments/{appointment}/complete', [Admin\AppointmentController::class, 'complete'])->name('appointments.complete');
-        Route::delete('/appointments/{appointment}',        [Admin\AppointmentController::class, 'destroyAppointment'])->name('appointments.destroy');
+        Route::delete('/appointments/{appointment}',        [Admin\AppointmentController::class, 'destroyAppointment'])->name('appointments.destroy')->middleware('role:super_admin');
 
         // Walk-in Log
         Route::get('/walkin',              [\App\Http\Controllers\Admin\WalkinLogController::class, 'index'])->name('walkin.index');

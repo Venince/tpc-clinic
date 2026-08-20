@@ -117,11 +117,21 @@ class AppointmentController extends Controller
         return back()->with('success', 'Appointment marked as completed.');
     }
 
-    public function destroyAppointment(Appointment $appointment)
+    public function destroyAppointment(Request $request, Appointment $appointment)
     {
+        if (!$request->user()->isSuperAdmin()) {
+            abort(403, 'Only super admins can delete appointment records.');
+        }
+
         if (in_array($appointment->status, ['pending', 'approved'])) {
             return back()->with('error', 'Cannot delete an active appointment. Decline it first.');
         }
+
+        $slotDate = $appointment->slot?->date;
+        if ($slotDate && \Carbon\Carbon::parse($slotDate)->startOfDay()->lt(now()->startOfDay())) {
+            return back()->with('error', 'Past appointments cannot be deleted — they are kept for record-keeping.');
+        }
+
         $appointment->delete();
         return back()->with('success', 'Appointment deleted.');
     }
