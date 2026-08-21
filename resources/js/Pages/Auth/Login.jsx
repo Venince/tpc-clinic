@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 
 export default function Login({ status, lockout_seconds = 0 }) {
     const { errors = {} } = usePage().props;
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, reset } = useForm({
         email: '', password: '', remember: false,
     });
 
@@ -34,7 +34,9 @@ export default function Login({ status, lockout_seconds = 0 }) {
     const submit = (e) => {
         e.preventDefault();
         if (isLockedOut) return;
-        post(route('login.store'));
+        post(route('login.store'), {
+            onError: () => reset(),
+        });
     };
 
     return (

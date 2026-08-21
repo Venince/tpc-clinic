@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withBroadcasting(
         __DIR__.'/../routes/channels.php',
-        attributes: ['middleware' => ['auth']],
+        attributes: ['middleware' => ['web', 'auth']],
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
