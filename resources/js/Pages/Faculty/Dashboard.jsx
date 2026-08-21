@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import {
     CalendarIcon, BeakerIcon, ClockIcon, MegaphoneIcon,
@@ -6,6 +6,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function FacultyDashboard({ profile, pendingAppointments, medicineRequests, recentAppointments, announcements, recentWalkins, walkinCount }) {
+    const { auth } = usePage().props;
     const statusBadge = (s) => {
         const map = { pending:'badge-yellow', approved:'badge-green', declined:'badge-red', completed:'badge-purple', cancelled:'badge-gray' };
         return <span className={`badge ${map[s] || 'badge-gray'} whitespace-nowrap`}>{s}</span>;
@@ -27,10 +28,22 @@ export default function FacultyDashboard({ profile, pendingAppointments, medicin
 
             {/* Welcome */}
             <div className="bg-gradient-to-r from-clinic-600 to-clinic-700 rounded-xl p-4 sm:p-6 text-white mb-4">
-                <h2 className="text-lg sm:text-xl font-bold">Welcome back! 👋</h2>
-                <p className="text-clinic-100 text-sm mt-1">
-                    {profile?.department ? `${profile.position || 'Staff'} — ${profile.department}` : 'Complete your profile in Settings.'}
-                </p>
+                <div className="flex items-center gap-3 sm:gap-4">
+                    {auth.user?.profile_photo_url ? (
+                        <img src={auth.user.profile_photo_url} alt={auth.user.name}
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/40" />
+                    ) : (
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/15 rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-white/40">
+                            <span className="text-white font-semibold text-lg">{auth.user?.name?.charAt(0)}</span>
+                        </div>
+                    )}
+                    <div className="min-w-0">
+                        <h2 className="text-lg sm:text-xl font-bold truncate">Welcome back, {auth.user?.name}! 👋</h2>
+                        <p className="text-clinic-100 text-sm mt-1">
+                            {profile?.department ? `${profile.position || 'Staff'} — ${profile.department}` : 'Complete your profile in Settings.'}
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Quick stats */}
