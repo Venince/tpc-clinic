@@ -44,11 +44,11 @@ export default function StudentAppointments({ appointments, slots }) {
                     <h2 className="page-title">Appointments</h2>
                     <p className="page-subtitle">Book and manage your clinic appointments</p>
                 </div>
-                <div className="flex gap-2">
-                    <Link href={route('student.appointments.calendar')} className="btn-secondary justify-center">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <Link href={route('student.appointments.calendar')} className="btn-secondary justify-center w-full sm:w-auto">
                         <CalendarDaysIcon className="w-4 h-4 mr-2" /> Calendar View
                     </Link>
-                    <button onClick={() => setShowBook(true)} className="btn-primary">
+                    <button onClick={() => setShowBook(true)} className="btn-primary justify-center w-full sm:w-auto">
                         <CalendarIcon className="w-4 h-4 mr-2" /> Book Appointment
                     </button>
                 </div>
@@ -158,7 +158,7 @@ export default function StudentAppointments({ appointments, slots }) {
 
             {/* Book Modal */}
             {showBook && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-gray-900">Book Appointment</h3>
