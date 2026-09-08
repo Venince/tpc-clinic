@@ -1,7 +1,7 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
-import { CalendarIcon, ClockIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, CalendarDaysIcon, ClockIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const fmtDate = (raw) => {
     if (!raw) return '—';
@@ -36,9 +36,14 @@ export default function FacultyAppointments({ appointments, slots }) {
                     <h2 className="page-title">Appointments</h2>
                     <p className="page-subtitle">Book and manage your clinic appointments</p>
                 </div>
-                <button onClick={() => setShowBook(true)} className="btn-primary">
-                    <CalendarIcon className="w-4 h-4 mr-2" /> Book Appointment
-                </button>
+                <div className="flex gap-2">
+                    <Link href={route('faculty.appointments.calendar')} className="btn-secondary justify-center">
+                        <CalendarDaysIcon className="w-4 h-4 mr-2" /> Calendar View
+                    </Link>
+                    <button onClick={() => setShowBook(true)} className="btn-primary">
+                        <CalendarIcon className="w-4 h-4 mr-2" /> Book Appointment
+                    </button>
+                </div>
             </div>
 
             {/* Available slots preview */}

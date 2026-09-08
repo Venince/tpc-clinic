@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
+use App\Support\PhilippineHolidays;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -19,6 +20,11 @@ class AppointmentController extends Controller
         return $this->isStudent($request) ? 'Student/Appointments/Index' : 'Faculty/Appointments/Index';
     }
 
+    private function calendarPage(Request $request): string
+    {
+        return $this->isStudent($request) ? 'Student/Appointments/Calendar' : 'Faculty/Appointments/Calendar';
+    }
+
     private function routePrefix(Request $request): string
     {
         return $this->isStudent($request) ? 'student' : 'faculty';
@@ -32,6 +38,63 @@ class AppointmentController extends Controller
             ->get()->filter(fn($s)=>!$s->isFullyBooked())->values();
 
         return Inertia::render($this->indexPage($request), compact('appointments','slots'));
+    }
+
+    public function calendar(Request $request)
+    {
+        $month = $request->get('month', now()->format('Y-m'));
+        [$year, $m] = explode('-', $month);
+        $userId = $request->user()->id;
+
+        // The logged-in user's own appointments that fall in this month, grouped by date.
+        $appointments = Appointment::where('user_id', $userId)
+            ->whereHas('slot', fn($q) => $q->whereYear('date', $year)->whereMonth('date', $m))
+            ->with('slot')
+            ->get();
+
+        $appointmentsByDate = $appointments
+            ->filter(fn($a) => $a->slot)
+            ->groupBy(fn($a) => $a->slot->date->toDateString())
+            ->map(fn($group) => $group->map(fn($a) => [
+                'id'             => $a->id,
+                'purpose'        => $a->purpose,
+                'status'         => $a->status,
+                'decline_reason' => $a->decline_reason,
+                'start_time'     => $a->slot->start_time,
+                'end_time'       => $a->slot->end_time,
+            ])->values());
+
+        // Bookable slots for this month — only future, open, not-full slots.
+        $slots = AppointmentSlot::whereYear('date', $year)->whereMonth('date', $m)
+            ->where('is_available', true)
+            ->where('date', '>=', today())
+            ->withCount('appointments')
+            ->orderBy('date')->orderBy('start_time')
+            ->get()
+            ->filter(fn($s) => !$s->isFullyBooked())
+            ->values();
+
+        $slotsByDate = $slots
+            ->groupBy(fn($s) => $s->date->toDateString())
+            ->map(fn($group) => $group->map(fn($s) => [
+                'id'                => $s->id,
+                'start_time'        => $s->start_time,
+                'end_time'          => $s->end_time,
+                'available_slots'   => $s->availableSlots(),
+                'max_appointments'  => $s->max_appointments,
+            ])->values());
+
+        return Inertia::render($this->calendarPage($request), [
+            'appointmentsByDate' => $appointmentsByDate,
+            'slotsByDate'        => $slotsByDate,
+            'month'              => $month,
+            'currentDate'        => now()->toDateString(),
+            'routePrefix'        => $this->routePrefix($request),
+            'holidays'           => array_merge(
+                PhilippineHolidays::getHolidaysForYear((int) $year),
+                PhilippineHolidays::getHolidaysForYear((int) $year + 1),
+            ),
+        ]);
     }
 
     public function store(Request $request)
