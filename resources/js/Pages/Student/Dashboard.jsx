@@ -117,6 +117,7 @@ export default function StudentDashboard({ profile, profileCompleted, appointmen
                         <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                             <MegaphoneIcon className="w-4 h-4 text-clinic-500" /> Announcements
                         </h3>
+                        <Link href={route('announcements')} className="text-xs text-clinic-600 hover:underline">View all</Link>
                     </div>
                     <div className="divide-y divide-gray-100">
                         {announcements?.length ? announcements.map(a => (

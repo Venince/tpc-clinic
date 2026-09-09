@@ -15,14 +15,14 @@ class AppointmentController extends Controller
         return $request->user()->role->name === 'student';
     }
 
-    private function indexPage(Request $request): string
-    {
-        return $this->isStudent($request) ? 'Student/Appointments/Index' : 'Faculty/Appointments/Index';
-    }
-
     private function calendarPage(Request $request): string
     {
         return $this->isStudent($request) ? 'Student/Appointments/Calendar' : 'Faculty/Appointments/Calendar';
+    }
+
+    private function listPage(Request $request): string
+    {
+        return $this->isStudent($request) ? 'Student/Appointments/Index' : 'Faculty/Appointments/Index';
     }
 
     private function routePrefix(Request $request): string
@@ -30,17 +30,10 @@ class AppointmentController extends Controller
         return $this->isStudent($request) ? 'student' : 'faculty';
     }
 
+    /**
+     * Default appointments landing page — the calendar.
+     */
     public function index(Request $request)
-    {
-        $appointments = Appointment::where('user_id',$request->user()->id)->with('slot')->latest()->paginate(10);
-        $slots = AppointmentSlot::where('is_available',true)->where('date','>=',today())
-            ->withCount('appointments')->orderBy('date')->orderBy('start_time')
-            ->get()->filter(fn($s)=>!$s->isFullyBooked())->values();
-
-        return Inertia::render($this->indexPage($request), compact('appointments','slots'));
-    }
-
-    public function calendar(Request $request)
     {
         $month = $request->get('month', now()->format('Y-m'));
         [$year, $m] = explode('-', $month);
@@ -64,9 +57,9 @@ class AppointmentController extends Controller
                 'end_time'       => $a->slot->end_time,
             ])->values());
 
-        // Bookable slots for this month — only future, open, not-full slots.
-        $slots = AppointmentSlot::whereYear('date', $year)->whereMonth('date', $m)
-            ->where('is_available', true)
+        // All open, bookable future slots (used both for the month grid and the
+        // "Book Appointment" quick-pick dropdown that's always available on this page).
+        $openSlots = AppointmentSlot::where('is_available', true)
             ->where('date', '>=', today())
             ->withCount('appointments')
             ->orderBy('date')->orderBy('start_time')
@@ -74,7 +67,8 @@ class AppointmentController extends Controller
             ->filter(fn($s) => !$s->isFullyBooked())
             ->values();
 
-        $slotsByDate = $slots
+        $slotsByDate = $openSlots
+            ->filter(fn($s) => $s->date->format('Y-m') === $month)
             ->groupBy(fn($s) => $s->date->toDateString())
             ->map(fn($group) => $group->map(fn($s) => [
                 'id'                => $s->id,
@@ -84,9 +78,20 @@ class AppointmentController extends Controller
                 'max_appointments'  => $s->max_appointments,
             ])->values());
 
+        $slots = $openSlots->map(fn($s) => [
+            'id'                => $s->id,
+            'date'              => $s->date->toDateString(),
+            'start_time'        => $s->start_time,
+            'end_time'          => $s->end_time,
+            'available_slots'   => $s->availableSlots(),
+            'max_appointments'  => $s->max_appointments,
+            'booked_count'      => $s->booked_count,
+        ])->values();
+
         return Inertia::render($this->calendarPage($request), [
             'appointmentsByDate' => $appointmentsByDate,
             'slotsByDate'        => $slotsByDate,
+            'slots'              => $slots,
             'month'              => $month,
             'currentDate'        => now()->toDateString(),
             'routePrefix'        => $this->routePrefix($request),
@@ -95,6 +100,19 @@ class AppointmentController extends Controller
                 PhilippineHolidays::getHolidaysForYear((int) $year + 1),
             ),
         ]);
+    }
+
+    /**
+     * Table / list view of the user's appointments.
+     */
+    public function list(Request $request)
+    {
+        $appointments = Appointment::where('user_id',$request->user()->id)->with('slot')->latest()->paginate(10);
+        $slots = AppointmentSlot::where('is_available',true)->where('date','>=',today())
+            ->withCount('appointments')->orderBy('date')->orderBy('start_time')
+            ->get()->filter(fn($s)=>!$s->isFullyBooked())->values();
+
+        return Inertia::render($this->listPage($request), compact('appointments','slots'));
     }
 
     public function store(Request $request)

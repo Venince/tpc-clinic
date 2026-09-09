@@ -65,10 +65,11 @@ export default function FacultyDashboard({ profile, pendingAppointments, medicin
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Announcements */}
                 <div className="card">
-                    <div className="card-header">
+                    <div className="card-header flex items-center justify-between">
                         <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                             <MegaphoneIcon className="w-4 h-4 text-clinic-500" /> Announcements
                         </h3>
+                        <Link href={route('announcements')} className="text-xs text-clinic-600 hover:underline">View all</Link>
                     </div>
                     <div className="divide-y divide-gray-100">
                         {announcements?.map(a => (

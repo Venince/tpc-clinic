@@ -1,8 +1,15 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon, ListBulletIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, ChevronRightIcon, ListBulletIcon, CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const fmtTime = (raw) => (raw ? String(raw).slice(0, 5) : '—');
+
+const fmtDate = (raw) => {
+    if (!raw) return '—';
+    const d = new Date(raw + 'T00:00:00');
+    if (isNaN(d)) return raw;
+    return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
 const STATUS_DOT = {
     pending:   'bg-yellow-400',
@@ -20,28 +27,32 @@ const STATUS_BADGE = {
 const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 /**
- * Read-only appointment calendar for Student / Faculty portals.
+ * Default appointments landing page for Student / Faculty portals.
  * Mobile-first: the grid only shows day numbers + small status dots so it
  * never needs horizontal scrolling. Tapping any day opens a bottom-sheet
  * with that day's appointments (with cancel) and, for open future days,
- * an inline slot picker + booking form — all in one sheet, no stacked modals.
+ * an inline slot picker + booking form. A "Book Appointment" button is
+ * always visible at the top, independent of any specific day, for a quick
+ * pick from any open slot.
  *
  * Props:
  *  - Layout: the portal layout component (StudentLayout / FacultyLayout)
  *  - routePrefix: 'student' | 'faculty' — used to build route names
  *  - appointmentsByDate: { 'YYYY-MM-DD': [{ id, purpose, status, decline_reason, start_time, end_time }] }
  *  - slotsByDate: { 'YYYY-MM-DD': [{ id, start_time, end_time, available_slots, max_appointments }] }
+ *  - slots: [{ id, date, start_time, end_time, available_slots, max_appointments, booked_count }] — flat, all future open slots
  *  - month: 'YYYY-MM'
  *  - currentDate: 'YYYY-MM-DD'
  *  - holidays: [{ date, name }]
  */
 export default function AppointmentCalendar({
-    Layout, routePrefix, appointmentsByDate, slotsByDate, month, currentDate, holidays,
+    Layout, routePrefix, appointmentsByDate, slotsByDate, slots, month, currentDate, holidays,
 }) {
-    const [dayDetail, setDayDetail] = useState(null); // date string of the open day-detail sheet
+    const [dayDetail, setDayDetail] = useState(null);   // date string of the open day-detail sheet
+    const [showQuickBook, setShowQuickBook] = useState(false); // always-available "Book Appointment" modal
 
-    const calendarRoute = route(`${routePrefix}.appointments.calendar`);
-    const indexRoute     = route(`${routePrefix}.appointments.index`);
+    const calendarRoute = route(`${routePrefix}.appointments.index`);
+    const listRoute      = route(`${routePrefix}.appointments.list`);
     const storeRoute     = route(`${routePrefix}.appointments.store`);
     const cancelRoute    = (id) => route(`${routePrefix}.appointments.cancel`, id);
 
@@ -79,11 +90,17 @@ export default function AppointmentCalendar({
 
     const openDayDetail = (dateStr) => { reset(); setDayDetail(dateStr); };
     const closeDayDetail = () => { setDayDetail(null); reset(); };
+    const openQuickBook = () => { reset(); setShowQuickBook(true); };
+    const closeQuickBook = () => { setShowQuickBook(false); reset(); };
     const selectSlot = (id) => setData('appointment_slot_id', String(id));
 
-    const submitBooking = (e) => {
+    const submitDayBooking = (e) => {
         e.preventDefault();
         post(storeRoute, { onSuccess: closeDayDetail });
+    };
+    const submitQuickBooking = (e) => {
+        e.preventDefault();
+        post(storeRoute, { onSuccess: closeQuickBook });
     };
 
     const cancelAppointment = (appointment) => {
@@ -97,15 +114,20 @@ export default function AppointmentCalendar({
         <Layout title="Appointment Calendar">
             <Head title="Appointment Calendar" />
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
-                <div className="flex items-center gap-3 justify-center sm:justify-start">
+            <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+                <div className="flex items-center justify-center gap-3">
                     <button onClick={prevMonth} className="btn-secondary btn-sm px-2"><ChevronLeftIcon className="w-4 h-4" /></button>
                     <h2 className="font-semibold text-gray-900 text-base sm:text-lg w-36 sm:w-48 text-center">{monthName}</h2>
                     <button onClick={nextMonth} className="btn-secondary btn-sm px-2"><ChevronRightIcon className="w-4 h-4" /></button>
                 </div>
-                <Link href={indexRoute} className="btn-secondary btn-sm justify-center w-full sm:w-auto">
-                    <ListBulletIcon className="w-4 h-4 mr-1" /> List View
-                </Link>
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <Link href={listRoute} className="btn-secondary justify-center w-full sm:w-auto">
+                        <ListBulletIcon className="w-4 h-4 mr-2" /> List View
+                    </Link>
+                    <button onClick={openQuickBook} className="btn-primary justify-center w-full sm:w-auto">
+                        <CalendarIcon className="w-4 h-4 mr-2" /> Book Appointment
+                    </button>
+                </div>
             </div>
 
             <div className="card overflow-hidden">
@@ -171,7 +193,54 @@ export default function AppointmentCalendar({
                 ))}
             </div>
 
-            {/* Day detail sheet — appointments + inline booking, all in one place */}
+            {/* Always-available quick booking modal — not tied to a specific day */}
+            {showQuickBook && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold text-gray-900">Book Appointment</h3>
+                            <button onClick={closeQuickBook} className="text-gray-400 hover:text-gray-600">
+                                <XMarkIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={submitQuickBooking} className="space-y-4">
+                            <div>
+                                <label htmlFor="quick-book-slot" className="label">Select Slot</label>
+                                <select id="quick-book-slot" name="appointment_slot_id" value={data.appointment_slot_id} onChange={e => setData('appointment_slot_id', e.target.value)}
+                                    className={`input ${errors.appointment_slot_id ? 'input-error' : ''}`}>
+                                    <option value="">— Choose a slot —</option>
+                                    {slots.map(s => (
+                                        <option key={s.id} value={s.id}>
+                                            {fmtDate(s.date)} · {fmtTime(s.start_time)}–{fmtTime(s.end_time)} ({s.available_slots} available)
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.appointment_slot_id && <p className="error-msg">{errors.appointment_slot_id}</p>}
+                                {errors.slot && <p className="error-msg">{errors.slot}</p>}
+                            </div>
+                            <div>
+                                <label htmlFor="quick-book-purpose" className="label">Purpose</label>
+                                <input id="quick-book-purpose" name="purpose" value={data.purpose} onChange={e => setData('purpose', e.target.value)}
+                                    className={`input ${errors.purpose ? 'input-error' : ''}`}
+                                    placeholder="e.g. General check-up…" />
+                                {errors.purpose && <p className="error-msg">{errors.purpose}</p>}
+                            </div>
+                            <div>
+                                <label htmlFor="quick-book-notes" className="label">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+                                <textarea id="quick-book-notes" name="notes" value={data.notes} onChange={e => setData('notes', e.target.value)} className="input" rows={2} />
+                            </div>
+                            <div className="flex gap-3">
+                                <button type="submit" disabled={processing} className="btn-primary flex-1">
+                                    {processing ? 'Booking…' : 'Book Appointment'}
+                                </button>
+                                <button type="button" onClick={closeQuickBook} className="btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Day detail sheet — appointments + inline booking scoped to the tapped day */}
             {dayDetail && (() => {
                 const dateStr = dayDetail;
                 const dayAppts = appointmentsByDate[dateStr] || [];
@@ -243,17 +312,17 @@ export default function AppointmentCalendar({
                                     )}
 
                                     {data.appointment_slot_id && (
-                                        <form onSubmit={submitBooking} className="space-y-3 mt-4 pt-4 border-t border-gray-100">
+                                        <form onSubmit={submitDayBooking} className="space-y-3 mt-4 pt-4 border-t border-gray-100">
                                             <div>
-                                                <label className="label">Purpose</label>
-                                                <input value={data.purpose} onChange={e => setData('purpose', e.target.value)}
+                                                <label htmlFor="day-book-purpose" className="label">Purpose</label>
+                                                <input id="day-book-purpose" name="purpose" value={data.purpose} onChange={e => setData('purpose', e.target.value)}
                                                     className={`input ${errors.purpose ? 'input-error' : ''}`}
                                                     placeholder="e.g. General check-up…" />
                                                 {errors.purpose && <p className="error-msg">{errors.purpose}</p>}
                                             </div>
                                             <div>
-                                                <label className="label">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
-                                                <textarea value={data.notes} onChange={e => setData('notes', e.target.value)} className="input" rows={2} />
+                                                <label htmlFor="day-book-notes" className="label">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+                                                <textarea id="day-book-notes" name="notes" value={data.notes} onChange={e => setData('notes', e.target.value)} className="input" rows={2} />
                                             </div>
                                             {errors.slot && <p className="error-msg">{errors.slot}</p>}
                                             <div className="flex gap-3">

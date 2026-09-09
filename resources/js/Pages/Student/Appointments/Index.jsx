@@ -39,13 +39,13 @@ export default function StudentAppointments({ appointments, slots }) {
         <StudentLayout title="My Appointments">
             <Head title="Appointments" />
 
-            <div className="page-header">
+            <div className="page-header flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div>
                     <h2 className="page-title">Appointments</h2>
                     <p className="page-subtitle">Book and manage your clinic appointments</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <Link href={route('student.appointments.calendar')} className="btn-secondary justify-center w-full sm:w-auto">
+                    <Link href={route('student.appointments.index')} className="btn-secondary justify-center w-full sm:w-auto">
                         <CalendarDaysIcon className="w-4 h-4 mr-2" /> Calendar View
                     </Link>
                     <button onClick={() => setShowBook(true)} className="btn-primary justify-center w-full sm:w-auto">
@@ -168,8 +168,8 @@ export default function StudentAppointments({ appointments, slots }) {
                         </div>
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <label className="label">Select Slot</label>
-                                <select value={data.appointment_slot_id} onChange={e => setData('appointment_slot_id', e.target.value)}
+                                <label htmlFor="appointment_slot_id" className="label">Select Slot</label>
+                                <select id="appointment_slot_id" name="appointment_slot_id" value={data.appointment_slot_id} onChange={e => setData('appointment_slot_id', e.target.value)}
                                     className={`input ${errors.appointment_slot_id ? 'input-error' : ''}`}>
                                     <option value="">— Choose a slot —</option>
                                     {slots.map(s => (
@@ -182,15 +182,15 @@ export default function StudentAppointments({ appointments, slots }) {
                                 {errors.slot && <p className="error-msg">{errors.slot}</p>}
                             </div>
                             <div>
-                                <label className="label">Purpose / Reason</label>
-                                <input value={data.purpose} onChange={e => setData('purpose', e.target.value)}
+                                <label htmlFor="purpose" className="label">Purpose / Reason</label>
+                                <input id="purpose" name="purpose" value={data.purpose} onChange={e => setData('purpose', e.target.value)}
                                     className={`input ${errors.purpose ? 'input-error' : ''}`}
                                     placeholder="e.g. General check-up, fever, wound dressing…" />
                                 {errors.purpose && <p className="error-msg">{errors.purpose}</p>}
                             </div>
                             <div>
-                                <label className="label">Additional Notes <span className="text-gray-400 font-normal">(optional)</span></label>
-                                <textarea value={data.notes} onChange={e => setData('notes', e.target.value)}
+                                <label htmlFor="notes" className="label">Additional Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+                                <textarea id="notes" name="notes" value={data.notes} onChange={e => setData('notes', e.target.value)}
                                     className="input" rows={2} placeholder="Any other details…" />
                             </div>
                             <div className="flex gap-3">

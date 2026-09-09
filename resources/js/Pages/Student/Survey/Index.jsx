@@ -60,20 +60,20 @@ export default function StudentSurvey({ questions, answers, completed }) {
                                 </p>
 
                                 {q.type === 'text' && (
-                                    <input value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
+                                    <input id={`q_${q.id}`} name={`q_${q.id}`} value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
                                         className="input" placeholder="Your answer…" />
                                 )}
                                 {q.type === 'paragraph' && (
-                                    <textarea value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
+                                    <textarea id={`q_${q.id}`} name={`q_${q.id}`} value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
                                         className="input" rows={3} placeholder="Your answer…" />
                                 )}
                                 {q.type === 'date' && (
-                                    <input type="date" value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
+                                    <input id={`q_${q.id}`} name={`q_${q.id}`} type="date" value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
                                         className="input w-full sm:w-48" />
                                 )}
                                 {q.type === 'radio' && q.options?.map(opt => (
                                     <label key={opt} className="flex items-center gap-3 py-2 cursor-pointer">
-                                        <input type="radio" name={`q_${q.id}`} value={opt}
+                                        <input id={`q_${q.id}_${opt}`} type="radio" name={`q_${q.id}`} value={opt}
                                             checked={data.answers[q.id] === opt}
                                             onChange={() => updateAnswer(q.id, opt)}
                                             className="w-4 h-4 text-clinic-600 focus:ring-clinic-500 flex-shrink-0" />
@@ -82,7 +82,7 @@ export default function StudentSurvey({ questions, answers, completed }) {
                                 ))}
                                 {q.type === 'checkbox' && q.options?.map(opt => (
                                     <label key={opt} className="flex items-center gap-3 py-2 cursor-pointer">
-                                        <input type="checkbox" value={opt}
+                                        <input id={`q_${q.id}_${opt}`} type="checkbox" name={`q_${q.id}[]`} value={opt}
                                             checked={(data.answers[q.id] || []).includes(opt)}
                                             onChange={() => toggleCheckbox(q.id, opt)}
                                             className="w-4 h-4 rounded text-clinic-600 focus:ring-clinic-500 flex-shrink-0" />
@@ -90,7 +90,7 @@ export default function StudentSurvey({ questions, answers, completed }) {
                                     </label>
                                 ))}
                                 {q.type === 'dropdown' && (
-                                    <select value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
+                                    <select id={`q_${q.id}`} name={`q_${q.id}`} value={data.answers[q.id] || ''} onChange={e => updateAnswer(q.id, e.target.value)}
                                         className="input w-full sm:w-64">
                                         <option value="">— Select —</option>
                                         {q.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}

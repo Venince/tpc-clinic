@@ -236,6 +236,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
             Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
             Route::get('/appointments/calendar',              [Student\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+            Route::get('/appointments/list',                  [Student\AppointmentController::class, 'list'])->name('appointments.list');  
             Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
             Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
@@ -289,6 +290,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
         Route::get('/appointments/calendar',              [Student\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+        Route::get('/appointments/list',                  [Student\AppointmentController::class, 'list'])->name('appointments.list');  
         Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
         Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
