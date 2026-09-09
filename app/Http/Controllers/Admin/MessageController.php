@@ -5,12 +5,15 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
+use App\Services\MessagingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class MessageController extends Controller
 {
+    public function __construct(private MessagingService $messagingService) {}
+
     private function indexPage(Request $request): string
     {
         return match($request->user()->role->name) {
@@ -29,14 +32,25 @@ class MessageController extends Controller
         };
     }
 
+    private function indexRoute(Request $request): string
+    {
+        return match($request->user()->role->name) {
+            'student'       => 'student.messages.index',
+            'faculty_staff' => 'faculty.messages.index',
+            default         => 'admin.messages.index',
+        };
+    }
+
     public function index(Request $request)
     {
-        $conversations = Conversation::whereHas('participants', fn($q) => $q->where('user_id', $request->user()->id))
+        $userId = $request->user()->id;
+
+        $conversations = Conversation::visibleFor($userId)
             ->with([
                 'participants:id,name,email,profile_photo_path',
                 'messages' => fn($q) => $q->latest()->limit(1),
             ])
-            ->withCount(['messages as unread' => fn($q) => $q->where('sender_id', '!=', $request->user()->id)->where('is_read', false)])
+            ->withCount(['messages as unread' => fn($q) => $q->where('sender_id', '!=', $userId)->where('is_read', false)])
             ->orderByDesc('last_message_at')->paginate(20);
 
         $user = $request->user();
@@ -57,20 +71,25 @@ class MessageController extends Controller
     public function show(Request $request, Conversation $conversation)
     {
         $user = $request->user();
+        $participant = $conversation->participants()->where('user_id', $user->id)->first();
 
         if (!$user->isAdminOrHigher()) {
-            if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
+            if (!$participant) {
                 abort(403);
             }
+        }
+
+        // A conversation the user has deleted from their own inbox stays hidden
+        // for them permanently, even if they try to hit the URL directly.
+        if ($participant && $participant->pivot->deleted_at) {
+            abort(404);
         }
 
         Message::where('conversation_id', $conversation->id)
             ->where('sender_id', '!=', $user->id)
             ->update(['is_read' => true, 'read_at' => now()]);
 
-        $messages = Message::where('conversation_id', $conversation->id)
-            ->with('sender:id,name,profile_photo_path')
-            ->latest()->paginate(50);
+        $messages = $this->messagingService->getVisibleMessages($conversation, $user->id);
 
         return Inertia::render($this->showPage($request), [
             'conversation' => $conversation->load('participants:id,name,email,profile_photo_path'),
@@ -129,6 +148,12 @@ class MessageController extends Controller
         return back()->with('success', 'Reply sent.');
     }
 
+    /**
+     * Delete the ENTIRE conversation, but only from the current user's inbox.
+     * The other participant keeps the conversation and all its messages
+     * untouched, unless they too have already deleted it — in which case
+     * nobody can see it anymore and it's permanently purged.
+     */
     public function destroy(Request $request, Conversation $conversation)
     {
         $user = $request->user();
@@ -139,24 +164,57 @@ class MessageController extends Controller
             }
         }
 
-        DB::table('notifications')
-            ->where('type', NewMessageNotification::class)
-            ->where(
-                DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.conversation_id'))"),
-                $conversation->id
-            )
-            ->delete();
+        $this->messagingService->deleteConversationForUser($conversation, $user->id);
 
-        $conversation->messages()->delete();
-        $conversation->participants()->detach();
-        $conversation->delete();
+        return redirect()->route($this->indexRoute($request))->with('success', 'Conversation deleted.');
+    }
 
-        $route = match($user->role->name) {
-            'student'       => 'student.messages.index',
-            'faculty_staff' => 'faculty.messages.index',
-            default         => 'admin.messages.index',
-        };
+    /**
+     * Delete one or more selected messages inside a conversation.
+     * mode = "me"       -> hides the selected messages only for the current user.
+     * mode = "everyone" -> removes the selected messages for all participants;
+     *                      only allowed when every selected message was sent
+     *                      by the current user.
+     */
+    public function destroyMessages(Request $request, Conversation $conversation)
+    {
+        $user = $request->user();
 
-        return redirect()->route($route)->with('success', 'Conversation deleted.');
+        if (!$user->isAdminOrHigher()) {
+            if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
+                abort(403);
+            }
+        }
+
+        $data = $request->validate([
+            'message_ids'   => ['required', 'array', 'min:1'],
+            'message_ids.*' => ['integer', 'exists:messages,id'],
+            'mode'          => ['required', 'in:me,everyone'],
+        ]);
+
+        $messages = Message::where('conversation_id', $conversation->id)
+            ->whereIn('id', $data['message_ids'])
+            ->get();
+
+        if ($data['mode'] === 'everyone') {
+            $notOwned = $messages->contains(fn($m) => (int) $m->sender_id !== $user->id);
+            if ($notOwned) {
+                throw ValidationException::withMessages([
+                    'message_ids' => ['You can only delete your own messages for everyone.'],
+                ]);
+            }
+        }
+
+        foreach ($messages as $message) {
+            if ($data['mode'] === 'everyone') {
+                $this->messagingService->deleteMessageForEveryone($message, $user->id);
+            } else {
+                $this->messagingService->deleteMessageForUser($message, $user->id);
+            }
+        }
+
+        return back()->with('success', $data['mode'] === 'everyone'
+            ? 'Message(s) deleted for everyone.'
+            : 'Message(s) deleted for you.');
     }
 }

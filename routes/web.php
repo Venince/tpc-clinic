@@ -137,6 +137,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/messages/{conversation}',        [Admin\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/reply', [Admin\MessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{conversation}',     [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
+        Route::delete('/messages/{conversation}/messages', [Admin\MessageController::class, 'destroyMessages'])->name('messages.destroyMessages');
 
         // Reports
         Route::get('/reports',                   [Admin\ReportController::class, 'index'])->name('reports.index');
@@ -253,6 +254,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('/messages/{conversation}',        [Admin\MessageController::class, 'show'])->name('messages.show');
             Route::post('/messages/{conversation}/reply', [Admin\MessageController::class, 'reply'])->name('messages.reply');
             Route::delete('/messages/{conversation}',     [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
+            Route::delete('/messages/{conversation}/messages', [Admin\MessageController::class, 'destroyMessages'])->name('messages.destroyMessages');
         });
     });
 
@@ -312,5 +314,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/messages/{conversation}',        [Admin\MessageController::class, 'show'])->name('messages.show');
         Route::post('/messages/{conversation}/reply', [Admin\MessageController::class, 'reply'])->name('messages.reply');
         Route::delete('/messages/{conversation}',     [Admin\MessageController::class, 'destroy'])->name('messages.destroy');
+        Route::delete('/messages/{conversation}/messages', [Admin\MessageController::class, 'destroyMessages'])->name('messages.destroyMessages');
     });
 });

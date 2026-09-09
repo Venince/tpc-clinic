@@ -1,17 +1,69 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import StudentLayout from '@/Layouts/StudentLayout';
-import { useEffect, useRef } from 'react';
-import { ArrowLeftIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { useEffect, useRef, useState } from 'react';
+import {
+    ArrowLeftIcon,
+    PaperAirplaneIcon,
+    EllipsisVerticalIcon,
+    TrashIcon,
+    ChevronRightIcon,
+    ChevronLeftIcon,
+} from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 
 export default function StudentMessageShow({ conversation, messages }) {
     const { auth } = usePage().props;
     const { data, setData, post, processing, reset } = useForm({ body: '' });
     const bottomRef = useRef(null);
+    const menuRef = useRef(null);
+
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [menuStage, setMenuStage] = useState('root'); // 'root' | 'choices'
+
+    const otherParticipant = conversation.participants?.find(p => p.id !== auth.user.id);
+    const orderedMessages = [...(messages.data ?? [])].reverse();
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
+
+    const closeMenu = () => {
+        setOpenMenuId(null);
+        setMenuStage('root');
+    };
+
+    const toggleMenu = (id) => {
+        if (openMenuId === id) {
+            closeMenu();
+        } else {
+            setOpenMenuId(id);
+            setMenuStage('root');
+        }
+    };
+
+    useEffect(() => {
+        if (!openMenuId) return;
+        const handleOutside = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) closeMenu();
+        };
+        const handleEscape = (e) => { if (e.key === 'Escape') closeMenu(); };
+        document.addEventListener('mousedown', handleOutside);
+        document.addEventListener('touchstart', handleOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleOutside);
+            document.removeEventListener('touchstart', handleOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [openMenuId]);
+
+    const handleDelete = (msg, mode) => {
+        router.delete(route('student.messages.destroyMessages', conversation.id), {
+            data: { message_ids: [msg.id], mode },
+            preserveScroll: true,
+            onSuccess: closeMenu,
+        });
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -29,17 +81,14 @@ export default function StudentMessageShow({ conversation, messages }) {
         }
     };
 
-    const otherParticipant = conversation.participants?.find(p => p.id !== auth.user?.id);
-    const orderedMessages = [...(messages.data ?? [])].reverse();
-
     return (
-        <StudentLayout title={conversation.subject}>
-            <Head title={conversation.subject} />
+        <StudentLayout title={otherParticipant?.name ?? conversation.subject}>
+            <Head title={otherParticipant?.name ?? conversation.subject} />
 
-            {/* Stretch to fill the main area without overflowing */}
+            {/* -m-6 cancels the layout's p-6 so we can go full-height edge-to-edge */}
             <div className="flex flex-col h-full -m-6">
 
-                {/* Back link + subject header */}
+                {/* Header */}
                 <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0">
                     <Link
                         href={route('student.messages.index')}
@@ -48,24 +97,38 @@ export default function StudentMessageShow({ conversation, messages }) {
                         <ArrowLeftIcon className="w-5 h-5" />
                     </Link>
                     <UserAvatar user={otherParticipant} size="sm" className="flex-shrink-0" />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
-                            {otherParticipant?.name ?? conversation.subject}
+                            {otherParticipant?.name ?? 'Unknown'}
                         </p>
                         <p className="text-xs text-gray-400 truncate">{conversation.subject}</p>
                     </div>
                 </div>
 
-                {/* Message list — flex-1 scrolls independently */}
-                <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+                {/* Message list */}
+                <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4 bg-gray-50">
                     {orderedMessages.map(msg => {
                         const isOwn = msg.sender_id === auth.user.id;
+                        const isMenuOpen = openMenuId === msg.id;
+
                         return (
-                            <div key={msg.id} className={`flex items-end gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                            <div key={msg.id} className={`flex items-end gap-1 sm:gap-1.5 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                                {isOwn && (
+                                    <MessageKebab
+                                        isOwn={isOwn}
+                                        isOpen={isMenuOpen}
+                                        stage={menuStage}
+                                        menuRef={isMenuOpen ? menuRef : null}
+                                        onToggle={() => toggleMenu(msg.id)}
+                                        onOpenChoices={() => setMenuStage('choices')}
+                                        onBack={() => setMenuStage('root')}
+                                        onDelete={(mode) => handleDelete(msg, mode)}
+                                    />
+                                )}
                                 {!isOwn && (
                                     <UserAvatar user={msg.sender} size="sm" className="flex-shrink-0 mb-0.5" />
                                 )}
-                                <div className={`max-w-[80%] sm:max-w-[65%] flex flex-col gap-0.5 ${isOwn ? 'items-end' : 'items-start'}`}>
+                                <div className={`max-w-[78%] sm:max-w-[65%] flex flex-col gap-0.5 ${isOwn ? 'items-end' : 'items-start'}`}>
                                     {!isOwn && (
                                         <p className="text-xs text-gray-500 px-1">{msg.sender?.name}</p>
                                     )}
@@ -83,13 +146,25 @@ export default function StudentMessageShow({ conversation, messages }) {
                                 {isOwn && (
                                     <UserAvatar user={auth.user} size="sm" className="flex-shrink-0 mb-0.5" />
                                 )}
+                                {!isOwn && (
+                                    <MessageKebab
+                                        isOwn={isOwn}
+                                        isOpen={isMenuOpen}
+                                        stage={menuStage}
+                                        menuRef={isMenuOpen ? menuRef : null}
+                                        onToggle={() => toggleMenu(msg.id)}
+                                        onOpenChoices={() => setMenuStage('choices')}
+                                        onBack={() => setMenuStage('root')}
+                                        onDelete={(mode) => handleDelete(msg, mode)}
+                                    />
+                                )}
                             </div>
                         );
                     })}
                     <div ref={bottomRef} />
                 </div>
 
-                {/* Reply box — pinned to bottom */}
+                {/* Reply box */}
                 <div className="px-4 py-3 bg-white border-t border-gray-200 flex-shrink-0">
                     <form onSubmit={submit} className="flex gap-2 items-end">
                         <textarea
@@ -123,5 +198,73 @@ export default function StudentMessageShow({ conversation, messages }) {
                 </div>
             </div>
         </StudentLayout>
+    );
+}
+
+/**
+ * Small kebab (⋮) button next to a message bubble. Tapping it opens a
+ * two-step popup: "Delete" first, then "Delete for Everyone" (senders
+ * only) / "Delete for You". Positioned with its right edge anchored to
+ * the button so it never runs off the edge of a narrow/mobile screen.
+ */
+function MessageKebab({ isOwn, isOpen, stage, menuRef, onToggle, onOpenChoices, onBack, onDelete }) {
+    return (
+        <div className="relative flex-shrink-0" ref={menuRef}>
+            <button
+                type="button"
+                onClick={onToggle}
+                aria-label="Message options"
+                className={`p-1.5 rounded-full transition-colors ${
+                    isOpen ? 'text-gray-700 bg-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/60 active:bg-gray-200'
+                }`}
+            >
+                <EllipsisVerticalIcon className="w-4 h-4" />
+            </button>
+
+            {isOpen && (
+                <div className="absolute z-20 top-full mt-1 right-0 w-44 sm:w-48 max-w-[85vw] bg-white rounded-xl shadow-lg border border-gray-100 py-1 overflow-hidden">
+                    {stage === 'root' ? (
+                        <button
+                            type="button"
+                            onClick={onOpenChoices}
+                            className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+                        >
+                            <span className="flex items-center gap-2">
+                                <TrashIcon className="w-4 h-4 text-gray-400" />
+                                Delete
+                            </span>
+                            <ChevronRightIcon className="w-4 h-4 text-gray-300" />
+                        </button>
+                    ) : (
+                        <>
+                            <button
+                                type="button"
+                                onClick={onBack}
+                                className="w-full flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-400 hover:bg-gray-50 border-b border-gray-100"
+                            >
+                                <ChevronLeftIcon className="w-3.5 h-3.5" />
+                                Delete message
+                            </button>
+                            {isOwn && (
+                                <button
+                                    type="button"
+                                    onClick={() => onDelete('everyone')}
+                                    className="w-full text-left px-3.5 py-2.5 text-sm text-red-600 hover:bg-red-50 active:bg-red-100"
+                                >
+                                    Delete for Everyone
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => onDelete('me')}
+                                className="w-full text-left px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+                            >
+                                Delete for You
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }
