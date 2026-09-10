@@ -7,6 +7,7 @@ use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -47,5 +48,27 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Validation failed.', 'errors' => $e->errors()], 422);
             }
+        });
+
+        // The 'throttle:5,1' middleware on the login/forgot-password/reset-password
+        // POST routes fires before AuthController runs, so without this it renders
+        // Laravel's raw 429 Blade page instead of redirecting back into the Inertia app.
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Too many requests. Please wait a moment and try again.'], 429);
+            }
+
+            $retryAfter = (int) ($e->getHeaders()['Retry-After'] ?? 60);
+
+            if ($request->routeIs('login.store')) {
+                return redirect()->route('login')
+                    ->withInput($request->only('email'))
+                    ->withErrors(['email' => 'Too many login attempts. Please wait a moment and try again.'])
+                    ->with('lockout_seconds', $retryAfter);
+            }
+
+            return back()
+                ->withInput($request->except('password', 'password_confirmation'))
+                ->withErrors(['email' => 'Too many attempts. Please wait a moment and try again.']);
         });
     })->create();

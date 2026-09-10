@@ -52,7 +52,7 @@
     .sidebar-link.active { @apply bg-clinic-50 text-clinic-700; }
     .sidebar-section-title { @apply px-3 mb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider; }
 
-    .page-header  { @apply mb-6 flex items-center justify-between; }
+    .page-header  { @apply mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3; }
     .page-title   { @apply text-2xl font-bold text-gray-900; }
     .page-subtitle{ @apply text-sm text-gray-500 mt-1; }
 }
@@ -85,11 +85,19 @@
     }
 }
 
+/*
+ * page-fade: uses `forwards` (not `both`) and ends on `transform: none`.
+ * This matters because a lingering non-`none` transform on an ancestor
+ * creates a new containing block for any `position: fixed` descendant,
+ * which broke viewport-centered modals rendered inside page content
+ * (they became positioned relative to this scrolling wrapper instead
+ * of the viewport). Ending on `transform: none` avoids that trap.
+ */
 @keyframes pageFadeIn {
     from { opacity: 0; transform: translateY(3px); }
-    to   { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: none; }
 }
 
 .page-fade {
-    animation: pageFadeIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation: pageFadeIn 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }

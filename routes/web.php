@@ -29,6 +29,10 @@ Route::get('/announcements', function () {
     ]);
 })->name('announcements');
 
+Route::get('/privacy-policy', function () {
+    return Inertia::render('Public/PrivacyPolicy');
+})->name('privacy-policy');
+
 // ─── Auth ──────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/tpc_login',  [AuthController::class, 'showLogin'])->name('login');
@@ -82,10 +86,14 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/programs/students/{studentProfile}', [Admin\ProgramController::class, 'showStudent'])->name('programs.students.show');
 
         // Appointments
-        Route::get('/appointments',                [Admin\AppointmentController::class, 'index'])->name('appointments.index');
-        Route::get('/appointments/calendar',       [Admin\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+        Route::get('/appointments',                [Admin\AppointmentController::class, 'calendar'])->name('appointments.index');
+        Route::get('/appointments/list',           [Admin\AppointmentController::class, 'index'])->name('appointments.list');
         Route::post('/appointment-slots',          [Admin\AppointmentController::class, 'slotStore'])->name('slots.store');
         Route::delete('/appointment-slots/{slot}', [Admin\AppointmentController::class, 'slotDestroy'])->name('slots.destroy');
+        Route::post('/appointments/{appointment}/approve',  [Admin\AppointmentController::class, 'approve'])->name('appointments.approve');
+        Route::post('/appointments/{appointment}/decline',  [Admin\AppointmentController::class, 'decline'])->name('appointments.decline');
+        Route::post('/appointments/{appointment}/complete', [Admin\AppointmentController::class, 'complete'])->name('appointments.complete');
+        Route::delete('/appointments/{appointment}',        [Admin\AppointmentController::class, 'destroyAppointment'])->name('appointments.destroy')->middleware('role:super_admin');
         Route::post('/appointments/{appointment}/approve',  [Admin\AppointmentController::class, 'approve'])->name('appointments.approve');
         Route::post('/appointments/{appointment}/decline',  [Admin\AppointmentController::class, 'decline'])->name('appointments.decline');
         Route::post('/appointments/{appointment}/complete', [Admin\AppointmentController::class, 'complete'])->name('appointments.complete');

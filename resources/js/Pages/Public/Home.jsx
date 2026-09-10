@@ -317,7 +317,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                                 { label: 'Home',          href: route('home') },
                                 { label: 'Services',      href: '#services' },
                                 { label: 'Announcements', href: route('announcements') },
-                                // { label: 'Sign in',       href: route('login') },
+                                { label: 'Privacy Policy',href: route('privacy-policy') },
                             ].map(l => (
                                 <a key={l.label} href={l.href} className="block text-sm text-clinic-200 hover:text-white mb-2 transition-colors">{l.label}</a>
                             ))}

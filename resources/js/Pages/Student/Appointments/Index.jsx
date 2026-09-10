@@ -44,12 +44,21 @@ export default function StudentAppointments({ appointments, slots }) {
                     <h2 className="page-title">Appointments</h2>
                     <p className="page-subtitle">Book and manage your clinic appointments</p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <Link href={route('student.appointments.index')} className="btn-secondary justify-center w-full sm:w-auto">
-                        <CalendarDaysIcon className="w-4 h-4 mr-2" /> Calendar View
+                {/* Side-by-side on every breakpoint; compact padding/text on mobile, full size from sm+ */}
+                <div className="flex flex-row gap-2 w-full sm:w-auto">
+                    <Link
+                        href={route('student.appointments.index')}
+                        className="btn-secondary justify-center flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
+                    >
+                        <CalendarDaysIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        Calendar View
                     </Link>
-                    <button onClick={() => setShowBook(true)} className="btn-primary justify-center w-full sm:w-auto">
-                        <CalendarIcon className="w-4 h-4 mr-2" /> Book Appointment
+                    <button
+                        onClick={() => setShowBook(true)}
+                        className="btn-primary justify-center flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
+                    >
+                        <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        Book Appointment
                     </button>
                 </div>
             </div>

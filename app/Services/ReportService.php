@@ -91,4 +91,42 @@ class ReportService
             'answers'       => $q->answers->pluck('answer'),
         ])->toArray();
     }
+
+    public function generateHeadcountReport(array $filters = []): array
+    {
+        $category = $filters['category'] ?? 'student';
+
+        if ($category === 'faculty') {
+            $rows = \App\Models\FacultyProfile::selectRaw("COALESCE(department, 'Unspecified') as department, COUNT(*) as total")
+                ->groupBy('department')
+                ->orderBy('department')
+                ->get();
+
+            return [
+                'category' => 'faculty',
+                'rows'     => $rows->toArray(),
+                'total'    => (int) $rows->sum('total'),
+            ];
+        }
+
+        $rows = \App\Models\StudentProfile::with('program:id,code,name')
+            ->when(isset($filters['program_id']), fn($q) => $q->where('program_id', $filters['program_id']))
+            ->selectRaw('program_id, year_level, block, COUNT(*) as total')
+            ->groupBy('program_id', 'year_level', 'block')
+            ->orderBy('program_id')->orderBy('year_level')->orderBy('block')
+            ->get()
+            ->map(fn($r) => [
+                'program_code' => $r->program?->code ?? '—',
+                'program_name' => $r->program?->name ?? '—',
+                'year_level'   => $r->year_level ?? '—',
+                'block'        => $r->block ?? '—',
+                'total'        => $r->total,
+            ]);
+
+        return [
+            'category' => 'student',
+            'rows'     => $rows->toArray(),
+            'total'    => (int) $rows->sum('total'),
+        ];
+    }
 }

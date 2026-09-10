@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import StudentLayout from '@/Layouts/StudentLayout';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowUpTrayIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 export default function StudentRequirements({ types, requirements }) {
@@ -92,8 +93,9 @@ export default function StudentRequirements({ types, requirements }) {
                 )}
             </div>
 
-            {/* Upload Modal */}
-            {uploading && (
+            {/* Upload Modal — rendered via portal so it's positioned relative to the
+                viewport, not to any transformed/animated ancestor (e.g. .page-fade). */}
+            {uploading && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-1 break-words">Upload: {uploading.name}</h3>
@@ -114,7 +116,8 @@ export default function StudentRequirements({ types, requirements }) {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </StudentLayout>
     );

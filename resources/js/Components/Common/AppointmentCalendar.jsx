@@ -120,12 +120,21 @@ export default function AppointmentCalendar({
                     <h2 className="font-semibold text-gray-900 text-base sm:text-lg w-36 sm:w-48 text-center">{monthName}</h2>
                     <button onClick={nextMonth} className="btn-secondary btn-sm px-2"><ChevronRightIcon className="w-4 h-4" /></button>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                    <Link href={listRoute} className="btn-secondary justify-center w-full sm:w-auto">
-                        <ListBulletIcon className="w-4 h-4 mr-2" /> List View
+                {/* Side-by-side on every breakpoint; compact padding/text on mobile, full size from sm+ */}
+                <div className="flex flex-row gap-2">
+                    <Link
+                        href={listRoute}
+                        className="btn-secondary justify-center flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
+                    >
+                        <ListBulletIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        List View
                     </Link>
-                    <button onClick={openQuickBook} className="btn-primary justify-center w-full sm:w-auto">
-                        <CalendarIcon className="w-4 h-4 mr-2" /> Book Appointment
+                    <button
+                        onClick={openQuickBook}
+                        className="btn-primary justify-center flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
+                    >
+                        <CalendarIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        Book Appointment
                     </button>
                 </div>
             </div>

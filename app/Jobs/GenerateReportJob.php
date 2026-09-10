@@ -84,6 +84,43 @@ class GenerateReportJob implements ShouldQueue
                     ->toArray(),
 
                 default => [],
+
+                'headcount' => (function () use ($filters) {
+                    $category = $filters['category'] ?? 'student';
+
+                    if ($category === 'faculty') {
+                        $rows = FacultyProfile::selectRaw("COALESCE(department, 'Unspecified') as department, COUNT(*) as total")
+                            ->groupBy('department')
+                            ->orderBy('department')
+                            ->get();
+
+                        return [
+                            'category' => 'faculty',
+                            'rows'     => $rows->toArray(),
+                            'total'    => (int) $rows->sum('total'),
+                        ];
+                    }
+
+                    $rows = StudentProfile::with('program:id,code,name')
+                        ->when(isset($filters['program_id']), fn($q) => $q->where('program_id', $filters['program_id']))
+                        ->selectRaw('program_id, year_level, block, COUNT(*) as total')
+                        ->groupBy('program_id', 'year_level', 'block')
+                        ->orderBy('program_id')->orderBy('year_level')->orderBy('block')
+                        ->get()
+                        ->map(fn($r) => [
+                            'program_code' => $r->program?->code ?? '—',
+                            'program_name' => $r->program?->name ?? '—',
+                            'year_level'   => $r->year_level ?? '—',
+                            'block'        => $r->block ?? '—',
+                            'total'        => $r->total,
+                        ]);
+
+                    return [
+                        'category' => 'student',
+                        'rows'     => $rows->toArray(),
+                        'total'    => (int) $rows->sum('total'),
+                    ];
+                })(),
             };
 
             if ($format === 'excel') {
@@ -96,6 +133,7 @@ class GenerateReportJob implements ShouldQueue
                     'pregnancy'      => new \App\Exports\PregnancyReportExport(),
                     'survey'         => new \App\Exports\SurveyReportExport(),
                     'walkin_log'     => new \App\Exports\WalkinLogExport($filters),
+                    'headcount'      => new \App\Exports\HeadcountExport($filters),
                     default          => null,
                 };
 

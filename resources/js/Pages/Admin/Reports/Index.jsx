@@ -6,6 +6,7 @@ import { DocumentArrowDownIcon, PlusIcon, TrashIcon, XMarkIcon } from '@heroicon
 const REPORT_TYPES = [
     { value: 'student_health',  label: 'Student Health' },
     { value: 'faculty_health',  label: 'Faculty Health' },
+    { value: 'headcount',       label: 'Population / Headcount' },
     { value: 'appointment',     label: 'Appointment' },
     { value: 'medicine',        label: 'Medicine' },
     { value: 'pregnancy',       label: 'Pregnancy' },
@@ -206,13 +207,44 @@ export default function Reports({ reports }) {
                                 <label className="label">Report Type</label>
                                 <select
                                     value={data.type}
-                                    onChange={e => setData('type', e.target.value)}
+                                    onChange={e => setData(data => ({ ...data, type: e.target.value, filters: {} }))}
                                     className="input"
                                 >
                                     {REPORT_TYPES.map(t => (
                                         <option key={t.value} value={t.value}>{t.label}</option>
                                     ))}
                                 </select>
+
+                                {data.type === 'headcount' && (
+                                    <div>
+                                        <label className="label">Category</label>
+                                        <div className="grid grid-cols-2 gap-3 mt-1">
+                                            {[
+                                                { value: 'student', label: 'Student' },
+                                                { value: 'faculty', label: 'Faculty & Staff' },
+                                            ].map(c => (
+                                                <label
+                                                    key={c.value}
+                                                    className={`flex items-center justify-center gap-2 border rounded-lg py-2.5 cursor-pointer text-sm font-medium transition
+                                                        ${data.filters.category === c.value
+                                                            ? 'border-clinic-600 bg-clinic-50 text-clinic-700'
+                                                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                                        }`}
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        value={c.value}
+                                                        checked={data.filters.category === c.value}
+                                                        onChange={() => setData('filters', { ...data.filters, category: c.value })}
+                                                        className="sr-only"
+                                                    />
+                                                    {c.label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                        {errors['filters.category'] && <p className="error-msg">{errors['filters.category']}</p>}
+                                    </div>
+                                )}
                             </div>
 
                             <div>

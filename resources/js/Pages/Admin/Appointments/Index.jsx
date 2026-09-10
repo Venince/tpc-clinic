@@ -49,8 +49,8 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
 
     const canDelete = (a) => isSuperAdmin && ['declined', 'completed', 'cancelled'].includes(a.status) && !isPast(a);
 
-    const applyFilters = () => router.get(route('admin.appointments.index'), { status, date_from: dateFrom, date_to: dateTo, search }, { preserveState: true });
-    const clearFilters = () => { setStatus(''); setDateFrom(''); setDateTo(''); setSearch(''); router.get(route('admin.appointments.index')); };
+    const applyFilters = () => router.get(route('admin.appointments.list'), { status, date_from: dateFrom, date_to: dateTo, search }, { preserveState: true });
+    const clearFilters = () => { setStatus(''); setDateFrom(''); setDateTo(''); setSearch(''); router.get(route('admin.appointments.list')); };
 
     return (
         <AdminLayout title="Appointments">
@@ -102,7 +102,7 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                     <button onClick={applyFilters} className="btn-primary btn-sm flex-1 sm:flex-none">Filter</button>
                     <button onClick={clearFilters} className="btn-secondary btn-sm flex-1 sm:flex-none">Clear</button>
                 </div>
-                <Link href={route('admin.appointments.calendar')} className="btn-secondary btn-sm sm:ml-auto justify-center">
+                <Link href={route('admin.appointments.index')} className="btn-secondary btn-sm sm:ml-auto justify-center">
                     <CalendarIcon className="w-4 h-4 mr-1" /> Calendar View
                 </Link>
             </div>

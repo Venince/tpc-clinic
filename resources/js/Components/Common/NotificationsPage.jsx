@@ -93,11 +93,11 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                 </div>
 
                 {items.length > 0 && (
-                    <div className="flex items-center gap-2 mt-3 sm:mt-0 sm:ml-auto">
+                    <div className="flex gap-2 w-full sm:w-auto">
                         {hasUnread && (
                             <button
                                 onClick={markAll}
-                                className="btn-secondary btn-sm flex-1 sm:flex-none justify-center"
+                                className="btn-secondary btn-sm flex-1 sm:flex-none justify-center whitespace-nowrap"
                             >
                                 <CheckIcon className="w-4 h-4 mr-1" />
                                 Mark all read
@@ -105,7 +105,7 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
                         )}
                         <button
                             onClick={() => { if (confirm('Delete all notifications?')) deleteAll(); }}
-                            className="btn-sm flex items-center justify-center gap-1.5 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors flex-1 sm:flex-none"
+                            className="btn-sm flex items-center justify-center gap-1.5 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors flex-1 sm:flex-none whitespace-nowrap"
                         >
                             <TrashIcon className="w-4 h-4" />
                             Delete all

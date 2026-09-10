@@ -83,7 +83,7 @@ export default function Login({ status, lockout_seconds = 0 }) {
                             disabled={isLockedOut}
                         />
                     </div>
-                    {errors.email && (
+                    {errors.email && !isLockedOut && (
                         <p className="error-msg">{errors.email}</p>
                     )}
                 </div>
@@ -141,11 +141,14 @@ export default function Login({ status, lockout_seconds = 0 }) {
                 <button
                     type="submit"
                     disabled={processing || isLockedOut}
-                    className="btn-primary w-full btn-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={isLockedOut ? { opacity: 1 } : undefined}
+                    className={`btn-primary w-full btn-lg disabled:cursor-not-allowed ${
+                        isLockedOut
+                            ? 'bg-red-600 hover:bg-red-600 text-white'
+                            : 'disabled:opacity-50'
+                    }`}
                 >
-                    {isLockedOut
-                        ? `Locked — ${fmt(lockoutSeconds)}`
-                        : processing ? 'Signing in…' : 'Sign in'}
+                    {isLockedOut ? 'Locked' : processing ? 'Signing in…' : 'Sign in'}
                 </button>
             </form>
 
