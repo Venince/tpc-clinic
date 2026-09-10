@@ -57,21 +57,23 @@ export default function FacultyProfile({ profile, programs }) {
 
                 <div className="card">
                     <div className="card-body">
-                        <form onSubmit={submit} className="space-y-5">
+                                                <form onSubmit={submit} className="space-y-5">
                             <div>
-                                <label className="label">Full Name</label>
-                                <input value={data.name} onChange={e => setData('name', e.target.value)} className="input" />
+                                <label className="label" htmlFor="faculty-profile-name">Full Name</label>
+                                <input id="faculty-profile-name" name="name" autoComplete="name" value={data.name} onChange={e => setData('name', e.target.value)} className="input" />
                                 {errors.name && <p className="error-msg">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="label">Email</label>
-                                <input value={profile.email} disabled className="input opacity-60 cursor-not-allowed" />
+                                <label className="label" htmlFor="faculty-profile-email">Email</label>
+                                <input id="faculty-profile-email" name="email" autoComplete="email" value={profile.email} disabled className="input opacity-60 cursor-not-allowed" />
                             </div>
 
                             {/* Department / Program */}
                             <div>
-                                <label className="label">Department / Program</label>
+                                <label className="label" htmlFor="faculty-profile-department">Department / Program</label>
                                 <select
+                                    id="faculty-profile-department"
+                                    name="department"
                                     value={useOther ? '__other__' : data.department}
                                     onChange={handleDepartmentChange}
                                     className="input"
@@ -85,6 +87,8 @@ export default function FacultyProfile({ profile, programs }) {
 
                                 {useOther && (
                                     <input
+                                        id="faculty-profile-department-other"
+                                        name="department_other"
                                         value={data.department}
                                         onChange={e => setData('department', e.target.value)}
                                         className="input mt-2"
@@ -96,13 +100,13 @@ export default function FacultyProfile({ profile, programs }) {
                             </div>
 
                             <div>
-                                <label className="label">Position</label>
-                                <input value={data.position} onChange={e => setData('position', e.target.value)} className="input" placeholder="e.g. Instructor" />
+                                <label className="label" htmlFor="faculty-profile-position">Position</label>
+                                <input id="faculty-profile-position" name="position" value={data.position} onChange={e => setData('position', e.target.value)} className="input" placeholder="e.g. Instructor" />
                                 {errors.position && <p className="error-msg">{errors.position}</p>}
                             </div>
                             <div>
-                                <label className="label">Phone</label>
-                                <input value={data.phone} onChange={e => setData('phone', e.target.value)} className="input" placeholder="e.g. 09XX XXX XXXX" />
+                                <label className="label" htmlFor="faculty-profile-phone">Phone</label>
+                                <input id="faculty-profile-phone" name="phone" autoComplete="tel" value={data.phone} onChange={e => setData('phone', e.target.value)} className="input" placeholder="e.g. 09XX XXX XXXX" />
                                 {errors.phone && <p className="error-msg">{errors.phone}</p>}
                             </div>
                             <div className="flex justify-end">

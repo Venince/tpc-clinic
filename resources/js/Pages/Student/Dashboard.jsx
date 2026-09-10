@@ -31,6 +31,13 @@ export default function StudentDashboard({ profile, profileCompleted, appointmen
         return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     };
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 18) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
     return (
         <StudentLayout title="Dashboard">
             <Head title="Student Dashboard" />
@@ -67,15 +74,15 @@ export default function StudentDashboard({ profile, profileCompleted, appointmen
                 <div className="flex items-center gap-2.5 sm:gap-4">
                     {auth.user?.profile_photo_url ? (
                         <img src={auth.user.profile_photo_url} alt={auth.user.name}
-                            className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-white/40" />
+                            className="w-10 h-10 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0" />
                     ) : (
-                        <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/15 rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-white/40">
+                        <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/15 rounded-full flex items-center justify-center flex-shrink-0">
                             <span className="text-white font-semibold text-sm sm:text-lg">{auth.user?.name?.charAt(0)}</span>
                         </div>
                     )}
                     <div className="min-w-0 flex-1">
-                        <h2 className="text-base sm:text-xl font-bold truncate leading-tight">Welcome back, {auth.user?.name}! 👋</h2>
-                        <p className="text-clinic-100 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">
+                        <h2 className="text-base sm:text-xl font-bold leading-tight break-words">{getGreeting()}, {auth.user?.name}! 👋</h2>
+                        <p className="text-clinic-100 text-xs sm:text-sm mt-0.5 sm:mt-1 break-words">
                             {profile?.program?.name
                                 ? `${profile.program.name} — Year ${profile.year_level ?? '?'}, Block ${profile.block ?? '?'}`
                                 : 'Complete your profile to get started.'}

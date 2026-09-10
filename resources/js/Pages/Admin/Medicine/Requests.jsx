@@ -1,9 +1,9 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import Modal from '@/Components/UI/Modal';
 
 export default function MedicineRequests({ requests, filters, stats }) {
     const { auth } = usePage().props;
@@ -182,9 +182,9 @@ export default function MedicineRequests({ requests, filters, stats }) {
             )}
 
             {/* Reject Modal */}
-            {rejectId && createPortal(
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+            {rejectId && (
+                <Modal onClose={() => { setRejectId(null); rejectForm.reset(); }} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold text-gray-900 mb-3">Reject Request</h3>
                         <form onSubmit={reject}>
                             <label htmlFor="reject-reason" className="sr-only">Reason for rejection</label>
@@ -197,18 +197,17 @@ export default function MedicineRequests({ requests, filters, stats }) {
                             </div>
                         </form>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
 
             {/* Release Modal */}
-            {releaseId && createPortal(
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+            {releaseId && (
+                <Modal onClose={() => setReleaseId(null)} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold text-gray-900 mb-3">Release Medicine</h3>
                         <form onSubmit={release}>
                             <label htmlFor="release-qty" className="label">Quantity to Release</label>
-                            <input id="release-qty" type="number" min="1" value={releaseForm.data.quantity_released}
+                            <input id="release-qty" name="quantity_released" type="number" min="1" value={releaseForm.data.quantity_released}
                                 onChange={e => releaseForm.setData('quantity_released', e.target.value)} className="input" />
                             <div className="flex flex-col sm:flex-row gap-3 mt-4">
                                 <button type="submit" disabled={releaseForm.processing} className="btn-primary flex-1 justify-center">
@@ -218,8 +217,7 @@ export default function MedicineRequests({ requests, filters, stats }) {
                             </div>
                         </form>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
         </AdminLayout>
     );

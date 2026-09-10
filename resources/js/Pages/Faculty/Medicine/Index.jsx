@@ -2,6 +2,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
 import { BeakerIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 export default function FacultyMedicine({ medicines, myRequests }) {
     const [selected, setSelected] = useState(null);
@@ -19,6 +20,8 @@ export default function FacultyMedicine({ medicines, myRequests }) {
     };
 
     const canDelete = (s) => ['cancelled', 'rejected', 'released'].includes(s);
+
+    const closeModal = () => { setSelected(null); reset(); };
 
     return (
         <FacultyLayout title="Medicine">
@@ -104,27 +107,33 @@ export default function FacultyMedicine({ medicines, myRequests }) {
                 </div>
             </div>
 
-            {/* Request Modal — bottom sheet on mobile */}
+                        {/* Request Modal */}
             {selected && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+                <Modal onClose={closeModal} size="md">
+                    <div className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-gray-900 truncate pr-4">Request: {selected.name}</h3>
-                            <button onClick={() => { setSelected(null); reset(); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                            <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
                                 <XMarkIcon className="w-5 h-5" />
                             </button>
                         </div>
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <label className="label">Quantity ({selected.unit})</label>
-                                <input type="number" min="1" max={selected.quantity}
+                                <label className="label" htmlFor="faculty-medicine-quantity">Quantity ({selected.unit})</label>
+                                <input
+                                    id="faculty-medicine-quantity"
+                                    name="quantity_requested"
+                                    type="number" min="1" max={selected.quantity}
                                     value={data.quantity_requested} onChange={e => setData('quantity_requested', parseInt(e.target.value))}
                                     className="input" />
                                 <p className="text-xs text-gray-400 mt-1">{selected.quantity} {selected.unit} available</p>
                             </div>
                             <div>
-                                <label className="label">Reason</label>
-                                <textarea value={data.reason} onChange={e => setData('reason', e.target.value)}
+                                <label className="label" htmlFor="faculty-medicine-reason">Reason</label>
+                                <textarea
+                                    id="faculty-medicine-reason"
+                                    name="reason"
+                                    value={data.reason} onChange={e => setData('reason', e.target.value)}
                                     className="input" rows={3} placeholder="Why do you need this medicine?" />
                                 {errors.reason && <p className="error-msg">{errors.reason}</p>}
                             </div>
@@ -132,11 +141,11 @@ export default function FacultyMedicine({ medicines, myRequests }) {
                                 <button type="submit" disabled={processing} className="btn-primary flex-1">
                                     {processing ? 'Submitting…' : 'Submit Request'}
                                 </button>
-                                <button type="button" onClick={() => { setSelected(null); reset(); }} className="btn-secondary">Cancel</button>
+                                <button type="button" onClick={closeModal} className="btn-secondary">Cancel</button>
                             </div>
                         </form>
                     </div>
-                </div>
+                </Modal>
             )}
         </FacultyLayout>
     );

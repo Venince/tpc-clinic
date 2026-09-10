@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, ListBulletIcon, CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 const fmtTime = (raw) => {
     if (!raw) return '—';
@@ -210,10 +211,10 @@ export default function AppointmentCalendar({
                 ))}
             </div>
 
-            {/* Always-available quick booking modal — not tied to a specific day */}
+                        {/* Always-available quick booking modal — not tied to a specific day */}
             {showQuickBook && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+                <Modal onClose={closeQuickBook} size="md">
+                    <div className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-gray-900">Book Appointment</h3>
                             <button onClick={closeQuickBook} className="text-gray-400 hover:text-gray-600">
@@ -254,10 +255,10 @@ export default function AppointmentCalendar({
                             </div>
                         </form>
                     </div>
-                </div>
+                </Modal>
             )}
 
-            {/* Day detail sheet — appointments + inline booking scoped to the tapped day */}
+                        {/* Day detail sheet — appointments + inline booking scoped to the tapped day */}
             {dayDetail && (() => {
                 const dateStr = dayDetail;
                 const dayAppts = appointmentsByDate[dateStr] || [];
@@ -269,8 +270,8 @@ export default function AppointmentCalendar({
                     .toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
                 return (
-                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                        <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
+                    <Modal onClose={closeDayDetail} size="md">
+                        <div className="p-6 max-h-[85vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-semibold text-gray-900">{prettyDate}</h3>
                                 <button onClick={closeDayDetail} className="text-gray-400 hover:text-gray-600">
@@ -355,7 +356,7 @@ export default function AppointmentCalendar({
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </Modal>
                 );
             })()}
         </Layout>

@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { CalendarIcon, CheckIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import Modal from '@/Components/UI/Modal';
 
 export default function AppointmentsIndex({ appointments, filters, stats, isSuperAdmin }) {
     const [status, setStatus]     = useState(filters.status || '');
@@ -188,10 +189,10 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                 )}
             </div>
 
-            {/* Decline modal */}
+                        {/* Decline modal */}
             {declineId && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <Modal onClose={() => { setDeclineId(null); reset(); }} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold text-gray-900 mb-3">Decline Appointment</h3>
                         <form onSubmit={decline}>
                             <label htmlFor="decline-reason" className="sr-only">Reason for declining</label>
@@ -205,13 +206,13 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                             </div>
                         </form>
                     </div>
-                </div>
+                </Modal>
             )}
 
             {/* Delete confirmation modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <Modal onClose={() => setConfirmDelete(null)} size="sm">
+                    <div className="p-6">
                         <h3 className="font-semibold text-gray-900 mb-2">Delete Appointment?</h3>
                         <p className="text-sm text-gray-600 mb-1 break-words">
                             <span className="font-medium">{confirmDelete.user?.name}</span> — {confirmDelete.slot?.date}
@@ -224,7 +225,7 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                             <button onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1 sm:flex-none">Cancel</button>
                         </div>
                     </div>
-                </div>
+                </Modal>
             )}
         </AdminLayout>
     );

@@ -1,8 +1,9 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
-import { PlusIcon, ChatBubbleLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, ChatBubbleLeftIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import Modal from '@/Components/UI/Modal';
 
 export default function FacultyMessagesIndex({ conversations, contacts }) {
     const { auth } = usePage().props;
@@ -19,9 +20,11 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
     const { data, setData, post, processing, errors, reset } = useForm({ recipient_id: '', subject: '', body: '' });
     const selectedContact = contacts.find(c => c.id == data.recipient_id);
 
+    const closeNew = () => { setShowNew(false); reset(); setRecipientSearch(''); setShowContacts(false); };
+
     const submit = (e) => {
         e.preventDefault();
-        post(route('faculty.messages.store'), { onSuccess: () => { setShowNew(false); reset(); setRecipientSearch(''); setShowContacts(false); } });
+        post(route('faculty.messages.store'), { onSuccess: closeNew });
     };
 
     const handleDelete = () => {
@@ -79,100 +82,108 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
                 </div>
             </div>
 
-            {/* New Message Modal */}
+                        {/* New Message Modal */}
             {showNew && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-xl sm:rounded-xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
-                        <h3 className="font-semibold mb-4">New Message to Clinic</h3>
-                        <form onSubmit={submit} className="space-y-3">
-                            <div className="relative">
-                                <label className="label" htmlFor="recipient-search">To</label>
-                                <input
-                                    id="recipient-search"
-                                    name="recipient-search"
-                                    type="text"
-                                    value={recipientSearch}
-                                    onChange={e => {
-                                        setRecipientSearch(e.target.value);
-                                        setShowContacts(true);
-                                        // Clear selection if user edits after picking
-                                        if (selectedContact && e.target.value !== selectedContact.name) {
-                                            setData('recipient_id', '');
-                                        }
-                                    }}
-                                    onFocus={() => setShowContacts(true)}
-                                    placeholder="Search by name or email…"
-                                    className={`input ${errors.recipient_id ? 'input-error' : ''}`}
-                                    autoComplete="off"
-                                />
-                                {/* Selected badge */}
-                                {selectedContact && (
-                                    <div className="mt-1 inline-flex items-center gap-1 bg-clinic-100 text-clinic-700 text-xs px-2 py-1 rounded-full">
-                                        {selectedContact.name}
-                                        <button type="button" onClick={() => { setData('recipient_id', ''); setRecipientSearch(''); }}
-                                            className="ml-1 text-clinic-500 hover:text-clinic-800">✕</button>
-                                    </div>
-                                )}
-                                {/* Dropdown */}
-                                {showContacts && recipientSearch && !selectedContact && (
-                                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                        {filteredContacts.length > 0 ? filteredContacts.map(c => (
-                                            <button
-                                                key={c.id}
-                                                type="button"
-                                                onMouseDown={() => {
-                                                    setData('recipient_id', c.id);
-                                                    setRecipientSearch(c.name);
-                                                    setShowContacts(false);
-                                                }}
-                                                className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center gap-2.5"
-                                            >
-                                                <UserAvatar user={c} size="xs" className="flex-shrink-0" />
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                                                    <p className="text-xs text-gray-400">{c.email}</p>
-                                                </div>
-                                            </button>
-                                        )) : (
-                                            <p className="px-4 py-3 text-sm text-gray-400">No contacts found.</p>
-                                        )}
-                                    </div>
-                                )}
-                                {errors.recipient_id && <p className="error-msg">{errors.recipient_id}</p>}
-                            </div>
-                            <div>
-                                <label className="label" htmlFor="new-message-subject">Subject</label>
-                                <input id="new-message-subject" name="subject" value={data.subject} onChange={e => setData('subject', e.target.value)} className="input" />
-                                {errors.subject && <p className="error-msg">{errors.subject}</p>}
-                            </div>
-                            <div>
-                                <label className="label" htmlFor="new-message-body">Message</label>
-                                <textarea id="new-message-body" name="body" value={data.body} onChange={e => setData('body', e.target.value)} className="input" rows={4} />
-                                {errors.body && <p className="error-msg">{errors.body}</p>}
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <button type="submit" disabled={processing} className="btn-primary flex-1 sm:flex-none">{processing ? 'Sending…' : 'Send'}</button>
-                                <button type="button" onClick={() => { setShowNew(false); reset(); setRecipientSearch(''); }} className="btn-secondary">Cancel</button>
-                            </div>
-                        </form>
+                <Modal onClose={closeNew} size="md">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                        <h3 className="font-semibold text-gray-900">New Message to Clinic</h3>
+                        <button onClick={closeNew} className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
                     </div>
-                </div>
+
+                    {/* Form */}
+                    <form onSubmit={submit} className="px-5 py-4 space-y-4">
+                        <div className="relative">
+                            <label className="label" htmlFor="recipient-search">To</label>
+                            <input
+                                id="recipient-search"
+                                name="recipient-search"
+                                type="text"
+                                value={recipientSearch}
+                                onChange={e => {
+                                    setRecipientSearch(e.target.value);
+                                    setShowContacts(true);
+                                    if (selectedContact && e.target.value !== selectedContact.name) {
+                                        setData('recipient_id', '');
+                                    }
+                                }}
+                                onFocus={() => setShowContacts(true)}
+                                placeholder="Search by name or email…"
+                                className={`input ${errors.recipient_id ? 'input-error' : ''}`}
+                                autoComplete="off"
+                            />
+                            {selectedContact && (
+                                <div className="mt-1.5 inline-flex items-center gap-1 bg-clinic-100 text-clinic-700 text-xs px-2 py-1 rounded-full">
+                                    {selectedContact.name}
+                                    <button type="button" onClick={() => { setData('recipient_id', ''); setRecipientSearch(''); }}
+                                        className="ml-1 text-clinic-500 hover:text-clinic-800">✕</button>
+                                </div>
+                            )}
+                            {showContacts && recipientSearch && !selectedContact && (
+                                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                    {filteredContacts.length > 0 ? filteredContacts.map(c => (
+                                        <button
+                                            key={c.id}
+                                            type="button"
+                                            onMouseDown={() => {
+                                                setData('recipient_id', c.id);
+                                                setRecipientSearch(c.name);
+                                                setShowContacts(false);
+                                            }}
+                                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center gap-2.5"
+                                        >
+                                            <UserAvatar user={c} size="xs" className="flex-shrink-0" />
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                                                <p className="text-xs text-gray-400">{c.email}</p>
+                                            </div>
+                                        </button>
+                                    )) : (
+                                        <p className="px-4 py-3 text-sm text-gray-400">No contacts found.</p>
+                                    )}
+                                </div>
+                            )}
+                            {errors.recipient_id && <p className="error-msg">{errors.recipient_id}</p>}
+                        </div>
+                        <div>
+                            <label className="label" htmlFor="new-message-subject">Subject</label>
+                            <input id="new-message-subject" name="subject" value={data.subject} onChange={e => setData('subject', e.target.value)} className={`input ${errors.subject ? 'input-error' : ''}`} placeholder="What's this about?" />
+                            {errors.subject && <p className="error-msg">{errors.subject}</p>}
+                        </div>
+                        <div>
+                            <label className="label" htmlFor="new-message-body">Message</label>
+                            <textarea id="new-message-body" name="body" value={data.body} onChange={e => setData('body', e.target.value)} className={`input ${errors.body ? 'input-error' : ''}`} rows={4} placeholder="Write your message…" />
+                            {errors.body && <p className="error-msg">{errors.body}</p>}
+                        </div>
+                        <div className="flex flex-col-reverse sm:flex-row gap-2.5 pt-1 pb-1">
+                            <button type="button" onClick={closeNew} className="btn-secondary w-full sm:w-auto justify-center">Cancel</button>
+                            <button type="submit" disabled={processing} className="btn-primary w-full sm:w-auto justify-center">{processing ? 'Sending…' : 'Send'}</button>
+                        </div>
+                    </form>
+                </Modal>
             )}
 
             {/* Delete Confirm Modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
-                        <h3 className="font-semibold text-gray-900 mb-1">Delete Conversation?</h3>
+                <Modal onClose={() => setConfirmDelete(null)} size="sm">
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                        <h3 className="font-semibold text-gray-900">Delete Conversation?</h3>
+                        <button onClick={() => setConfirmDelete(null)} className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="px-5 py-4">
                         <p className="text-sm text-gray-500 mb-5 break-words">
                             This will permanently delete "<span className="font-medium text-gray-700">{confirmDelete.subject}</span>" and all its messages. This cannot be undone.
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                            <button onClick={handleDelete} className="btn-danger flex-1">Yes, delete</button>
-                            <button onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1">Cancel</button>
+                        <div className="flex flex-col-reverse sm:flex-row gap-2.5">
+                            <button onClick={() => setConfirmDelete(null)} className="btn-secondary w-full justify-center">Cancel</button>
+                            <button onClick={handleDelete} className="btn-danger w-full justify-center">Yes, delete</button>
                         </div>
                     </div>
-                </div>
+                </Modal>
             )}
         </FacultyLayout>
     );

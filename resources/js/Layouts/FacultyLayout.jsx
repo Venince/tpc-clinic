@@ -80,8 +80,9 @@ export default function FacultyLayout({ children, title }) {
     );
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden">
-            <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 flex-shrink-0">
+        <div className="min-h-screen bg-gray-50 lg:flex">
+            {/* Desktop sidebar — sticky, scrolls independently of the page */}
+            <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:h-screen lg:sticky lg:top-0 bg-white border-r border-gray-200 flex-shrink-0">
                 <SidebarContent />
             </aside>
 
@@ -102,8 +103,8 @@ export default function FacultyLayout({ children, title }) {
                 </aside>
             </div>
 
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
+            <div className="flex flex-col min-h-screen lg:flex-1 min-w-0">
+                <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500 flex-shrink-0">
                             <Bars3Icon className="w-6 h-6" />
@@ -116,8 +117,8 @@ export default function FacultyLayout({ children, title }) {
                 </header>
 
                 {/* p-4 on mobile, p-6 on sm+ */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <div key={url} className="page-fade h-full space-y-4">
+                <main className="flex-1 p-4 sm:p-6">
+                    <div key={url} className="page-fade space-y-4">
                         <PushNotificationPrompt />
                         {children}
                     </div>

@@ -2,6 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 export default function AnnouncementsIndex({ announcements }) {
     const [modal, setModal] = useState(null);
@@ -93,104 +94,110 @@ export default function AnnouncementsIndex({ announcements }) {
                 </div>
             </div>
 
-            {/* Modal */}
+                        {/* Modal */}
             {modal !== null && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    {/* Sheet on mobile, centered dialog on sm+ */}
-                    <div className="bg-white w-full sm:rounded-xl sm:max-w-lg shadow-xl max-h-[90dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl">
+                <Modal onClose={() => setModal(null)} size="lg">
+                    {/* Modal header */}
+                    <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                        <h3 className="font-semibold text-gray-900">
+                            {modal === 'new' ? 'New Announcement' : 'Edit Announcement'}
+                        </h3>
+                        <button
+                            onClick={() => setModal(null)}
+                            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        >
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
 
-                        {/* Modal header */}
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-                            <h3 className="font-semibold text-gray-900">
-                                {modal === 'new' ? 'New Announcement' : 'Edit Announcement'}
-                            </h3>
-                            <button
-                                onClick={() => setModal(null)}
-                                className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                            >
-                                <XMarkIcon className="w-5 h-5" />
-                            </button>
+                    {/* Form */}
+                    <form onSubmit={submit} className="px-5 py-4 space-y-4">
+                        <div>
+                            <label className="label" htmlFor="announcement-title">Title</label>
+                            <input
+                                id="announcement-title"
+                                name="title"
+                                autoComplete="off"
+                                value={data.title}
+                                onChange={e => setData('title', e.target.value)}
+                                className="input"
+                                placeholder="Announcement title"
+                            />
                         </div>
 
-                        {/* Form */}
-                        <form onSubmit={submit} className="px-5 py-4 space-y-4">
-                            <div>
-                                <label className="label">Title</label>
-                                <input
-                                    value={data.title}
-                                    onChange={e => setData('title', e.target.value)}
-                                    className="input"
-                                    placeholder="Announcement title"
-                                />
-                            </div>
+                        <div>
+                            <label className="label" htmlFor="announcement-content">Content</label>
+                            <textarea
+                                id="announcement-content"
+                                name="content"
+                                value={data.content}
+                                onChange={e => setData('content', e.target.value)}
+                                className="input"
+                                rows={4}
+                                placeholder="Write your announcement..."
+                            />
+                        </div>
 
-                            <div>
-                                <label className="label">Content</label>
-                                <textarea
-                                    value={data.content}
-                                    onChange={e => setData('content', e.target.value)}
-                                    className="input"
-                                    rows={4}
-                                    placeholder="Write your announcement..."
-                                />
-                            </div>
+                        <div>
+                            <label className="label" htmlFor="announcement-category">Category</label>
+                            <select
+                                id="announcement-category"
+                                name="category"
+                                value={data.category}
+                                onChange={e => setData('category', e.target.value)}
+                                className="input"
+                            >
+                                <option value="general">General</option>
+                                <option value="health">Health</option>
+                                <option value="event">Event</option>
+                            </select>
+                        </div>
 
-                            <div>
-                                <label className="label">Category</label>
-                                <select
-                                    value={data.category}
-                                    onChange={e => setData('category', e.target.value)}
-                                    className="input"
-                                >
-                                    <option value="general">General</option>
-                                    <option value="health">Health</option>
-                                    <option value="event">Event</option>
-                                </select>
-                            </div>
+                        <div>
+                            <label className="label" htmlFor="announcement-expires-at">Expires At <span className="text-gray-400 font-normal">(optional)</span></label>
+                            <input
+                                id="announcement-expires-at"
+                                name="expires_at"
+                                type="datetime-local"
+                                value={data.expires_at}
+                                onChange={e => setData('expires_at', e.target.value)}
+                                className="input"
+                            />
+                        </div>
 
-                            <div>
-                                <label className="label">Expires At <span className="text-gray-400 font-normal">(optional)</span></label>
-                                <input
-                                    type="datetime-local"
-                                    value={data.expires_at}
-                                    onChange={e => setData('expires_at', e.target.value)}
-                                    className="input"
-                                />
-                            </div>
+                        <div className="flex items-center gap-2.5">
+                            <input
+                                type="checkbox"
+                                id="pub"
+                                name="is_published"
+                                checked={data.is_published}
+                                onChange={e => setData('is_published', e.target.checked)}
+                                className="rounded text-clinic-600 w-4 h-4"
+                            />
+                            <label htmlFor="pub" className="text-sm text-gray-700 select-none cursor-pointer">
+                                Publish immediately
+                            </label>
+                        </div>
 
-                            <div className="flex items-center gap-2.5">
-                                <input
-                                    type="checkbox"
-                                    id="pub"
-                                    checked={data.is_published}
-                                    onChange={e => setData('is_published', e.target.checked)}
-                                    className="rounded text-clinic-600 w-4 h-4"
-                                />
-                                <label htmlFor="pub" className="text-sm text-gray-700 select-none cursor-pointer">
-                                    Publish immediately
-                                </label>
-                            </div>
-
-                            {/* Actions — full-width on mobile */}
-                            <div className="flex flex-col-reverse sm:flex-row gap-2.5 pt-1 pb-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setModal(null)}
-                                    className="btn-secondary w-full sm:w-auto justify-center"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="btn-primary w-full sm:w-auto justify-center"
-                                >
-                                    {processing ? 'Saving…' : 'Save'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                        {/* Actions — full-width on mobile */}
+                        <div className="flex flex-col-reverse sm:flex-row gap-2.5 pt-1 pb-1">
+                            <button
+                                type="button"
+                                onClick={() => setModal(null)}
+                                className="btn-secondary w-full sm:w-auto justify-center"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="btn-primary w-full sm:w-auto justify-center"
+                            >
+                                {processing ? 'Saving…' : 'Save'}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
             )}
         </AdminLayout>
     );

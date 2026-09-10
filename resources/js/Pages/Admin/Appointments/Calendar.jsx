@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, ListBulletIcon, PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 const WEEKDAY_FULL  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const WEEKDAY_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -168,7 +169,7 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                 <span className="ml-2">Tap a day to view or manage its slots.</span>
             </p>
 
-            {/* Day Detail sheet — tap any day to see/manage its slots */}
+                        {/* Day Detail sheet */}
             {dayDetail && (() => {
                 const dateStr = dayDetail;
                 const daySlots = slots[dateStr] || [];
@@ -179,8 +180,8 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                     .toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
                 return (
-                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                        <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
+                    <Modal onClose={closeDayDetail} size="md">
+                        <div className="p-6 max-h-[85vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-semibold text-gray-900">{prettyDate}</h3>
                                 <button onClick={closeDayDetail} className="text-gray-400 hover:text-gray-600">
@@ -230,14 +231,14 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                                 </button>
                             )}
                         </div>
-                    </div>
+                    </Modal>
                 );
             })()}
 
             {/* Add Slot Modal */}
             {showSlotForm && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <Modal onClose={() => setShowSlotForm(false)} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold text-gray-900 mb-4">Create Appointment Slot</h3>
                         <form onSubmit={submit} className="space-y-3">
                             <div>
@@ -284,13 +285,13 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                             </div>
                         </form>
                     </div>
-                </div>
+                </Modal>
             )}
 
             {/* Delete Confirmation Modal */}
             {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
+                <Modal onClose={() => setConfirmDelete(null)} size="sm">
+                    <div className="p-6">
                         <h3 className="font-semibold text-gray-900 mb-2">Delete Slot?</h3>
                         <p className="text-sm text-gray-600 mb-1">
                             <span className="font-medium">{confirmDelete.date}</span> — {fmtTime(confirmDelete.start_time)} to {fmtTime(confirmDelete.end_time)}
@@ -303,7 +304,7 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                             <button onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1 sm:flex-none">Cancel</button>
                         </div>
                     </div>
-                </div>
+                </Modal>
             )}
         </AdminLayout>
     );

@@ -6,6 +6,7 @@ import {
     XMarkIcon, MagnifyingGlassIcon, FunnelIcon, HeartIcon, BeakerIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import Modal from '@/Components/UI/Modal';
 
 /* ── small reusable bits ── */
 function VitalPill({ label, value }) {
@@ -413,10 +414,10 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                 {paginationButtons()}
             </div>
 
-            {/* ── Create Modal ── */}
+                        {/* ── Create Modal ── */}
             {showCreate && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-xl shadow-xl max-h-[95vh] flex flex-col">
+                <Modal onClose={() => { setShowCreate(false); reset(); setPatientSearch(''); }} size="lg">
+                    <div className="flex flex-col max-h-[95vh]">
                         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
                             <h3 className="font-semibold text-gray-900">Log Walk-in Visit</h3>
                             <button onClick={() => { setShowCreate(false); reset(); setPatientSearch(''); }}
@@ -430,9 +431,12 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
 
                                 {/* Patient */}
                                 <div>
-                                    <label className="label">Patient <span className="text-red-500">*</span></label>
+                                    <label className="label" htmlFor="walkin-patient">Patient <span className="text-red-500">*</span></label>
                                     <div className="relative">
                                         <input
+                                            id="walkin-patient"
+                                            name="patient"
+                                            autoComplete="off"
                                             value={selectedPatient ? `${selectedPatient.name} (${selectedPatient.email})` : patientSearch}
                                             onChange={e => { setPatientSearch(e.target.value); setData('user_id', ''); setShowPatientDrop(true); }}
                                             onFocus={() => setShowPatientDrop(true)}
@@ -458,8 +462,11 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
 
                                 {/* Date & Time */}
                                 <div>
-                                    <label className="label">Visit Date & Time <span className="text-red-500">*</span></label>
-                                    <input type="datetime-local" value={data.visited_at}
+                                    <label className="label" htmlFor="walkin-visited-at">Visit Date & Time <span className="text-red-500">*</span></label>
+                                    <input
+                                        id="walkin-visited-at"
+                                        name="visited_at"
+                                        type="datetime-local" value={data.visited_at}
                                         onChange={e => setData('visited_at', e.target.value)}
                                         className={`input ${errors.visited_at ? 'input-error' : ''}`} />
                                     {errors.visited_at && <p className="error-msg">{errors.visited_at}</p>}
@@ -467,8 +474,11 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
 
                                 {/* Chief Complaint */}
                                 <div>
-                                    <label className="label">Chief Complaint <span className="text-red-500">*</span></label>
-                                    <input value={data.chief_complaint}
+                                    <label className="label" htmlFor="walkin-chief-complaint">Chief Complaint <span className="text-red-500">*</span></label>
+                                    <input
+                                        id="walkin-chief-complaint"
+                                        name="chief_complaint"
+                                        value={data.chief_complaint}
                                         onChange={e => setData('chief_complaint', e.target.value)}
                                         className={`input ${errors.chief_complaint ? 'input-error' : ''}`}
                                         placeholder="e.g. Headache, Fever, Wound dressing" />
@@ -489,8 +499,10 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                             { key: 'weight',         label: 'Weight (kg)',        placeholder: 'e.g. 55' },
                                         ].map(v => (
                                             <div key={v.key}>
-                                                <label className="label text-xs">{v.label}</label>
+                                                <label className="label text-xs" htmlFor={`walkin-vital-${v.key}`}>{v.label}</label>
                                                 <input
+                                                    id={`walkin-vital-${v.key}`}
+                                                    name={`vital_signs.${v.key}`}
                                                     value={data.vital_signs[v.key] || ''}
                                                     onChange={e => setData('vital_signs', { ...data.vital_signs, [v.key]: e.target.value })}
                                                     className="input text-sm" placeholder={v.placeholder} />
@@ -502,13 +514,19 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                 {/* Diagnosis & Treatment */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="label">Diagnosis <span className="text-xs text-gray-400 font-normal">(optional)</span></label>
-                                        <textarea value={data.diagnosis} onChange={e => setData('diagnosis', e.target.value)}
+                                        <label className="label" htmlFor="walkin-diagnosis">Diagnosis <span className="text-xs text-gray-400 font-normal">(optional)</span></label>
+                                        <textarea
+                                            id="walkin-diagnosis"
+                                            name="diagnosis"
+                                            value={data.diagnosis} onChange={e => setData('diagnosis', e.target.value)}
                                             className="input" rows={2} placeholder="e.g. Upper respiratory tract infection" />
                                     </div>
                                     <div>
-                                        <label className="label">Treatment / Action <span className="text-xs text-gray-400 font-normal">(optional)</span></label>
-                                        <textarea value={data.treatment} onChange={e => setData('treatment', e.target.value)}
+                                        <label className="label" htmlFor="walkin-treatment">Treatment / Action <span className="text-xs text-gray-400 font-normal">(optional)</span></label>
+                                        <textarea
+                                            id="walkin-treatment"
+                                            name="treatment"
+                                            value={data.treatment} onChange={e => setData('treatment', e.target.value)}
                                             className="input" rows={2} placeholder="e.g. Rest advised. Paracetamol given." />
                                     </div>
                                 </div>
@@ -516,9 +534,9 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                 {/* Medicines Dispensed */}
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <label className="label mb-0">
+                                        <p className="label mb-0" id="walkin-medicines-label">
                                             Medicines Dispensed <span className="text-xs text-gray-400 font-normal">(optional)</span>
-                                        </label>
+                                        </p>
                                         <button type="button" onClick={addMedicine} className="btn-secondary btn-sm text-xs">
                                             + Add Medicine
                                         </button>
@@ -532,7 +550,11 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                             <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2.5 bg-gray-50">
                                                 {/* Medicine select + remove */}
                                                 <div className="flex items-center gap-2">
-                                                    <select value={item.medicine_id}
+                                                    <label className="sr-only" htmlFor={`walkin-medicine-${i}`}>Medicine {i + 1}</label>
+                                                    <select
+                                                        id={`walkin-medicine-${i}`}
+                                                        name={`medicines_dispensed[${i}].medicine_id`}
+                                                        value={item.medicine_id}
                                                         onChange={e => updateMedicine(i, 'medicine_id', e.target.value)}
                                                         className="input flex-1 text-sm min-w-0">
                                                         <option value="">— Select medicine —</option>
@@ -550,20 +572,26 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
 
                                                 {/* Quantity stepper */}
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-gray-500 font-medium">Quantity</span>
+                                                    <span className="text-xs text-gray-500 font-medium" id={`walkin-quantity-label-${i}`}>Quantity</span>
                                                     <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
                                                         <button
                                                             type="button"
+                                                            aria-label="Decrease quantity"
                                                             onClick={() => updateMedicine(i, 'quantity', Math.max(1, (item.quantity || 1) - 1))}
                                                             className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors text-lg font-medium select-none"
                                                         >
                                                             −
                                                         </button>
-                                                        <span className="w-10 text-center text-sm font-semibold text-gray-900 select-none">
+                                                        <span
+                                                            id={`walkin-quantity-${i}`}
+                                                            aria-labelledby={`walkin-quantity-label-${i}`}
+                                                            className="w-10 text-center text-sm font-semibold text-gray-900 select-none"
+                                                        >
                                                             {item.quantity || 1}
                                                         </span>
                                                         <button
                                                             type="button"
+                                                            aria-label="Increase quantity"
                                                             onClick={() => updateMedicine(i, 'quantity', (item.quantity || 1) + 1)}
                                                             className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors text-lg font-medium select-none"
                                                         >
@@ -578,8 +606,11 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
 
                                 {/* Notes */}
                                 <div>
-                                    <label className="label">Notes <span className="text-xs text-gray-400 font-normal">(optional)</span></label>
-                                    <textarea value={data.notes} onChange={e => setData('notes', e.target.value)}
+                                    <label className="label" htmlFor="walkin-notes">Notes <span className="text-xs text-gray-400 font-normal">(optional)</span></label>
+                                    <textarea
+                                        id="walkin-notes"
+                                        name="notes"
+                                        value={data.notes} onChange={e => setData('notes', e.target.value)}
                                         className="input" rows={2} placeholder="Any additional notes…" />
                                 </div>
                             </div>
@@ -598,7 +629,7 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                             </div>
                         </form>
                     </div>
-                </div>
+                </Modal>
             )}
         </AdminLayout>
     );

@@ -1,10 +1,10 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon, UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import PhotoLightbox from '@/Components/Common/PhotoLightbox';
+import Modal from '@/Components/UI/Modal';
 
 export default function Programs({ programs }) {
     const [modal, setModal]       = useState(null);
@@ -206,9 +206,9 @@ export default function Programs({ programs }) {
             </div>
 
             {/* Modal */}
-            {modal !== null && createPortal(
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            {modal !== null && (
+                <Modal onClose={() => setModal(null)} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold mb-4">{modal === 'new' ? 'Add Program' : 'Edit Program'}</h3>
                         <form onSubmit={submit} className="space-y-3">
                             <div>
@@ -256,8 +256,7 @@ export default function Programs({ programs }) {
                             </div>
                         </form>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
 
             <PhotoLightbox

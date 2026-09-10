@@ -2,6 +2,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { DocumentArrowDownIcon, PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 const REPORT_TYPES = [
     { value: 'student_health',  label: 'Student Health' },
@@ -186,115 +187,119 @@ export default function Reports({ reports }) {
 
             {/* ── Generate Report modal ── */}
             {showForm && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
-                    {/* Sheet slides up on mobile, centered modal on sm+ */}
-                    <div className="bg-white w-full sm:max-w-md sm:rounded-xl rounded-t-2xl shadow-xl">
-                        {/* Modal header */}
-                        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
-                            <h3 className="font-semibold text-gray-800">Generate New Report</h3>
-                            <button
-                                onClick={closeForm}
-                                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition"
-                                aria-label="Close"
+                <Modal onClose={closeForm} size="md">
+                    {/* Modal header */}
+                    <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100">
+                        <h3 className="font-semibold text-gray-800">Generate New Report</h3>
+                        <button
+                            onClick={closeForm}
+                            className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition"
+                            aria-label="Close"
+                        >
+                            <XMarkIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Modal body */}
+                    <form onSubmit={submit} className="p-5 space-y-4">
+                        <div>
+                            <label className="label" htmlFor="report-type">Report Type</label>
+                            <select
+                                id="report-type"
+                                name="type"
+                                value={data.type}
+                                onChange={e => setData(data => ({ ...data, type: e.target.value, filters: {} }))}
+                                className="input"
                             >
-                                <XMarkIcon className="w-5 h-5" />
-                            </button>
+                                {REPORT_TYPES.map(t => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                ))}
+                            </select>
+
+                            {data.type === 'headcount' && (
+                                <div>
+                                    <p className="label">Category</p>
+                                    <div className="grid grid-cols-2 gap-3 mt-1">
+                                        {[
+                                            { value: 'student', label: 'Student' },
+                                            { value: 'faculty', label: 'Faculty & Staff' },
+                                        ].map(c => (
+                                            <label
+                                                key={c.value}
+                                                className={`flex items-center justify-center gap-2 border rounded-lg py-2.5 cursor-pointer text-sm font-medium transition
+                                                    ${data.filters.category === c.value
+                                                        ? 'border-clinic-600 bg-clinic-50 text-clinic-700'
+                                                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="headcount_category"
+                                                    value={c.value}
+                                                    checked={data.filters.category === c.value}
+                                                    onChange={() => setData('filters', { ...data.filters, category: c.value })}
+                                                    className="sr-only"
+                                                />
+                                                {c.label}
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {errors['filters.category'] && <p className="error-msg">{errors['filters.category']}</p>}
+                                </div>
+                            )}
                         </div>
 
-                        {/* Modal body */}
-                        <form onSubmit={submit} className="p-5 space-y-4">
-                            <div>
-                                <label className="label">Report Type</label>
-                                <select
-                                    value={data.type}
-                                    onChange={e => setData(data => ({ ...data, type: e.target.value, filters: {} }))}
-                                    className="input"
-                                >
-                                    {REPORT_TYPES.map(t => (
-                                        <option key={t.value} value={t.value}>{t.label}</option>
-                                    ))}
-                                </select>
+                        <div>
+                            <label className="label" htmlFor="report-title">Title</label>
+                            <input
+                                id="report-title"
+                                name="title"
+                                autoComplete="off"
+                                value={data.title}
+                                onChange={e => setData('title', e.target.value)}
+                                className={`input ${errors.title ? 'input-error' : ''}`}
+                                placeholder="e.g. Student Health Report Q1 2025"
+                            />
+                            {errors.title && <p className="error-msg">{errors.title}</p>}
+                        </div>
 
-                                {data.type === 'headcount' && (
-                                    <div>
-                                        <label className="label">Category</label>
-                                        <div className="grid grid-cols-2 gap-3 mt-1">
-                                            {[
-                                                { value: 'student', label: 'Student' },
-                                                { value: 'faculty', label: 'Faculty & Staff' },
-                                            ].map(c => (
-                                                <label
-                                                    key={c.value}
-                                                    className={`flex items-center justify-center gap-2 border rounded-lg py-2.5 cursor-pointer text-sm font-medium transition
-                                                        ${data.filters.category === c.value
-                                                            ? 'border-clinic-600 bg-clinic-50 text-clinic-700'
-                                                            : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                                                        }`}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        value={c.value}
-                                                        checked={data.filters.category === c.value}
-                                                        onChange={() => setData('filters', { ...data.filters, category: c.value })}
-                                                        className="sr-only"
-                                                    />
-                                                    {c.label}
-                                                </label>
-                                            ))}
-                                        </div>
-                                        {errors['filters.category'] && <p className="error-msg">{errors['filters.category']}</p>}
-                                    </div>
-                                )}
+                        <div>
+                            <p className="label">Format</p>
+                            <div className="grid grid-cols-2 gap-3 mt-1">
+                                {['pdf', 'excel'].map(f => (
+                                    <label
+                                        key={f}
+                                        className={`flex items-center justify-center gap-2 border rounded-lg py-2.5 cursor-pointer text-sm font-medium uppercase transition
+                                            ${data.format === f
+                                                ? 'border-clinic-600 bg-clinic-50 text-clinic-700'
+                                                : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                            }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="format"
+                                            value={f}
+                                            checked={data.format === f}
+                                            onChange={() => setData('format', f)}
+                                            className="sr-only"
+                                        />
+                                        {f}
+                                    </label>
+                                ))}
                             </div>
+                        </div>
 
-                            <div>
-                                <label className="label">Title</label>
-                                <input
-                                    value={data.title}
-                                    onChange={e => setData('title', e.target.value)}
-                                    className={`input ${errors.title ? 'input-error' : ''}`}
-                                    placeholder="e.g. Student Health Report Q1 2025"
-                                />
-                                {errors.title && <p className="error-msg">{errors.title}</p>}
-                            </div>
-
-                            <div>
-                                <label className="label">Format</label>
-                                <div className="grid grid-cols-2 gap-3 mt-1">
-                                    {['pdf', 'excel'].map(f => (
-                                        <label
-                                            key={f}
-                                            className={`flex items-center justify-center gap-2 border rounded-lg py-2.5 cursor-pointer text-sm font-medium uppercase transition
-                                                ${data.format === f
-                                                    ? 'border-clinic-600 bg-clinic-50 text-clinic-700'
-                                                    : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                                                }`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                value={f}
-                                                checked={data.format === f}
-                                                onChange={() => setData('format', f)}
-                                                className="sr-only"
-                                            />
-                                            {f}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Footer buttons */}
-                            <div className="flex gap-3 pt-1">
-                                <button type="submit" disabled={processing} className="btn-primary flex-1 justify-center">
-                                    {processing ? 'Queuing…' : 'Generate'}
-                                </button>
-                                <button type="button" onClick={closeForm} className="btn-secondary flex-1 justify-center">
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                        {/* Footer buttons */}
+                        <div className="flex gap-3 pt-1">
+                            <button type="submit" disabled={processing} className="btn-primary flex-1 justify-center">
+                                {processing ? 'Queuing…' : 'Generate'}
+                            </button>
+                            <button type="button" onClick={closeForm} className="btn-secondary flex-1 justify-center">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
             )}
         </AdminLayout>
     );

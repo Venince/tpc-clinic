@@ -1,8 +1,8 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 const formatDate = (iso) => iso ? iso.slice(0, 10) : '—'; 
 
@@ -21,9 +21,9 @@ function MedicineModal({ medicine, onClose }) {
             : post(route('admin.medicine.store'), { onSuccess: () => { reset(); onClose(); } });
     };
 
-    return createPortal(
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-            <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
+    return (
+        <Modal onClose={onClose} size="lg">
+            <div className="p-6">
                 <h3 className="font-semibold text-gray-900 mb-4">{medicine ? 'Edit Medicine' : 'Add Medicine'}</h3>
                 <form onSubmit={submit} className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -65,8 +65,7 @@ function MedicineModal({ medicine, onClose }) {
                     </div>
                 </form>
             </div>
-        </div>,
-        document.body
+        </Modal>
     );
 }
 

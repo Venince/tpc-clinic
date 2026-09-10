@@ -1,8 +1,8 @@
 import { Head, useForm } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ArrowUpTrayIcon, CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 export default function FacultyRequirements({ types, requirements }) {
     const [uploading, setUploading] = useState(null);
@@ -74,17 +74,19 @@ export default function FacultyRequirements({ types, requirements }) {
                 {!types.length && <div className="card p-10 text-center text-gray-400">No requirements set up yet.</div>}
             </div>
 
-            {/* Upload Modal — rendered via portal so it's positioned relative to the
-                viewport, not to any transformed/animated ancestor (e.g. .page-fade). */}
-            {uploading && createPortal(
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        {/* Upload Modal */}
+            {uploading && (
+                <Modal onClose={() => { setUploading(null); reset(); }} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold text-gray-900 mb-1 break-words">Upload: {uploading.name}</h3>
                         <p className="text-xs text-gray-400 mb-4">Accepted: PDF, JPG, PNG, DOC, DOCX (max 10MB)</p>
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <label className="label">Select File</label>
-                                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                <label className="label" htmlFor="faculty-requirement-file">Select File</label>
+                                <input
+                                    id="faculty-requirement-file"
+                                    name="file"
+                                    type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                     onChange={e => setData('file', e.target.files[0])}
                                     className={`block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-clinic-50 file:text-clinic-700 hover:file:bg-clinic-100 ${errors.file ? 'text-red-500' : ''}`} />
                                 {errors.file && <p className="error-msg">{errors.file}</p>}
@@ -97,8 +99,7 @@ export default function FacultyRequirements({ types, requirements }) {
                             </div>
                         </form>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
         </FacultyLayout>
     );

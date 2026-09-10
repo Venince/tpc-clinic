@@ -1,9 +1,9 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import Modal from '@/Components/UI/Modal';
 
 const TYPES = ['text', 'paragraph', 'radio', 'checkbox', 'dropdown', 'date'];
 
@@ -277,9 +277,9 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
             )}
 
             {/* Question Modal */}
-            {modal !== null && createPortal(
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
-                    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {modal !== null && (
+                <Modal onClose={() => setModal(null)} size="lg">
+                    <div className="p-6">
                         <h3 className="font-semibold mb-1">
                             {modal === 'new' ? 'Add Question' : 'Edit Question'}
                         </h3>
@@ -320,7 +320,7 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
                                 </div>
                             )}
                             <div className="flex items-center gap-2">
-                                <input type="checkbox" id="req" checked={data.is_required}
+                                <input type="checkbox" id="req" name="is_required" checked={data.is_required}
                                     onChange={e => setData('is_required', e.target.checked)}
                                     className="rounded text-clinic-600" />
                                 <label htmlFor="req" className="text-sm text-gray-700">Required field</label>
@@ -335,8 +335,7 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
                             </div>
                         </form>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
         </AdminLayout>
     );

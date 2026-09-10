@@ -1,12 +1,12 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
     PlusIcon, TrashIcon, CheckIcon, XMarkIcon,
     EyeIcon, MagnifyingGlassIcon, ExclamationTriangleIcon, ArrowDownIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
+import Modal from '@/Components/UI/Modal';
 
 export default function RequirementsIndex({ types, requirements, programs, filters }) {
     const { auth } = usePage().props;
@@ -417,37 +417,37 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </div>
             )}
 
-            {/* Add Requirement Type Modal */}
-            {showAdd && createPortal(
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4 overflow-y-auto">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+                        {/* Add Requirement Type Modal */}
+            {showAdd && (
+                <Modal onClose={() => { setShowAdd(false); addForm.reset(); }} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold mb-4">Add Requirement Type</h3>
                         <form onSubmit={submitAdd} className="space-y-3">
                             <div>
-                                <label className="label">Name</label>
-                                <input value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)}
+                                <label className="label" htmlFor="reqtype-name">Name</label>
+                                                                <input id="reqtype-name" name="name" autoComplete="off" value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)}
                                     className="input" placeholder="e.g. X-ray Result" />
                                 {addForm.errors.name && <p className="error-msg">{addForm.errors.name}</p>}
                             </div>
                             <div>
-                                <label className="label">Description</label>
-                                <textarea value={addForm.data.description} onChange={e => addForm.setData('description', e.target.value)}
+                                <label className="label" htmlFor="reqtype-description">Description</label>
+                                <textarea id="reqtype-description" name="description" value={addForm.data.description} onChange={e => addForm.setData('description', e.target.value)}
                                     className="input" rows={2} />
                             </div>
 
                             {/* Targeting */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="label">Program <span className="text-gray-400 font-normal">(optional)</span></label>
-                                    <select value={addForm.data.program_id} onChange={e => addForm.setData('program_id', e.target.value)} className="input">
+                                    <label className="label" htmlFor="reqtype-program">Program <span className="text-gray-400 font-normal">(optional)</span></label>
+                                    <select id="reqtype-program" name="program_id" value={addForm.data.program_id} onChange={e => addForm.setData('program_id', e.target.value)} className="input">
                                         <option value="">All Programs</option>
                                         {programs.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
                                     </select>
                                     {addForm.errors.program_id && <p className="error-msg">{addForm.errors.program_id}</p>}
                                 </div>
                                 <div>
-                                    <label className="label">Year Level <span className="text-gray-400 font-normal">(optional)</span></label>
-                                    <select value={addForm.data.year_level} onChange={e => addForm.setData('year_level', e.target.value)} className="input">
+                                    <label className="label" htmlFor="reqtype-year">Year Level <span className="text-gray-400 font-normal">(optional)</span></label>
+                                    <select id="reqtype-year" name="year_level" value={addForm.data.year_level} onChange={e => addForm.setData('year_level', e.target.value)} className="input">
                                         <option value="">All Years</option>
                                         {[1,2,3,4,5,6].map(y => <option key={y} value={y}>Year {y}</option>)}
                                     </select>
@@ -488,73 +488,69 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                         </form>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
 
-            {/* Clear Submissions Modal */}
-            {showClear && createPortal(
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4 overflow-y-auto">
-                    <div className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
-                        <div className="flex items-start gap-3 px-6 pt-6 pb-4">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                                <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 text-base">Clear Submissions</h3>
-                                <p className="text-sm text-gray-500 mt-0.5">
-                                    This permanently deletes all uploaded files and submission records for the selected group.
-                                    Users will need to re-submit their requirements.
-                                </p>
-                            </div>
+                        {/* Clear Submissions Modal */}
+            {showClear && (
+                <Modal onClose={() => { setShowClear(false); clearForm.reset(); }} size="md">
+                    <div className="flex items-start gap-3 px-6 pt-6 pb-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                            <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
                         </div>
-                        <form onSubmit={submitClear}>
-                            <div className="px-6 pb-5 space-y-3">
-                                <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Select user group to clear</p>
-                                {[
-                                    { value: 'student',       label: 'Students only',             sub: 'Clears all student requirement submissions.' },
-                                    { value: 'faculty_staff', label: 'Faculty / Staff only',       sub: 'Clears all faculty and staff submissions.' },
-                                    { value: 'both',          label: 'Students & Faculty / Staff', sub: 'Clears every submission across all users.' },
-                                ].map(opt => (
-                                    <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                                        clearForm.data.user_type === opt.value ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                    }`}>
-                                        <input type="radio" name="user_type" value={opt.value}
-                                            checked={clearForm.data.user_type === opt.value}
-                                            onChange={() => clearForm.setData('user_type', opt.value)}
-                                            className="mt-0.5 text-red-600 focus:ring-red-500" />
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-900">{opt.label}</p>
-                                            <p className="text-xs text-gray-500">{opt.sub}</p>
-                                        </div>
-                                    </label>
-                                ))}
-                                {clearForm.errors.user_type && <p className="text-xs text-red-500">{clearForm.errors.user_type}</p>}
-                                {clearForm.data.user_type && (
-                                    <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
-                                        <strong>Warning:</strong> You are about to permanently delete all requirement
-                                        submissions for <strong>{userTypeLabel(clearForm.data.user_type)}</strong>.
-                                        This action cannot be undone.
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
-                                <button type="button" onClick={() => { setShowClear(false); clearForm.reset(); }} className="btn-secondary btn-sm">Cancel</button>
-                                <button type="submit" disabled={!clearForm.data.user_type || clearForm.processing}
-                                    className="btn-danger btn-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {clearForm.processing ? 'Clearing…' : 'Clear Submissions'}
-                                </button>
-                            </div>
-                        </form>
+                        <div>
+                            <h3 className="font-semibold text-gray-900 text-base">Clear Submissions</h3>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                This permanently deletes all uploaded files and submission records for the selected group.
+                                Users will need to re-submit their requirements.
+                            </p>
+                        </div>
                     </div>
-                </div>,
-                document.body
+                    <form onSubmit={submitClear}>
+                        <div className="px-6 pb-5 space-y-3">
+                            <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">Select user group to clear</p>
+                            {[
+                                { value: 'student',       label: 'Students only',             sub: 'Clears all student requirement submissions.' },
+                                { value: 'faculty_staff', label: 'Faculty / Staff only',       sub: 'Clears all faculty and staff submissions.' },
+                                { value: 'both',          label: 'Students & Faculty / Staff', sub: 'Clears every submission across all users.' },
+                            ].map(opt => (
+                                <label key={opt.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                                    clearForm.data.user_type === opt.value ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                }`}>
+                                    <input type="radio" name="user_type" value={opt.value}
+                                        checked={clearForm.data.user_type === opt.value}
+                                        onChange={() => clearForm.setData('user_type', opt.value)}
+                                        className="mt-0.5 text-red-600 focus:ring-red-500" />
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">{opt.label}</p>
+                                        <p className="text-xs text-gray-500">{opt.sub}</p>
+                                    </div>
+                                </label>
+                            ))}
+                            {clearForm.errors.user_type && <p className="text-xs text-red-500">{clearForm.errors.user_type}</p>}
+                            {clearForm.data.user_type && (
+                                <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+                                    <strong>Warning:</strong> You are about to permanently delete all requirement
+                                    submissions for <strong>{userTypeLabel(clearForm.data.user_type)}</strong>.
+                                    This action cannot be undone.
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
+                            <button type="button" onClick={() => { setShowClear(false); clearForm.reset(); }} className="btn-secondary btn-sm">Cancel</button>
+                            <button type="submit" disabled={!clearForm.data.user_type || clearForm.processing}
+                                className="btn-danger btn-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                {clearForm.processing ? 'Clearing…' : 'Clear Submissions'}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
             )}
 
-            {/* File Preview Modal */}
-            {previewing && createPortal(
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+                        {/* File Preview Modal */}
+            {previewing && (
+                <Modal onClose={() => setPreviewing(null)} size="lg">
+                    <div className="flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between px-4 md:px-5 py-4 border-b border-gray-100">
                             <div className="min-w-0 mr-3">
                                 <p className="font-semibold text-gray-900 truncate">{previewing.requirement_type?.name}</p>
@@ -570,7 +566,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-50 rounded-b-xl">
+                        <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-50">
                             {isImage(previewing.original_filename) ? (
                                 <img src={route('admin.requirements.file', previewing.id)} alt={previewing.original_filename}
                                     className="max-w-full max-h-[70vh] rounded shadow" />
@@ -585,14 +581,13 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             )}
                         </div>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
 
-            {/* Review Modal */}
-            {reviewing && createPortal(
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4 overflow-y-auto">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl my-auto">
+                        {/* Review Modal */}
+            {reviewing && (
+                <Modal onClose={() => setReviewing(null)} size="md">
+                    <div className="p-6">
                         <h3 className="font-semibold mb-1">Review Submission</h3>
                         <p className="text-sm text-gray-500 mb-4">
                             {reviewing.user?.name} — {reviewing.requirement_type?.name}
@@ -601,7 +596,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             <div className="flex gap-4">
                                 {['approved', 'rejected'].map(s => (
                                     <label key={s} className="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" value={s} checked={reviewForm.data.status === s}
+                                        <input type="radio" name="review_status" value={s} checked={reviewForm.data.status === s}
                                             onChange={() => reviewForm.setData('status', s)} className="text-clinic-600" />
                                         <span className="text-sm capitalize font-medium">{s}</span>
                                     </label>
@@ -622,8 +617,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                             </div>
                         </form>
                     </div>
-                </div>,
-                document.body
+                </Modal>
             )}
         </AdminLayout>
     );

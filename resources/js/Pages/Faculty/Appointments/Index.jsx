@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
 import { CalendarIcon, CalendarDaysIcon, ClockIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Modal from '@/Components/UI/Modal';
 
 const fmtDate = (raw) => {
     if (!raw) return '—';
@@ -150,10 +151,10 @@ export default function FacultyAppointments({ appointments, slots }) {
                 </div>
             </div>
 
-            {/* Book Modal — slides up from bottom on mobile */}
+                        {/* Book Modal */}
             {showBook && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+                <Modal onClose={() => { setShowBook(false); reset(); }} size="md">
+                    <div className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-gray-900">Book Appointment</h3>
                             <button onClick={() => { setShowBook(false); reset(); }} className="text-gray-400 hover:text-gray-600">
@@ -193,7 +194,7 @@ export default function FacultyAppointments({ appointments, slots }) {
                             </div>
                         </form>
                     </div>
-                </div>
+                </Modal>
             )}
         </FacultyLayout>
     );
