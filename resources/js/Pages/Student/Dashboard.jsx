@@ -24,7 +24,11 @@ export default function StudentDashboard({ profile, profileCompleted, appointmen
 
     const formatTime = (dt) => {
         if (!dt) return '';
-        return new Date(dt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        // time-only strings like "13:00:00" need a date part or `new Date()` fails
+        const isTimeOnly = /^\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(dt);
+        const date = isTimeOnly ? new Date(`1970-01-01T${dt}`) : new Date(dt);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     };
 
     return (
