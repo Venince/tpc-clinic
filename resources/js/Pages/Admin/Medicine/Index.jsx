@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -10,7 +11,7 @@ function MedicineModal({ medicine, onClose }) {
         name: medicine?.name || '', description: medicine?.description || '',
         unit: medicine?.unit || 'tablets', quantity: medicine?.quantity || 0,
         reorder_level: medicine?.reorder_level || 10,
-        expiration_date: medicine?.expiration_date || '', batch_number: medicine?.batch_number || '',
+        expiration_date: medicine?.expiration_date ? medicine.expiration_date.slice(0, 10) : '', batch_number: medicine?.batch_number || '',
     });
 
     const submit = (e) => {
@@ -20,42 +21,42 @@ function MedicineModal({ medicine, onClose }) {
             : post(route('admin.medicine.store'), { onSuccess: () => { reset(); onClose(); } });
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
             <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <h3 className="font-semibold text-gray-900 mb-4">{medicine ? 'Edit Medicine' : 'Add Medicine'}</h3>
                 <form onSubmit={submit} className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="sm:col-span-2">
-                            <label className="label">Name</label>
-                            <input value={data.name} onChange={e => setData('name', e.target.value)} className={`input ${errors.name ? 'input-error' : ''}`} />
+                            <label htmlFor="medicine-name" className="label">Name</label>
+                            <input id="medicine-name" name="name" autoComplete="off" value={data.name} onChange={e => setData('name', e.target.value)} className={`input ${errors.name ? 'input-error' : ''}`} />
                             {errors.name && <p className="error-msg">{errors.name}</p>}
                         </div>
                         <div>
-                            <label className="label">Unit</label>
-                            <select value={data.unit} onChange={e => setData('unit', e.target.value)} className="input">
+                            <label htmlFor="medicine-unit" className="label">Unit</label>
+                            <select id="medicine-unit" name="unit" value={data.unit} onChange={e => setData('unit', e.target.value)} className="input">
                                 {['tablets','capsules','ml','pcs','sachets','bottles','strips'].map(u => <option key={u}>{u}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="label">Quantity</label>
-                            <input type="number" min="0" value={data.quantity} onChange={e => setData('quantity', e.target.value)} className="input" />
+                            <label htmlFor="medicine-quantity" className="label">Quantity</label>
+                            <input id="medicine-quantity" name="quantity" type="number" min="0" value={data.quantity} onChange={e => setData('quantity', e.target.value)} className="input" />
                         </div>
                         <div>
-                            <label className="label">Reorder Level</label>
-                            <input type="number" min="0" value={data.reorder_level} onChange={e => setData('reorder_level', e.target.value)} className="input" />
+                            <label htmlFor="medicine-reorder-level" className="label">Reorder Level</label>
+                            <input id="medicine-reorder-level" name="reorder_level" type="number" min="0" value={data.reorder_level} onChange={e => setData('reorder_level', e.target.value)} className="input" />
                         </div>
                         <div>
-                            <label className="label">Expiration Date</label>
-                            <input type="date" value={data.expiration_date} onChange={e => setData('expiration_date', e.target.value)} className="input" />
+                            <label htmlFor="medicine-expiration-date" className="label">Expiration Date</label>
+                            <input id="medicine-expiration-date" name="expiration_date" type="date" value={data.expiration_date} onChange={e => setData('expiration_date', e.target.value)} className="input" />
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="label">Batch Number</label>
-                            <input value={data.batch_number} onChange={e => setData('batch_number', e.target.value)} className="input" placeholder="Optional" />
+                            <label htmlFor="medicine-batch-number" className="label">Batch Number</label>
+                            <input id="medicine-batch-number" name="batch_number" value={data.batch_number} onChange={e => setData('batch_number', e.target.value)} className="input" placeholder="Optional" />
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="label">Description</label>
-                            <textarea value={data.description} onChange={e => setData('description', e.target.value)} className="input" rows={2} />
+                            <label htmlFor="medicine-description" className="label">Description</label>
+                            <textarea id="medicine-description" name="description" value={data.description} onChange={e => setData('description', e.target.value)} className="input" rows={2} />
                         </div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -64,7 +65,8 @@ function MedicineModal({ medicine, onClose }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
@@ -105,7 +107,10 @@ export default function MedicineIndex({ medicines, filters, stats }) {
 
             {/* Filters — search full-width, select+Filter paired, Add stacks below on mobile */}
             <div className="flex flex-col gap-3 mb-6">
+                <label htmlFor="medicine-search" className="sr-only">Search medicine</label>
                 <input
+                    id="medicine-search"
+                    name="search"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && applyFilter()}
@@ -114,7 +119,8 @@ export default function MedicineIndex({ medicines, filters, stats }) {
                 />
                 <div className="flex flex-col sm:flex-row gap-2">
                     <div className="flex gap-2 flex-1">
-                        <select value={filter} onChange={e => setFilter(e.target.value)} className="input flex-1 sm:w-36">
+                        <label htmlFor="medicine-filter" className="sr-only">Filter by stock status</label>
+                        <select id="medicine-filter" name="filter" value={filter} onChange={e => setFilter(e.target.value)} className="input flex-1 sm:w-36">
                             <option value="">All</option>
                             <option value="low">Low Stock</option>
                             <option value="out">Out of Stock</option>

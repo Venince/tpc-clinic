@@ -41,6 +41,16 @@ function EmptyState({ label }) {
     return <p className="text-sm text-gray-400 text-center py-8">{label}</p>;
 }
 
+const fmtTime = (raw) => {
+    if (!raw) return '';
+    const [h, m] = String(raw).split(':');
+    const hour = parseInt(h, 10);
+    if (isNaN(hour)) return raw;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${m} ${period}`;
+};
+
 function InfoRow({ icon: Icon, label, value }) {
     return (
         <div className="flex items-start gap-3">
@@ -120,23 +130,23 @@ export default function FacultyShow({ faculty, appointments, medicineRequests, s
                 .print-logo { display: none; }
             `}</style>
 
-            <div className="flex items-center justify-between mb-4 no-print">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 no-print">
                 <Link href={route('admin.faculty.index')} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
                     <ArrowLeftIcon className="w-4 h-4" /> Back to Faculty & Staff
                 </Link>
 
-                <div className="relative">
+                <div className="relative self-stretch sm:self-auto">
                     <button
                         onClick={(e) => { e.stopPropagation(); setMenuOpen(o => !o); }}
                         disabled={downloading}
-                        className="btn-primary btn-sm"
+                        className="btn-primary btn-sm w-full sm:w-auto justify-center"
                     >
                         {downloading ? 'Generating…' : 'Export'}
                         {!downloading && <ChevronDownIcon className="w-4 h-4 ml-1" />}
                     </button>
 
                     {menuOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                        <div className="absolute right-0 mt-2 w-full sm:w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
                             <button onClick={handlePrint} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left">
                                 <PrinterIcon className="w-4 h-4 text-gray-400" /> Print
                             </button>
@@ -205,7 +215,7 @@ export default function FacultyShow({ faculty, appointments, medicineRequests, s
                                             <p className="text-sm font-medium text-gray-900 break-words">{a.purpose || 'General Consultation'}</p>
                                             <p className="text-xs text-gray-400">
                                                 {a.slot?.date ? new Date(a.slot.date).toLocaleDateString() : '—'}
-                                                {a.slot?.start_time ? ` • ${a.slot.start_time}` : ''}
+                                                {a.slot?.start_time ? ` • ${fmtTime(a.slot.start_time)}` : ''}
                                             </p>
                                         </div>
                                         <StatusBadge status={a.status} />

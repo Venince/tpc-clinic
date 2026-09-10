@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon, UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
@@ -10,16 +11,31 @@ export default function Programs({ programs }) {
     const [expanded, setExpanded] = useState(null);
     const [searches, setSearches] = useState({});
     const [viewingPhoto, setViewingPhoto] = useState(null);
-    const { data, setData, post, put, processing, errors, reset } = useForm({ code: '', name: '', description: '', is_active: true });
+    const [logoPreview, setLogoPreview] = useState(null);
+    const { data, setData, post, put, processing, errors, reset } = useForm({
+        code: '', name: '', description: '', is_active: true, logo: null, remove_logo: false,
+    });
 
     const open = (p) => {
         setModal(p || 'new');
-        setData(p ? { code: p.code, name: p.name, description: p.description || '', is_active: p.is_active } : { code: '', name: '', description: '', is_active: true });
+        setData(p
+            ? { code: p.code, name: p.name, description: p.description || '', is_active: p.is_active, logo: null, remove_logo: false }
+            : { code: '', name: '', description: '', is_active: true, logo: null, remove_logo: false });
+        setLogoPreview(p?.logo_url || null);
+    };
+    const selectLogo = (e) => {
+        const file = e.target.files?.[0] || null;
+        setData(d => ({ ...d, logo: file, remove_logo: false }));
+        setLogoPreview(file ? URL.createObjectURL(file) : null);
+    };
+    const clearLogo = () => {
+        setData(d => ({ ...d, logo: null, remove_logo: true }));
+        setLogoPreview(null);
     };
     const submit = (e) => {
         e.preventDefault();
-        if (modal === 'new') post(route('admin.programs.store'), { onSuccess: () => { setModal(null); reset(); } });
-        else put(route('admin.programs.update', modal.id), { onSuccess: () => { setModal(null); reset(); } });
+        if (modal === 'new') post(route('admin.programs.store'), { forceFormData: true, onSuccess: () => { setModal(null); reset(); setLogoPreview(null); } });
+        else put(route('admin.programs.update', modal.id), { forceFormData: true, onSuccess: () => { setModal(null); reset(); setLogoPreview(null); } });
     };
 
     const filterStudents = (students, query) => {
@@ -58,10 +74,18 @@ export default function Programs({ programs }) {
                             {/* Program Row */}
                             <div className="px-4 sm:px-6 py-3 sm:py-4">
                                 <div className="flex items-center gap-3">
-                                    {/* Code badge */}
-                                    <div className="min-w-[2.5rem] h-10 bg-clinic-100 text-clinic-700 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 px-2 text-center leading-tight">
-                                        {p.code}
-                                    </div>
+                                    {/* Logo (falls back to code badge) */}
+                                    {p.logo_url ? (
+                                        <img
+                                            src={p.logo_url}
+                                            alt={`${p.code} logo`}
+                                            className="w-10 h-10 min-w-[2.5rem] rounded-lg object-cover flex-shrink-0 border border-gray-200 bg-white"
+                                        />
+                                    ) : (
+                                        <div className="min-w-[2.5rem] h-10 bg-clinic-100 text-clinic-700 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 px-2 text-center leading-tight">
+                                            {p.code}
+                                        </div>
+                                    )}
 
                                     {/* Name + description */}
                                     <div className="flex-1 min-w-0">
@@ -182,28 +206,49 @@ export default function Programs({ programs }) {
             </div>
 
             {/* Modal */}
-            {modal !== null && (
+            {modal !== null && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold mb-4">{modal === 'new' ? 'Add Program' : 'Edit Program'}</h3>
                         <form onSubmit={submit} className="space-y-3">
                             <div>
-                                <label className="label">Code</label>
-                                <input value={data.code} onChange={e => setData('code', e.target.value)} className={`input ${errors.code ? 'input-error' : ''}`} placeholder="BSIT" />
+                                <label htmlFor="program-code" className="label">Code</label>
+                                <input id="program-code" name="code" value={data.code} onChange={e => setData('code', e.target.value)} className={`input ${errors.code ? 'input-error' : ''}`} placeholder="BSIT" />
                                 {errors.code && <p className="error-msg">{errors.code}</p>}
                             </div>
                             <div>
-                                <label className="label">Name</label>
-                                <input value={data.name} onChange={e => setData('name', e.target.value)} className="input" placeholder="Bachelor of Science in..." />
+                                <label htmlFor="program-name" className="label">Name</label>
+                                <input id="program-name" name="name" autoComplete="off" value={data.name} onChange={e => setData('name', e.target.value)} className="input" placeholder="Bachelor of Science in..." />
                                 {errors.name && <p className="error-msg">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="label">Description</label>
-                                <textarea value={data.description} onChange={e => setData('description', e.target.value)} className="input" rows={2} />
+                                <label htmlFor="program-description" className="label">Description</label>
+                                <textarea id="program-description" name="description" value={data.description} onChange={e => setData('description', e.target.value)} className="input" rows={2} />
+                            </div>
+                            <div>
+                                <label htmlFor="program-logo" className="label">Logo</label>
+                                <div className="flex items-center gap-3">
+                                    {logoPreview ? (
+                                        <img src={logoPreview} alt="Logo preview" className="w-14 h-14 rounded-lg object-cover border border-gray-200 bg-white flex-shrink-0" />
+                                    ) : (
+                                        <div className="w-14 h-14 rounded-lg bg-clinic-100 text-clinic-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                            {data.code || '—'}
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <input id="program-logo" name="logo" type="file" accept="image/*" onChange={selectLogo} className="input text-xs file:mr-2 file:text-xs" />
+                                        {logoPreview && (
+                                            <button type="button" onClick={clearLogo} className="text-xs text-red-500 hover:text-red-700 mt-1">
+                                                Remove logo
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                {errors.logo && <p className="error-msg">{errors.logo}</p>}
                             </div>
                             <div className="flex items-center gap-2">
-                                <input type="checkbox" checked={data.is_active} onChange={e => setData('is_active', e.target.checked)} className="rounded text-clinic-600" />
-                                <label className="text-sm text-gray-700">Active</label>
+                                <input id="program-active" name="is_active" type="checkbox" checked={data.is_active} onChange={e => setData('is_active', e.target.checked)} className="rounded text-clinic-600" />
+                                <label htmlFor="program-active" className="text-sm text-gray-700">Active</label>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                 <button type="submit" disabled={processing} className="btn-primary flex-1 sm:flex-none">{processing ? 'Saving…' : 'Save'}</button>
@@ -211,7 +256,8 @@ export default function Programs({ programs }) {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             <PhotoLightbox

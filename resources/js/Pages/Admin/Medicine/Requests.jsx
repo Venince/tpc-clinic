@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { TrashIcon } from '@heroicons/react/24/outline';
@@ -72,7 +73,8 @@ export default function MedicineRequests({ requests, filters, stats }) {
 
             {/* Filter */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <select value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-40">
+                <label htmlFor="request-status-filter" className="sr-only">Filter by status</label>
+                <select id="request-status-filter" name="status" value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-40">
                     <option value="">All Statuses</option>
                     {['pending','approved','rejected','released'].map(s => <option key={s}>{s}</option>)}
                 </select>
@@ -180,7 +182,7 @@ export default function MedicineRequests({ requests, filters, stats }) {
             )}
 
             {/* Reject Modal */}
-            {rejectId && (
+            {rejectId && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-3">Reject Request</h3>
@@ -195,11 +197,12 @@ export default function MedicineRequests({ requests, filters, stats }) {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Release Modal */}
-            {releaseId && (
+            {releaseId && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
                     <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-3">Release Medicine</h3>
@@ -215,7 +218,8 @@ export default function MedicineRequests({ requests, filters, stats }) {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </AdminLayout>
     );

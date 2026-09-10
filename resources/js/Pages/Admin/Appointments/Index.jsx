@@ -31,6 +31,16 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
         });
     };
 
+    const formatTime = (raw) => {
+        if (!raw) return '—';
+        const [h, m] = String(raw).split(':');
+        const hour = parseInt(h, 10);
+        if (isNaN(hour)) return raw;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${m} ${period}`;
+    };
+
     const formatDate = (isoDate) => {
         if (!isoDate) return '—';
         // Take the date portion only (YYYY-MM-DD) to avoid timezone-shifting the day
@@ -132,7 +142,7 @@ export default function AppointmentsIndex({ appointments, filters, stats, isSupe
                                     <td className="whitespace-nowrap">{a.purpose}</td>
                                     <td className="whitespace-nowrap">
                                         <p className="text-sm">{formatDate(a.slot?.date)}</p>
-                                        <p className="text-xs text-gray-400">{a.slot?.start_time} – {a.slot?.end_time}</p>
+                                        <p className="text-xs text-gray-400">{formatTime(a.slot?.start_time)} – {formatTime(a.slot?.end_time)}</p>
                                     </td>
                                     <td className="whitespace-nowrap">{statusBadge(a.status)}</td>
                                     <td className="whitespace-nowrap">

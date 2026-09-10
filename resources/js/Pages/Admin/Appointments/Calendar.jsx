@@ -6,6 +6,16 @@ import { ChevronLeftIcon, ChevronRightIcon, ListBulletIcon, PlusIcon, TrashIcon,
 const WEEKDAY_FULL  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const WEEKDAY_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+const fmtTime = (raw) => {
+    if (!raw) return '—';
+    const [h, m] = String(raw).split(':');
+    const hour = parseInt(h, 10);
+    if (isNaN(hour)) return raw;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${m} ${period}`;
+};
+
 export default function Calendar({ slots, month, currentDate, isSuperAdmin, holidays }) {
     const [dayDetail, setDayDetail] = useState(null);       // date string of the open day-detail sheet
     const [showSlotForm, setShowSlotForm] = useState(false);
@@ -188,7 +198,7 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                                         <div key={slot.id} className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-gray-50">
                                             <div className="min-w-0">
                                                 <p className="text-sm font-medium text-gray-900">
-                                                    {slot.start_time} – {slot.end_time}
+                                                    {fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}
                                                 </p>
                                                 <p className="text-xs text-gray-500">
                                                     {slot.pending_count + slot.approved_count}/{slot.max_appointments} booked
@@ -283,7 +293,7 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                     <div className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold text-gray-900 mb-2">Delete Slot?</h3>
                         <p className="text-sm text-gray-600 mb-1">
-                            <span className="font-medium">{confirmDelete.date}</span> — {confirmDelete.start_time} to {confirmDelete.end_time}
+                            <span className="font-medium">{confirmDelete.date}</span> — {fmtTime(confirmDelete.start_time)} to {fmtTime(confirmDelete.end_time)}
                         </p>
                         <p className="text-sm text-red-600 mb-5">
                             Slots with active (pending/approved) appointments cannot be deleted.

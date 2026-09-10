@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { createPortal } from 'react-dom';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
@@ -188,7 +189,8 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
             {tab === 'responses' && (
                 <div className="space-y-4">
                     <div className="flex gap-2">
-                        <input value={search} onChange={e => setSearch(e.target.value)}
+                        <label htmlFor="survey-response-search" className="sr-only">Search by name or email</label>
+                        <input id="survey-response-search" name="search" value={search} onChange={e => setSearch(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && router.get(route('admin.survey.index'), { search, role_tab }, { preserveState: true })}
                             className="input flex-1" placeholder="Search by name or email…" />
                         <button onClick={() => router.get(route('admin.survey.index'), { search, role_tab }, { preserveState: true })}
@@ -275,7 +277,7 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
             )}
 
             {/* Question Modal */}
-            {modal !== null && (
+            {modal !== null && createPortal(
                 <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
                     <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <h3 className="font-semibold mb-1">
@@ -286,22 +288,22 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
                         </p>
                         <form onSubmit={submit} className="space-y-3">
                             <div>
-                                <label className="label">Question</label>
-                                <textarea value={data.question} onChange={e => setData('question', e.target.value)}
+                                <label htmlFor="survey-question" className="label">Question</label>
+                                <textarea id="survey-question" name="question" value={data.question} onChange={e => setData('question', e.target.value)}
                                     className={`input ${errors.question ? 'input-error' : ''}`} rows={2} />
                                 {errors.question && <p className="error-msg">{errors.question}</p>}
                             </div>
                             <div>
-                                <label className="label">Type</label>
-                                <select value={data.type} onChange={e => setData('type', e.target.value)} className="input">
+                                <label htmlFor="survey-type" className="label">Type</label>
+                                <select id="survey-type" name="type" value={data.type} onChange={e => setData('type', e.target.value)} className="input">
                                     {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
                             </div>
                             {hasOptions && (
                                 <div>
-                                    <label className="label">Options</label>
+                                    <label htmlFor="survey-option-input" className="label">Options</label>
                                     <div className="flex gap-2 mb-2">
-                                        <input value={optInput} onChange={e => setOptInput(e.target.value)}
+                                        <input id="survey-option-input" name="option" value={optInput} onChange={e => setOptInput(e.target.value)}
                                             onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addOpt())}
                                             className="input flex-1" placeholder="Add option…" />
                                         <button type="button" onClick={addOpt} className="btn-secondary btn-sm">Add</button>
@@ -333,7 +335,8 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </AdminLayout>
     );

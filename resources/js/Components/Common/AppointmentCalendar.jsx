@@ -2,7 +2,15 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, ListBulletIcon, CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
-const fmtTime = (raw) => (raw ? String(raw).slice(0, 5) : '—');
+const fmtTime = (raw) => {
+    if (!raw) return '—';
+    const [h, m] = String(raw).split(':');
+    const hour = parseInt(h, 10);
+    if (isNaN(hour)) return raw;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${m} ${period}`;
+};
 
 const fmtDate = (raw) => {
     if (!raw) return '—';

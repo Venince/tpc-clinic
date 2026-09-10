@@ -51,7 +51,16 @@
                     <td>{{ $a['purpose'] ?? '—' }}</td>
                     <td class="small">{{ $a['notes'] ?? '—' }}</td>
                     <td>{{ $a['slot']['date'] ?? '—' }}</td>
-                    <td>{{ $a['slot']['start_time'] ?? '—' }}</td>
+                    <td>
+                        @if(!empty($a['slot']['start_time']))
+                            {{ \Carbon\Carbon::parse($a['slot']['start_time'])->format('g:i A') }}
+                            @if(!empty($a['slot']['end_time']))
+                                – {{ \Carbon\Carbon::parse($a['slot']['end_time'])->format('g:i A') }}
+                            @endif
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td class="status-{{ $a['status'] }}">{{ ucfirst($a['status']) }}</td>
                     <td>{{ $a['reviewer']['name'] ?? '—' }}</td>
                     <td class="small">{{ $a['reviewed_at'] ? \Carbon\Carbon::parse($a['reviewed_at'])->format('Y-m-d') : '—' }}</td>
