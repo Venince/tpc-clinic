@@ -145,7 +145,7 @@ export default function StudentDashboard({ profile, profileCompleted, appointmen
                                     <p className="text-sm font-medium text-gray-900 truncate">{a.purpose}</p>
                                     <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
                                         <ClockIcon className="w-3 h-3 flex-shrink-0" />
-                                        <span className="truncate">{a.slot?.date} at {a.slot?.start_time}</span>
+                                        <span className="truncate">{formatDate(a.slot?.date)} at {formatTime(a.slot?.start_time)}</span>
                                     </p>
                                 </div>
                                 {statusBadge(a.status)}
