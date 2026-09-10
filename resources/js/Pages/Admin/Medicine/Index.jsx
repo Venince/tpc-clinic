@@ -21,12 +21,12 @@ function MedicineModal({ medicine, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30 p-4">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <h3 className="font-semibold text-gray-900 mb-4">{medicine ? 'Edit Medicine' : 'Add Medicine'}</h3>
                 <form onSubmit={submit} className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="sm:col-span-2">
                             <label className="label">Name</label>
                             <input value={data.name} onChange={e => setData('name', e.target.value)} className={`input ${errors.name ? 'input-error' : ''}`} />
                             {errors.name && <p className="error-msg">{errors.name}</p>}
@@ -49,18 +49,18 @@ function MedicineModal({ medicine, onClose }) {
                             <label className="label">Expiration Date</label>
                             <input type="date" value={data.expiration_date} onChange={e => setData('expiration_date', e.target.value)} className="input" />
                         </div>
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
                             <label className="label">Batch Number</label>
                             <input value={data.batch_number} onChange={e => setData('batch_number', e.target.value)} className="input" placeholder="Optional" />
                         </div>
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
                             <label className="label">Description</label>
                             <textarea value={data.description} onChange={e => setData('description', e.target.value)} className="input" rows={2} />
                         </div>
                     </div>
-                    <div className="flex gap-3 pt-2">
-                        <button type="submit" disabled={processing} className="btn-primary flex-1">{processing ? 'Saving…' : 'Save'}</button>
-                        <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button type="submit" disabled={processing} className="btn-primary flex-1 justify-center">{processing ? 'Saving…' : 'Save'}</button>
+                        <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -75,6 +75,7 @@ export default function MedicineIndex({ medicines, filters, stats }) {
     const [filter, setFilter] = useState(filtersObj.filter || '');
 
     const deleteMed = (m) => { if (confirm(`Delete ${m.name}?`)) router.delete(route('admin.medicine.destroy', m.id)); };
+    const applyFilter = () => router.get(route('admin.medicine.index'), { search, filter }, { preserveState: true });
 
     const stockBadge = (m) => {
         if (m.is_out_of_stock) return <span className="badge badge-red">Out of Stock</span>;
@@ -102,24 +103,26 @@ export default function MedicineIndex({ medicines, filters, stats }) {
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            {/* Filters — search full-width, select+Filter paired, Add stacks below on mobile */}
+            <div className="flex flex-col gap-3 mb-6">
                 <input
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && router.get(route('admin.medicine.index'), { search, filter })}
-                    className="input flex-1"
+                    onKeyDown={e => e.key === 'Enter' && applyFilter()}
+                    className="input w-full"
                     placeholder="Search medicine…"
                 />
-                <div className="flex gap-2">
-                    <select value={filter} onChange={e => setFilter(e.target.value)} className="input flex-1 sm:w-36">
-                        <option value="">All</option>
-                        <option value="low">Low Stock</option>
-                        <option value="out">Out of Stock</option>
-                    </select>
-                    <button onClick={() => router.get(route('admin.medicine.index'), { search, filter })} className="btn-primary btn-sm whitespace-nowrap">Filter</button>
-                    <button onClick={() => setModalMed(null)} className="btn-primary btn-sm whitespace-nowrap">
-                        <PlusIcon className="w-4 h-4 mr-1 inline" /> Add
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex gap-2 flex-1">
+                        <select value={filter} onChange={e => setFilter(e.target.value)} className="input flex-1 sm:w-36">
+                            <option value="">All</option>
+                            <option value="low">Low Stock</option>
+                            <option value="out">Out of Stock</option>
+                        </select>
+                        <button onClick={applyFilter} className="btn-primary btn-sm whitespace-nowrap">Filter</button>
+                    </div>
+                    <button onClick={() => setModalMed(null)} className="btn-primary btn-sm whitespace-nowrap justify-center sm:w-auto">
+                        <PlusIcon className="w-4 h-4 mr-1 inline" /> Add Medicine
                     </button>
                 </div>
             </div>
@@ -129,11 +132,11 @@ export default function MedicineIndex({ medicines, filters, stats }) {
                 {medicines.data.map(m => (
                     <div key={m.id} className="card p-4">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                            <div>
-                                <p className="font-medium text-gray-900">{m.name}</p>
-                                {m.batch_number && <p className="text-xs text-gray-400">Batch: {m.batch_number}</p>}
+                            <div className="min-w-0">
+                                <p className="font-medium text-gray-900 truncate">{m.name}</p>
+                                {m.batch_number && <p className="text-xs text-gray-400 truncate">Batch: {m.batch_number}</p>}
                             </div>
-                            {stockBadge(m)}
+                            <div className="shrink-0">{stockBadge(m)}</div>
                         </div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
                             <div>
@@ -201,7 +204,35 @@ export default function MedicineIndex({ medicines, filters, stats }) {
                         </tbody>
                     </table>
                 </div>
+                {medicines.links?.length > 3 && (
+                    <div className="flex flex-wrap items-center justify-center gap-1 py-4 border-t border-gray-100">
+                        {medicines.links.map((link, i) => (
+                            <button
+                                key={i}
+                                disabled={!link.url}
+                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
+                                className={`px-3 py-1 text-sm rounded ${link.active ? 'bg-clinic-600 text-white' : link.url ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
+
+            {/* Mobile pagination */}
+            {medicines.links?.length > 3 && (
+                <div className="md:hidden flex flex-wrap items-center justify-center gap-1 py-4">
+                    {medicines.links.map((link, i) => (
+                        <button
+                            key={i}
+                            disabled={!link.url}
+                            onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
+                            className={`px-3 py-1 text-sm rounded ${link.active ? 'bg-clinic-600 text-white' : link.url ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                            dangerouslySetInnerHTML={{ __html: link.label }}
+                        />
+                    ))}
+                </div>
+            )}
 
             {modalMed !== undefined && <MedicineModal medicine={modalMed} onClose={() => setModalMed(undefined)} />}
         </AdminLayout>

@@ -16,8 +16,8 @@ export default function MedicineRequests({ requests, filters, stats }) {
     const releaseForm = useForm({ quantity_released: 1 });
 
     const approve = (id) => router.post(route('admin.medicine.requests.approve', id));
-    const reject  = (e) => { e.preventDefault(); rejectForm.post(route('admin.medicine.requests.reject', rejectId), { onSuccess: () => setRejectId(null) }); };
-    const release = (e) => { e.preventDefault(); releaseForm.post(route('admin.medicine.requests.release', releaseId), { onSuccess: () => setReleaseId(null) }); };
+    const reject  = (e) => { e.preventDefault(); rejectForm.post(route('admin.medicine.requests.reject', rejectId), { onSuccess: () => { setRejectId(null); rejectForm.reset(); } }); };
+    const release = (e) => { e.preventDefault(); releaseForm.post(route('admin.medicine.requests.release', releaseId), { onSuccess: () => { setReleaseId(null); releaseForm.reset(); } }); };
 
     const handleDelete = (id) => {
         if (!confirm('Are you sure you want to delete this medicine request? This cannot be undone.')) return;
@@ -71,12 +71,12 @@ export default function MedicineRequests({ requests, filters, stats }) {
             </div>
 
             {/* Filter */}
-            <div className="flex gap-3 mb-6">
-                <select value={status} onChange={e => setStatus(e.target.value)} className="input flex-1 sm:flex-none sm:w-40">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <select value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-40">
                     <option value="">All Statuses</option>
                     {['pending','approved','rejected','released'].map(s => <option key={s}>{s}</option>)}
                 </select>
-                <button onClick={() => router.get(route('admin.medicine.requests'), { status })} className="btn-primary btn-sm">Filter</button>
+                <button onClick={() => router.get(route('admin.medicine.requests'), { status }, { preserveState: true })} className="btn-primary btn-sm w-full sm:w-auto justify-center">Filter</button>
             </div>
 
             {/* Mobile Cards */}
@@ -91,10 +91,10 @@ export default function MedicineRequests({ requests, filters, stats }) {
                                     <p className="text-xs text-gray-400 truncate">{r.user?.email}</p>
                                 </div>
                             </div>
-                            {statusBadge(r.status)}
+                            <div className="shrink-0">{statusBadge(r.status)}</div>
                         </div>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
-                            <div>
+                            <div className="col-span-2">
                                 <span className="text-gray-400">Medicine: </span>
                                 <span className="text-gray-700">{r.medicine?.name} <span className="text-gray-400">({r.medicine?.unit})</span></span>
                             </div>
@@ -105,7 +105,7 @@ export default function MedicineRequests({ requests, filters, stats }) {
                             {r.reason && (
                                 <div className="col-span-2">
                                     <span className="text-gray-400">Reason: </span>
-                                    <span className="text-gray-700">{r.reason}</span>
+                                    <span className="text-gray-700 break-words">{r.reason}</span>
                                 </div>
                             )}
                         </div>
@@ -149,18 +149,49 @@ export default function MedicineRequests({ requests, filters, stats }) {
                         </tbody>
                     </table>
                 </div>
+                {requests.links?.length > 3 && (
+                    <div className="flex flex-wrap items-center justify-center gap-1 py-4 border-t border-gray-100">
+                        {requests.links.map((link, i) => (
+                            <button
+                                key={i}
+                                disabled={!link.url}
+                                onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
+                                className={`px-3 py-1 text-sm rounded ${link.active ? 'bg-clinic-600 text-white' : link.url ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
+
+            {/* Mobile pagination */}
+            {requests.links?.length > 3 && (
+                <div className="md:hidden flex flex-wrap items-center justify-center gap-1 py-4">
+                    {requests.links.map((link, i) => (
+                        <button
+                            key={i}
+                            disabled={!link.url}
+                            onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
+                            className={`px-3 py-1 text-sm rounded ${link.active ? 'bg-clinic-600 text-white' : link.url ? 'text-gray-600 hover:bg-gray-100' : 'text-gray-300 cursor-not-allowed'}`}
+                            dangerouslySetInnerHTML={{ __html: link.label }}
+                        />
+                    ))}
+                </div>
+            )}
 
             {/* Reject Modal */}
             {rejectId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
-                        <h3 className="font-semibold mb-3">Reject Request</h3>
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+                        <h3 className="font-semibold text-gray-900 mb-3">Reject Request</h3>
                         <form onSubmit={reject}>
-                            <textarea value={rejectForm.data.reason} onChange={e => rejectForm.setData('reason', e.target.value)} className="input" rows={3} placeholder="Reason for rejection…" required />
-                            <div className="flex gap-3 mt-4">
-                                <button type="submit" disabled={rejectForm.processing} className="btn-danger flex-1">Reject</button>
-                                <button type="button" onClick={() => setRejectId(null)} className="btn-secondary flex-1">Cancel</button>
+                            <label htmlFor="reject-reason" className="sr-only">Reason for rejection</label>
+                            <textarea id="reject-reason" value={rejectForm.data.reason} onChange={e => rejectForm.setData('reason', e.target.value)} className="input" rows={3} placeholder="Reason for rejection…" required />
+                            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                <button type="submit" disabled={rejectForm.processing} className="btn-danger flex-1 justify-center">
+                                    {rejectForm.processing ? 'Rejecting…' : 'Reject'}
+                                </button>
+                                <button type="button" onClick={() => { setRejectId(null); rejectForm.reset(); }} className="btn-secondary flex-1 justify-center">Cancel</button>
                             </div>
                         </form>
                     </div>
@@ -169,16 +200,18 @@ export default function MedicineRequests({ requests, filters, stats }) {
 
             {/* Release Modal */}
             {releaseId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
-                        <h3 className="font-semibold mb-3">Release Medicine</h3>
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm bg-black/30 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+                        <h3 className="font-semibold text-gray-900 mb-3">Release Medicine</h3>
                         <form onSubmit={release}>
-                            <label className="label">Quantity to Release</label>
-                            <input type="number" min="1" value={releaseForm.data.quantity_released}
+                            <label htmlFor="release-qty" className="label">Quantity to Release</label>
+                            <input id="release-qty" type="number" min="1" value={releaseForm.data.quantity_released}
                                 onChange={e => releaseForm.setData('quantity_released', e.target.value)} className="input" />
-                            <div className="flex gap-3 mt-4">
-                                <button type="submit" disabled={releaseForm.processing} className="btn-primary flex-1">Release</button>
-                                <button type="button" onClick={() => setReleaseId(null)} className="btn-secondary flex-1">Cancel</button>
+                            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                                <button type="submit" disabled={releaseForm.processing} className="btn-primary flex-1 justify-center">
+                                    {releaseForm.processing ? 'Releasing…' : 'Release'}
+                                </button>
+                                <button type="button" onClick={() => setReleaseId(null)} className="btn-secondary flex-1 justify-center">Cancel</button>
                             </div>
                         </form>
                     </div>

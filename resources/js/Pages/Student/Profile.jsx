@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import StudentLayout from '@/Layouts/StudentLayout';
 import ProfilePhotoUploader from '@/Components/Common/ProfilePhotoUploader';
+import Select from '@/Components/UI/Select';
 
 export default function StudentProfile({ profile, programs }) {
     const student = profile.student_profile || {};
@@ -32,14 +33,14 @@ export default function StudentProfile({ profile, programs }) {
         <StudentLayout title="My Profile">
             <Head title="Profile" />
 
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-2xl mx-auto px-4 sm:px-0">
                 {/* Account info */}
                 <div className="card mb-6">
                     <div className="card-header bg-clinic-50">
                         <h3 className="font-semibold text-clinic-900">Account Information</h3>
                     </div>
                     <div className="card-body">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-4">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-4">
                             <ProfilePhotoUploader
                                 photoUrl={profile.profile_photo_url}
                                 uploadRoute={route('student.profile.photo.update')}
@@ -95,46 +96,35 @@ export default function StudentProfile({ profile, programs }) {
                             </div>
                             <div>
                                 <label className="label" htmlFor="program_id">Program <Req /></label>
-                                <select
+                                <Select
                                     id="program_id"
-                                    name="program_id"
                                     value={data.program_id}
-                                    onChange={e => setData('program_id', e.target.value)}
-                                    className={`input ${errors.program_id ? 'input-error' : ''}`}
-                                >
-                                    <option value="">— Select Program —</option>
-                                    {programs.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
+                                    onChange={val => setData('program_id', val)}
+                                    options={programs.map(p => ({ value: p.id, label: p.name }))}
+                                    placeholder="— Select Program —"
+                                    error={errors.program_id}
+                                />
                                 {errors.program_id && <p className="error-msg">{errors.program_id}</p>}
                             </div>
                             <div>
                                 <label className="label" htmlFor="year_level">Year Level <Req /></label>
-                                <select
+                                <Select
                                     id="year_level"
-                                    name="year_level"
                                     value={data.year_level}
-                                    onChange={e => setData('year_level', e.target.value)}
-                                    className={`input ${errors.year_level ? 'input-error' : ''}`}
-                                >
-                                    <option value="">— Select —</option>
-                                    {[1, 2, 3, 4].map(y => (
-                                        <option key={y} value={y}>Year {y}</option>
-                                    ))}
-                                </select>
+                                    onChange={val => setData('year_level', val)}
+                                    options={[1, 2, 3, 4].map(y => ({ value: y, label: `Year ${y}` }))}
+                                    error={errors.year_level}
+                                />
                                 {errors.year_level && <p className="error-msg">{errors.year_level}</p>}
                             </div>
                             <div>
                                 <label className="label" htmlFor="block">Block <Req /></label>
-                                <input
+                                <Select
                                     id="block"
-                                    name="block"
-                                    autoComplete="off"
                                     value={data.block}
-                                    onChange={e => setData('block', e.target.value)}
-                                    className={`input ${errors.block ? 'input-error' : ''}`}
-                                    placeholder="e.g. A, B, 1"
+                                    onChange={val => setData('block', val)}
+                                    options={Array.from({ length: 20 }, (_, i) => i + 1).map(b => ({ value: b, label: `Block ${b}` }))}
+                                    error={errors.block}
                                 />
                                 {errors.block && <p className="error-msg">{errors.block}</p>}
                             </div>
@@ -155,24 +145,23 @@ export default function StudentProfile({ profile, programs }) {
                             </div>
                             <div>
                                 <label className="label" htmlFor="sex">Sex <Req /></label>
-                                <select
+                                <Select
                                     id="sex"
-                                    name="sex"
                                     value={data.sex}
-                                    onChange={e => {
-                                        setData('sex', e.target.value);
-                                        if (e.target.value === 'male') {
+                                    onChange={val => {
+                                        setData('sex', val);
+                                        if (val === 'male') {
                                             setData('is_pregnant', false);
                                             setData('pregnancy_due_date', '');
                                         }
                                     }}
-                                    className={`input ${errors.sex ? 'input-error' : ''}`}
-                                >
-                                    <option value="">— Select —</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Prefer not to say</option>
-                                </select>
+                                    options={[
+                                        { value: 'male', label: 'Male' },
+                                        { value: 'female', label: 'Female' },
+                                        { value: 'other', label: 'Prefer not to say' },
+                                    ]}
+                                    error={errors.sex}
+                                />
                                 {errors.sex && <p className="error-msg">{errors.sex}</p>}
                             </div>
                             <div>
@@ -190,17 +179,15 @@ export default function StudentProfile({ profile, programs }) {
                             </div>
                             <div>
                                 <label className="label" htmlFor="civil_status">Civil Status <Req /></label>
-                                <select
+                                <Select
                                     id="civil_status"
-                                    name="civil_status"
                                     value={data.civil_status}
-                                    onChange={e => setData('civil_status', e.target.value)}
-                                    className={`input ${errors.civil_status ? 'input-error' : ''}`}
-                                >
-                                    {['single', 'married', 'widowed', 'separated'].map(s => (
-                                        <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                                    ))}
-                                </select>
+                                    onChange={val => setData('civil_status', val)}
+                                    options={['single', 'married', 'widowed', 'separated'].map(s => ({
+                                        value: s, label: s.charAt(0).toUpperCase() + s.slice(1),
+                                    }))}
+                                    error={errors.civil_status}
+                                />
                                 {errors.civil_status && <p className="error-msg">{errors.civil_status}</p>}
                             </div>
                             <div className="sm:col-span-2">
@@ -246,7 +233,7 @@ export default function StudentProfile({ profile, programs }) {
                             {(data.sex === 'female' || data.sex === 'other') && (
                                 <div className="sm:col-span-2 border-t border-gray-100 pt-4">
                                     <p className="text-sm font-medium text-gray-700 mb-3">Pregnancy Information</p>
-                                    <div className="flex items-center gap-3 mb-3">
+                                    <div className="flex items-center gap-3 mb-3 py-1">
                                         <input
                                             type="checkbox"
                                             id="is_pregnant"
@@ -256,9 +243,9 @@ export default function StudentProfile({ profile, programs }) {
                                                 setData('is_pregnant', e.target.checked);
                                                 if (!e.target.checked) setData('pregnancy_due_date', '');
                                             }}
-                                            className="w-4 h-4 rounded text-clinic-600"
+                                            className="w-5 h-5 rounded text-clinic-600 flex-shrink-0"
                                         />
-                                        <label htmlFor="is_pregnant" className="text-sm text-gray-700">
+                                        <label htmlFor="is_pregnant" className="text-sm text-gray-700 py-1">
                                             I am currently pregnant
                                         </label>
                                     </div>
@@ -279,8 +266,8 @@ export default function StudentProfile({ profile, programs }) {
                                 </div>
                             )}
 
-                            <div className="sm:col-span-2 flex justify-end">
-                                <button type="submit" disabled={processing} className="btn-primary">
+                            <div className="sm:col-span-2 flex flex-col sm:flex-row sm:justify-end gap-3 pt-4 mt-2 border-t border-gray-100">
+                                <button type="submit" disabled={processing} className="btn-primary w-full sm:w-auto justify-center">
                                     {processing ? 'Saving…' : 'Save Profile'}
                                 </button>
                             </div>
