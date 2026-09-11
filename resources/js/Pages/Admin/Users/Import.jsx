@@ -46,9 +46,11 @@ export default function UsersImport({ roles }) {
                         <div className="card-body">
                             <form onSubmit={submit} className="space-y-5">
                                 {/* Role */}
-                                <div>
-                                    <label className="label">Assign Role <span className="text-red-500">*</span></label>
+                                                                <div>
+                                    <label className="label" htmlFor="import-role">Assign Role <span className="text-red-500">*</span></label>
                                     <select
+                                        id="import-role"
+                                        name="role"
                                         value={data.role}
                                         onChange={e => setData('role', e.target.value)}
                                         className="input"
@@ -63,7 +65,7 @@ export default function UsersImport({ roles }) {
 
                                 {/* File */}
                                 <div>
-                                    <label className="label">Email List File (.txt) <span className="text-red-500">*</span></label>
+                                    <label className="label" htmlFor="import-file">Email List File (.txt) <span className="text-red-500">*</span></label>
                                     <div
                                         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${data.file ? 'border-clinic-400 bg-clinic-50' : 'border-gray-200 hover:border-clinic-300'}`}
                                         onDrop={handleDrop}
@@ -85,11 +87,13 @@ export default function UsersImport({ roles }) {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <label className="cursor-pointer">
+                                            <label htmlFor="import-file" className="cursor-pointer">
                                                 <ArrowUpTrayIcon className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                                                 <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
                                                 <p className="text-xs text-gray-400 mt-1">.txt files only, max 2MB</p>
                                                 <input
+                                                    id="import-file"
+                                                    name="file"
                                                     type="file"
                                                     accept=".txt"
                                                     className="hidden"

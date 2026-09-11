@@ -12,7 +12,7 @@ const tagStyles = {
     info:      'bg-blue-50 text-blue-700 border border-blue-200',
 };
 
-export default function Home({ announcements, services, auth, facilityPhoto }) {
+export default function Home({ announcements, services, auth, facilityPhoto, clinicEmail }) {
     const isAdmin = auth?.user?.role?.name === 'admin' || auth?.user?.role?.name === 'super_admin';
     const [modal, setModal] = useState(null);
 
@@ -129,8 +129,8 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                             <Link href={route('login')} className="inline-flex items-center justify-center gap-2 bg-clinic-600 text-white px-6 py-3 rounded-lg text-base font-medium hover:bg-clinic-700 transition-colors">
                                 <CalendarDaysIcon className="w-5 h-5" /> Book appointment
                             </Link>
-                            <a href="tel:0380000000" className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-50 transition-colors">
-                                <PhoneIcon className="w-5 h-5" /> Emergency contact
+                            <a href={`mailto:${clinicEmail}`} className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 px-6 py-3 rounded-lg text-base font-medium hover:bg-gray-50 transition-colors">
+                                <EnvelopeIcon className="w-5 h-5" /> Email us
                             </a>
                         </div>
                     </div>
@@ -273,7 +273,7 @@ export default function Home({ announcements, services, auth, facilityPhoto }) {
                             {[
                                 { icon: MapPinIcon,   label: 'Address',       value: 'San Isidro, Talibon, Bohol' },
                                 { icon: ClockIcon,    label: 'Clinic hours',  value: 'Mon – Fri: 8:00 AM – 5:00 PM' },
-                                { icon: EnvelopeIcon, label: 'Contact us',    value: '(038) 000-0000 · tpc.eclinic@gmail.com' },
+                                { icon: EnvelopeIcon, label: 'Contact us', value: `(038) 000-0000 · ${clinicEmail}` },
                             ].map(item => (
                                 <div key={item.label} className="flex gap-4 items-start">
                                     <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">

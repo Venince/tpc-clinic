@@ -23,20 +23,20 @@ export default function CreateUser({ roles }) {
                     <div className="card-body">
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <label className="label">Full Name</label>
-                                <input value={data.name} onChange={e => setData('name', e.target.value)}
+                                <label className="label" htmlFor="create-user-name">Full Name</label>
+                                <input id="create-user-name" name="name" autoComplete="name" value={data.name} onChange={e => setData('name', e.target.value)}
                                     className={`input ${errors.name ? 'input-error' : ''}`} placeholder="Venince Dave Quiamco Autida" />
                                 {errors.name && <p className="error-msg">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="label">Email Address</label>
-                                <input type="email" value={data.email} onChange={e => setData('email', e.target.value)}
+                                <label className="label" htmlFor="create-user-email">Email Address</label>
+                                <input id="create-user-email" name="email" type="email" autoComplete="email" value={data.email} onChange={e => setData('email', e.target.value)}
                                     className={`input ${errors.email ? 'input-error' : ''}`} placeholder="venincedave@gmail.com" />
                                 {errors.email && <p className="error-msg">{errors.email}</p>}
                             </div>
                             <div>
-                                <label className="label">Role</label>
-                                <select value={data.role} onChange={e => setData('role', e.target.value)} className="input">
+                                <label className="label" htmlFor="create-user-role">Role</label>
+                                <select id="create-user-role" name="role" value={data.role} onChange={e => setData('role', e.target.value)} className="input">
                                     {roles.map(r => <option key={r.id} value={r.name}>{r.display_name}</option>)}
                                 </select>
                                 {errors.role && <p className="error-msg">{errors.role}</p>}

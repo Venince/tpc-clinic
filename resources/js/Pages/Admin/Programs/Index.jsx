@@ -39,9 +39,12 @@ export default function Programs({ programs }) {
     };
 
     const filterStudents = (students, query) => {
-        if (!query) return students;
+        const sorted = [...students].sort((a, b) =>
+            (a.user?.name || '').localeCompare(b.user?.name || '')
+        );
+        if (!query) return sorted;
         const q = query.toLowerCase();
-        return students.filter(sp =>
+        return sorted.filter(sp =>
             sp.user?.name?.toLowerCase().includes(q) ||
             sp.user?.email?.toLowerCase().includes(q) ||
             sp.student_id?.toLowerCase().includes(q) ||
@@ -132,7 +135,11 @@ export default function Programs({ programs }) {
                                         <>
                                             <div className="relative mb-3">
                                                 <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                                <label className="sr-only" htmlFor={`program-search-${p.id}`}>Search students</label>
                                                 <input
+                                                    id={`program-search-${p.id}`}
+                                                    name={`program-search-${p.id}`}
+                                                    autoComplete="off"
                                                     value={query}
                                                     onChange={e => setSearches(prev => ({ ...prev, [p.id]: e.target.value }))}
                                                     className="input pl-9 pr-20 sm:pr-24 w-full sm:max-w-sm text-sm"

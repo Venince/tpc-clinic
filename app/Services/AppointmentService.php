@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
+use App\Models\User;
 use App\Notifications\AppointmentStatusNotification;
+use App\Notifications\NewAppointmentNotification;
 use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Rules\NotWeekendOrHoliday;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -77,7 +79,7 @@ class AppointmentService
             throw ValidationException::withMessages(['slot' => ['You already have a booking for this slot.']]);
         }
 
-        return DB::transaction(function () use ($data, $userId, $slot) {
+                return DB::transaction(function () use ($data, $userId, $slot) {
             $appointment = Appointment::create(array_merge($data, [
                 'user_id' => $userId,
                 'status'  => 'pending',
@@ -89,7 +91,15 @@ class AppointmentService
             }
 
             $this->auditService->log('appointment_booked', $userId, 'Appointment', $appointment->id);
-            return $appointment->load('slot', 'user');
+
+            $loaded = $appointment->load('slot', 'user');
+
+            $admins = User::whereHas('role', fn($q) => $q->whereIn('name', ['admin', 'super_admin']))->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new NewAppointmentNotification($loaded));
+            }
+
+            return $loaded;
         });
     }
 

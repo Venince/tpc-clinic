@@ -76,8 +76,11 @@ export default function AdminProfile({ profile }) {
                     <div className="card-body">
                         <form onSubmit={submitName} className="space-y-4">
                             <div>
-                                <label className="label">Full Name</label>
+                                <label className="label" htmlFor="admin-profile-name">Full Name</label>
                                 <input
+                                    id="admin-profile-name"
+                                    name="name"
+                                    autoComplete="name"
                                     value={nameForm.data.name}
                                     onChange={e => nameForm.setData('name', e.target.value)}
                                     className={`input ${nameForm.errors.name ? 'input-error' : ''}`}
@@ -88,11 +91,14 @@ export default function AdminProfile({ profile }) {
                                 )}
                             </div>
                             <div>
-                                <label className="label">Email</label>
+                                <label className="label" htmlFor="admin-profile-email">Email</label>
                                 {isSuperAdmin ? (
                                     <>
                                         <input
+                                            id="admin-profile-email"
+                                            name="email"
                                             type="email"
+                                            autoComplete="email"
                                             value={nameForm.data.email}
                                             onChange={e => nameForm.setData('email', e.target.value)}
                                             className={`input ${nameForm.errors.email ? 'input-error' : ''}`}
@@ -105,6 +111,9 @@ export default function AdminProfile({ profile }) {
                                 ) : (
                                     <>
                                         <input
+                                            id="admin-profile-email"
+                                            name="email"
+                                            autoComplete="email"
                                             value={profile.email}
                                             disabled
                                             className="input opacity-60 cursor-not-allowed"
@@ -114,8 +123,11 @@ export default function AdminProfile({ profile }) {
                                 )}
                             </div>
                             <div>
-                                <label className="label">Role</label>
+                                <label className="label" htmlFor="admin-profile-role">Role</label>
                                 <input
+                                    id="admin-profile-role"
+                                    name="role"
+                                    autoComplete="off"
                                     value={profile.role?.display_name ?? ''}
                                     disabled
                                     className="input opacity-60 cursor-not-allowed"
@@ -143,8 +155,10 @@ export default function AdminProfile({ profile }) {
                     <div className="card-body">
                         <form onSubmit={submitPassword} className="space-y-4">
                             <div>
-                                <label className="label">Current Password</label>
+                                <label className="label" htmlFor="admin-current-password">Current Password</label>
                                 <input
+                                    id="admin-current-password"
+                                    name="current_password"
                                     type="password"
                                     value={passwordForm.data.current_password}
                                     onChange={e => passwordForm.setData('current_password', e.target.value)}
@@ -156,8 +170,10 @@ export default function AdminProfile({ profile }) {
                                 )}
                             </div>
                             <div>
-                                <label className="label">New Password</label>
+                                <label className="label" htmlFor="admin-new-password">New Password</label>
                                 <input
+                                    id="admin-new-password"
+                                    name="password"
                                     type="password"
                                     value={passwordForm.data.password}
                                     onChange={e => passwordForm.setData('password', e.target.value)}
@@ -169,8 +185,10 @@ export default function AdminProfile({ profile }) {
                                 )}
                             </div>
                             <div>
-                                <label className="label">Confirm New Password</label>
+                                <label className="label" htmlFor="admin-confirm-password">Confirm New Password</label>
                                 <input
+                                    id="admin-confirm-password"
+                                    name="password_confirmation"
                                     type="password"
                                     value={passwordForm.data.password_confirmation}
                                     onChange={e => passwordForm.setData('password_confirmation', e.target.value)}

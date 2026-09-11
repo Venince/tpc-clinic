@@ -40,19 +40,19 @@ export default function EditUser({ user }) {
                     <div className="card-body">
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <label className="label">Full Name</label>
-                                <input value={data.name} onChange={e => setData('name', e.target.value)}
+                                <label className="label" htmlFor="edit-user-name">Full Name</label>
+                                <input id="edit-user-name" name="name" autoComplete="name" value={data.name} onChange={e => setData('name', e.target.value)}
                                     className={`input ${errors.name ? 'input-error' : ''}`} />
                                 {errors.name && <p className="error-msg">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="label">Email Address</label>
-                                <input type="email" value={data.email} onChange={e => setData('email', e.target.value)}
+                                <label className="label" htmlFor="edit-user-email">Email Address</label>
+                                <input id="edit-user-email" name="email" type="email" autoComplete="email" value={data.email} onChange={e => setData('email', e.target.value)}
                                     className={`input ${errors.email ? 'input-error' : ''}`} />
                                 {errors.email && <p className="error-msg">{errors.email}</p>}
                             </div>
                             <div className="flex items-center gap-3">
-                                <input type="checkbox" id="is_active" checked={data.is_active} onChange={e => setData('is_active', e.target.checked)}
+                                <input type="checkbox" id="is_active" name="is_active" checked={data.is_active} onChange={e => setData('is_active', e.target.checked)}
                                     className="rounded border-gray-300 text-clinic-600 focus:ring-clinic-500" />
                                 <label htmlFor="is_active" className="text-sm text-gray-700">Account is active</label>
                             </div>
@@ -82,16 +82,16 @@ export default function EditUser({ user }) {
                     </div>
                     {showPasswordForm && (
                         <div className="card-body">
-                            <form onSubmit={submitPassword} className="space-y-4">
+                                                        <form onSubmit={submitPassword} className="space-y-4">
                                 <div>
-                                    <label className="label">New Password</label>
-                                    <input type="password" value={pwData.password} onChange={e => setPwData('password', e.target.value)}
+                                    <label className="label" htmlFor="edit-user-new-password">New Password</label>
+                                    <input id="edit-user-new-password" name="password" type="password" value={pwData.password} onChange={e => setPwData('password', e.target.value)}
                                         className={`input ${pwErrors.password ? 'input-error' : ''}`} autoComplete="new-password" />
                                     {pwErrors.password && <p className="error-msg">{pwErrors.password}</p>}
                                 </div>
                                 <div>
-                                    <label className="label">Confirm New Password</label>
-                                    <input type="password" value={pwData.password_confirmation} onChange={e => setPwData('password_confirmation', e.target.value)}
+                                    <label className="label" htmlFor="edit-user-confirm-password">Confirm New Password</label>
+                                    <input id="edit-user-confirm-password" name="password_confirmation" type="password" value={pwData.password_confirmation} onChange={e => setPwData('password_confirmation', e.target.value)}
                                         className="input" autoComplete="new-password" />
                                 </div>
                                 <p className="text-xs text-gray-400">

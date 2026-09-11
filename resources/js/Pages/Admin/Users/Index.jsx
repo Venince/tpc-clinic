@@ -50,10 +50,12 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                     <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                         <div className="relative flex-1 min-w-0 sm:min-w-48">
                             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && applyFilters()}
+                            <label className="sr-only" htmlFor="users-search">Search name or email</label>
+                            <input id="users-search" name="search" autoComplete="off" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && applyFilters()}
                                 className="input pl-9 w-full" placeholder="Search name or email…" />
                         </div>
-                        <select value={role} onChange={e => setRole(e.target.value)} className="input w-full sm:w-44">
+                        <label className="sr-only" htmlFor="users-role-filter">Filter by role</label>
+                        <select id="users-role-filter" name="role" value={role} onChange={e => setRole(e.target.value)} className="input w-full sm:w-44">
                             <option value="">All roles</option>
                             {roles.map(r => <option key={r.id} value={r.name}>{r.display_name}</option>)}
                         </select>

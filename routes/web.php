@@ -17,6 +17,7 @@ Route::get('/', function () {
             ->get(['id','title','content','category','published_at']),
         'services'      => \App\Models\ClinicService::active()->get(),
         'facilityPhoto' => \App\Models\Setting::get('facility_photo') ?: null,
+        'clinicEmail'   => \App\Models\Setting::get('clinic_email') ?: 'tpc.eclinic@gmail.com',
     ]);
 })->name('home');
 

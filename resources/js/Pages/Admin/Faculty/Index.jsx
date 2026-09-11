@@ -9,16 +9,18 @@ export default function Faculty({ faculty }) {
     const [search, setSearch] = useState('');
     const [viewingPhoto, setViewingPhoto] = useState(null);
 
-    const filtered = faculty.filter(fp => {
-        const q = search.toLowerCase();
-        return (
-            fp.user?.name?.toLowerCase().includes(q) ||
-            fp.user?.email?.toLowerCase().includes(q) ||
-            fp.employee_id?.toLowerCase().includes(q) ||
-            fp.department?.toLowerCase().includes(q) ||
-            fp.position?.toLowerCase().includes(q)
-        );
-    });
+    const filtered = faculty
+        .filter(fp => {
+            const q = search.toLowerCase();
+            return (
+                fp.user?.name?.toLowerCase().includes(q) ||
+                fp.user?.email?.toLowerCase().includes(q) ||
+                fp.employee_id?.toLowerCase().includes(q) ||
+                fp.department?.toLowerCase().includes(q) ||
+                fp.position?.toLowerCase().includes(q)
+            );
+        })
+    .sort((a, b) => (a.user?.name || '').localeCompare(b.user?.name || ''));
 
     return (
         <AdminLayout title="Faculty & Staff">
