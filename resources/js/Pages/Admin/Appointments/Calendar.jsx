@@ -95,7 +95,7 @@ export default function Calendar({ slots, month, currentDate, isSuperAdmin, holi
                         className="btn-secondary justify-center flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm"
                     >
                         <ListBulletIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                        List View
+                        Bookings
                     </Link>
                     <button
                         onClick={() => openSlotForm()}
