@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Services\MessagingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,9 +23,11 @@ class MessageController extends Controller
         $this->authorizeParticipant($request->user()->id, $conversation);
         $this->messagingService->markAsRead($conversation, $request->user()->id);
 
-        $messages = Message::where('conversation_id', $conversation->id)
-            ->with('sender:id,name,email')
-            ->latest()->paginate(50);
+        // Was a raw, unfiltered query before — that meant messages deleted-for-me
+        // (and messages from before this user's "delete conversation" watermark)
+        // still came back over the API even though the web UI hid them. Route
+        // through the same visibility rules as everywhere else instead.
+        $messages = $this->messagingService->getVisibleMessages($conversation, $request->user()->id);
 
         return response()->json([
             'conversation' => $conversation->load('participants:id,name,email'),
@@ -38,14 +39,12 @@ class MessageController extends Controller
     {
         $data = $request->validate([
             'recipient_id' => ['required', 'integer', 'exists:users,id', 'different:' . $request->user()->id],
-            'subject'      => ['required', 'string', 'max:255'],
             'body'         => ['required', 'string'],
         ]);
 
         $conversation = $this->messagingService->startConversation(
             $request->user()->id,
             $data['recipient_id'],
-            $data['subject'],
             $data['body'],
             $request->hasFile('attachments') ? $request->file('attachments') : []
         );

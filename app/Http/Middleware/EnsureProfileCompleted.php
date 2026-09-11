@@ -28,6 +28,7 @@ class EnsureProfileCompleted
                 && $profile->student_id
                 && $profile->program_id
                 && $profile->year_level
+                && $profile->block
                 && $profile->sex
                 && $profile->birth_date
                 && $profile->contact_number;

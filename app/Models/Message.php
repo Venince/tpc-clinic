@@ -26,12 +26,28 @@ class Message extends Model {
 
     /**
      * Only messages not soft-deleted (deleted for everyone, handled automatically
-     * by SoftDeletes) AND not individually deleted-for-me by the given user.
+     * by SoftDeletes) AND not individually deleted-for-me by the given user
+     * AND created after the last time this user deleted the conversation
+     * (their "cleared_at" watermark on conversation_participants). Without
+     * that last check, deleting a conversation and then messaging the same
+     * person again would resurrect every old message, since deleting only
+     * ever hid the conversation itself, not the messages inside it.
      */
     public function scopeVisibleFor($query, int $userId)
     {
-        return $query->whereDoesntHave('deletedForUsers', function ($q) use ($userId) {
-            $q->where('message_deletions.user_id', $userId);
-        });
+        return $query
+            ->whereDoesntHave('deletedForUsers', function ($q) use ($userId) {
+                $q->where('message_deletions.user_id', $userId);
+            })
+            ->whereExists(function ($q) use ($userId) {
+                $q->selectRaw('1')
+                    ->from('conversation_participants')
+                    ->whereColumn('conversation_participants.conversation_id', 'messages.conversation_id')
+                    ->where('conversation_participants.user_id', $userId)
+                    ->where(function ($q) {
+                        $q->whereNull('conversation_participants.cleared_at')
+                          ->orWhereColumn('messages.created_at', '>', 'conversation_participants.cleared_at');
+                    });
+            });
     }
 }

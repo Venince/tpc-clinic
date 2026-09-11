@@ -16,23 +16,34 @@ class MessagingService
 {
     public function __construct(private AuditService $auditService) {}
 
-    public function startConversation(int $senderId, int $recipientId, string $subject, string $body, array $attachmentFiles = []): Conversation
+    public function startConversation(int $senderId, int $recipientId, string $body, array $attachmentFiles = []): Conversation
     {
         $sender    = User::findOrFail($senderId);
         $recipient = User::findOrFail($recipientId);
 
-        // Validate allowed conversation pairs
         $this->validateConversationPair($sender, $recipient);
 
-        return DB::transaction(function () use ($senderId, $recipientId, $subject, $body, $attachmentFiles) {
-            $conversation = Conversation::create([
-                'subject'         => $subject,
-                'last_message_at' => now(),
-            ]);
+        return DB::transaction(function () use ($senderId, $recipientId, $body, $attachmentFiles) {
+            $conversation = Conversation::between($senderId, $recipientId)->first();
 
-            $conversation->participants()->attach([$senderId, $recipientId]);
+            if ($conversation) {
+                // Reusing an existing thread. If the sender had previously
+                // deleted it from their own inbox, bring it back into their
+                // list — they're clearly messaging this person again on
+                // purpose — but only reset `deleted_at` (list visibility).
+                // `cleared_at` (the message watermark) is left untouched on
+                // purpose, so messages from before the delete stay hidden
+                // for the sender. Only messages sent from this point on will
+                // show up for them.
+                $conversation->participants()->updateExistingPivot($senderId, ['deleted_at' => null]);
+            } else {
+                $conversation = Conversation::create([
+                    'last_message_at' => now(),
+                ]);
+                $conversation->participants()->attach([$senderId, $recipientId]);
+            }
 
-            $message = $this->addMessage($conversation, $senderId, $body, $attachmentFiles);
+            $this->addMessage($conversation, $senderId, $body, $attachmentFiles);
 
             return $conversation->load('participants', 'messages');
         });
@@ -126,7 +137,17 @@ class MessagingService
             throw ValidationException::withMessages(['conversation' => ['You are not a participant in this conversation.']]);
         }
 
-        $conversation->participants()->updateExistingPivot($userId, ['deleted_at' => now()]);
+        $now = now();
+
+        // `deleted_at` hides the conversation from this user's inbox list.
+        // `cleared_at` is the permanent watermark: messages sent before this
+        // moment will never be shown to this user again for this
+        // conversation, even if it's later revived by a new message. Unlike
+        // `deleted_at`, this value is never reset back to null.
+        $conversation->participants()->updateExistingPivot($userId, [
+            'deleted_at' => $now,
+            'cleared_at' => $now,
+        ]);
 
         $stillVisibleToSomeone = $conversation->participants()
             ->wherePivotNull('deleted_at')

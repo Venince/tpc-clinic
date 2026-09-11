@@ -101,15 +101,14 @@ class MessageController extends Controller
     {
         $data = $request->validate([
             'recipient_id' => ['required', 'exists:users,id'],
-            'subject'      => ['required', 'string', 'max:255'],
             'body'         => ['required', 'string'],
         ]);
 
-        $conversation = Conversation::create(['subject' => $data['subject'], 'last_message_at' => now()]);
-        $conversation->participants()->attach([$request->user()->id, $data['recipient_id']]);
-        $msg = Message::create(['conversation_id' => $conversation->id, 'sender_id' => $request->user()->id, 'body' => $data['body']]);
-
-        User::find($data['recipient_id'])->notify(new NewMessageNotification($msg->load('sender')));
+        $conversation = $this->messagingService->startConversation(
+            $request->user()->id,
+            (int) $data['recipient_id'],
+            $data['body']
+        );
 
         $role = $request->user()->role->name;
         $route = match($role) {
@@ -133,17 +132,10 @@ class MessageController extends Controller
 
         $request->validate(['body' => ['required', 'string']]);
 
-        $msg = Message::create([
-            'conversation_id' => $conversation->id,
-            'sender_id'       => $user->id,
-            'body'            => $request->body,
-        ]);
-        $conversation->update(['last_message_at' => now()]);
-
-        $conversation->participants()
-            ->where('user_id', '!=', $user->id)
-            ->get()
-            ->each(fn($u) => $u->notify(new NewMessageNotification($msg->load('sender'))));
+        // Route through the service (not a raw Message::create) so this reply
+        // gets the same treatment as every other message: notifications, the
+        // conversation's last_message_at bump, and the delete/watermark rules.
+        $this->messagingService->addMessage($conversation, $user->id, $request->body);
 
         return back()->with('success', 'Reply sent.');
     }

@@ -88,15 +88,16 @@ class DashboardController extends Controller
             ->map(fn($s) => ['program' => $s->program?->code ?? 'N/A', 'total' => $s->total]);
 
         // Recent appointments
-        $recentAppointments = Appointment::with(['user:id,name', 'slot'])
+        $recentAppointments = Appointment::with(['user:id,name,profile_photo_path', 'slot'])
             ->latest()->limit(5)->get()
             ->map(fn($a) => [
-                'id'      => $a->id,
-                'patient' => $a->user->name,
-                'purpose' => $a->purpose,
-                'date'    => $a->slot->date->format('M d, Y'),
-                'time'    => $a->slot->start_time,
-                'status'  => $a->status,
+                'id'            => $a->id,
+                'patient'       => $a->user->name,
+                'patient_photo' => $a->user->profile_photo_url,
+                'purpose'       => $a->purpose,
+                'date'          => $a->slot->date->format('M d, Y'),
+                'time'          => $a->slot->start_time,
+                'status'        => $a->status,
             ]);
 
         return Inertia::render('Admin/Dashboard/Index', compact(

@@ -82,11 +82,11 @@ export default function FacultyMessageShow({ conversation, messages }) {
     };
 
     return (
-        <FacultyLayout title={otherParticipant?.name ?? conversation.subject}>
-            <Head title={otherParticipant?.name ?? conversation.subject} />
+        <FacultyLayout title={otherParticipant?.name ?? 'Conversation'}>
+            <Head title={otherParticipant?.name ?? 'Conversation'} />
 
             {/* -m-6 cancels the layout's p-6 so we can go full-height edge-to-edge */}
-            <div className="flex flex-col h-full -m-6">
+            <div className="flex flex-col h-full -m-4 sm:-m-6">
 
                 {/* Header */}
                 <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0">
@@ -101,7 +101,6 @@ export default function FacultyMessageShow({ conversation, messages }) {
                         <p className="font-semibold text-gray-900 truncate text-sm sm:text-base">
                             {otherParticipant?.name ?? 'Unknown'}
                         </p>
-                        <p className="text-xs text-gray-400 truncate">{conversation.subject}</p>
                     </div>
                 </div>
 

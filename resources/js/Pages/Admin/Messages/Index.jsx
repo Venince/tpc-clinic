@@ -12,16 +12,17 @@ export default function MessagesIndex({ conversations, contacts }) {
     const [showContacts, setShowContacts] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(null);
-    const { data, setData, post, processing, errors, reset } = useForm({ recipient_id: '', subject: '', body: '' });
+    const { data, setData, post, processing, errors, reset } = useForm({ recipient_id: '', body: '' });
 
-    // Client-side filter by recipient name or subject
+    // Client-side filter by recipient name or last message text
     const filteredConversations = conversations.data.filter(c => {
         const q = conversationSearch.toLowerCase();
         if (!q) return true;
         const other = c.participants?.find(p => p.id !== auth.user.id);
+        const lastMessage = c.messages?.[0]?.body;
         return (
             other?.name?.toLowerCase().includes(q) ||
-            c.subject?.toLowerCase().includes(q)
+            lastMessage?.toLowerCase().includes(q)
         );
     });
 
@@ -70,7 +71,7 @@ export default function MessagesIndex({ conversations, contacts }) {
                             value={conversationSearch}
                             onChange={e => setConversationSearch(e.target.value)}
                             className="input pl-9 w-full"
-                            placeholder="Search by name or subject…"
+                            placeholder="Search by name or message…"
                         />
                         {conversationSearch && (
                             <button
@@ -86,6 +87,10 @@ export default function MessagesIndex({ conversations, contacts }) {
                 <div className="divide-y divide-gray-100">
                     {filteredConversations.map(c => {
                         const other = c.participants?.find(p => p.id !== auth.user.id) ?? c.participants?.[0];
+                        const lastMessage = c.messages?.[0];
+                        const preview = lastMessage
+                            ? `${lastMessage.sender_id === auth.user.id ? 'You: ' : ''}${lastMessage.body}`
+                            : 'No messages yet';
                         return (
                             <div key={c.id} className="flex items-center gap-2 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors group">
                                 <Link href={route('admin.messages.show', c.id)} className="flex items-start gap-3 flex-1 min-w-0">
@@ -93,13 +98,15 @@ export default function MessagesIndex({ conversations, contacts }) {
                                     <UserAvatar user={other} size="md" className="mt-0.5 flex-shrink-0" />
 
                                     <div className="min-w-0 flex-1">
-                                        {/* Recipient name as conversation title */}
+                                        {/* Recipient name as conversation title, last message as preview */}
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
-                                                <p className="font-medium text-gray-900 truncate text-sm sm:text-base leading-snug">
+                                                <p className={`truncate text-sm sm:text-base leading-snug ${c.unread > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-900'}`}>
                                                     {other?.name ?? 'Unknown'}
                                                 </p>
-                                                <p className="text-xs text-gray-500 truncate">{c.subject}</p>
+                                                <p className={`text-xs truncate ${c.unread > 0 ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
+                                                    {preview}
+                                                </p>
                                             </div>
                                             <div className="flex flex-col items-end flex-shrink-0 gap-0.5">
                                                 {c.unread > 0 && (
@@ -202,12 +209,6 @@ export default function MessagesIndex({ conversations, contacts }) {
                         </div>
 
                         <div>
-                            <label className="label" htmlFor="new-message-subject">Subject</label>
-                            <input id="new-message-subject" name="subject" value={data.subject} onChange={e => setData('subject', e.target.value)} className={`input ${errors.subject ? 'input-error' : ''}`} placeholder="What's this about?" />
-                            {errors.subject && <p className="error-msg">{errors.subject}</p>}
-                        </div>
-
-                        <div>
                             <label className="label" htmlFor="new-message-body">Message</label>
                             <textarea id="new-message-body" name="body" value={data.body} onChange={e => setData('body', e.target.value)} className={`input ${errors.body ? 'input-error' : ''}`} rows={4} placeholder="Write your message…" />
                             {errors.body && <p className="error-msg">{errors.body}</p>}
@@ -232,7 +233,10 @@ export default function MessagesIndex({ conversations, contacts }) {
                     </div>
                     <div className="px-5 py-4">
                         <p className="text-sm text-gray-500 mb-5">
-                            This will permanently delete <span className="font-medium text-gray-700">"{confirmDelete.subject}"</span> and all its messages. This cannot be undone.
+                            This will delete your conversation with{' '}
+                            <span className="font-medium text-gray-700">
+                                {confirmDelete.participants?.find(p => p.id !== auth.user.id)?.name ?? 'this person'}
+                            </span>. They'll keep their copy, and if you message them again it'll start fresh — this conversation's messages won't come back.
                         </p>
                         <div className="flex flex-col-reverse sm:flex-row gap-2.5">
                             <button onClick={() => setConfirmDelete(null)} className="btn-secondary w-full justify-center">Cancel</button>

@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import UserAvatar from '@/Components/Common/UserAvatar';
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
     ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip,
@@ -291,19 +292,19 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                 />
             )}
 
-            {/* Charts row */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                        {/* Charts row */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 xl:items-stretch">
 
                 {/* Appointment Trend */}
-                <div className="card"
+                <div className="card flex flex-col xl:h-[420px]"
                     onMouseEnter={() => { trendPaused.current = true; }}
                     onMouseLeave={() => { trendPaused.current = false; }}
                 >
                     <div className="card-header">
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Appointment Trends (6 months)</h3>
                     </div>
-                    <div className="card-body pt-2">
-                        <div className="relative" ref={trendContainerRef}>
+                    <div className="card-body pt-2 flex-1 min-h-0">
+                        <div className="relative h-full min-h-[220px]" ref={trendContainerRef}>
                             <FloatingTooltip
                                 containerRef={trendContainerRef}
                                 index={trendIndex}
@@ -317,7 +318,7 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                                     </>
                                 )}
                             />
-                            <ResponsiveContainer width="100%" height={200}>
+                            <ResponsiveContainer width="100%" height="100%">
                                 <LineChart
                                     data={appointmentTrend}
                                     margin={{ left: -20, right: 8, top: 8, bottom: 0 }}
@@ -331,7 +332,7 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                                     <YAxis tick={{ fontSize: 10 }} width={28} />
                                     <Tooltip content={() => null} />
                                     <Legend wrapperStyle={{ fontSize: '11px' }} />
-                                    {['pending', 'approved', 'declined'].map((key, ki) => {
+                                    {['pending', 'approved', 'declined'].map((key) => {
                                         const colors = { pending: '#f59e0b', approved: '#10b981', declined: '#ef4444' };
                                         return (
                                             <Line key={key} type="monotone" dataKey={key} stroke={colors[key]} strokeWidth={2}
@@ -360,67 +361,50 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                 </div>
 
                 {/* Medicine Stock */}
-                <div className="card"
-                    onMouseEnter={() => { stockPaused.current = true; }}
-                    onMouseLeave={() => { stockPaused.current = false; }}
-                >
-                    <div className="card-header">
+                <div className="card flex flex-col xl:h-[420px]">
+                    <div className="card-header flex items-center justify-between">
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Medicine Stock Overview</h3>
+                        {medicineStock?.length > 0 && (
+                            <span className="text-xs text-gray-400">{medicineStock.length} shown, lowest stock first</span>
+                        )}
                     </div>
-                    <div className="card-body pt-2">
-                        <div className="relative" ref={stockContainerRef}>
-                            <FloatingTooltip
-                                containerRef={stockContainerRef}
-                                index={stockIndex}
-                                data={medicineStock}
-                                direction="vertical"
-                                renderContent={(d) => {
-                                    const color = d.status === 'out' ? '#ef4444' : d.status === 'low' ? '#f59e0b' : '#10b981';
-                                    return (
-                                        <>
-                                            <p className="font-semibold text-gray-700 mb-1">{d.name}</p>
-                                            <p style={{ color }}>quantity : {d.quantity}</p>
-                                        </>
-                                    );
-                                }}
-                            />
-                            <ResponsiveContainer width="100%" height={Math.max(200, (medicineStock?.length || 5) * 28)}>
-                                <BarChart
-                                    data={medicineStock?.map(m => ({ ...m, name: truncateName(m.name) }))}
-                                    layout="vertical"
-                                    margin={{ left: 0, right: 8, top: 4, bottom: 4 }}
-                                    onMouseMove={(state) => {
-                                        if (stockPaused.current && state?.activeTooltipIndex != null)
-                                            setStockIndex(state.activeTooltipIndex);
+                    <div className="card-body pt-2 flex-1 min-h-0 overflow-y-auto">
+                        <ResponsiveContainer width="100%" height={Math.max(200, (medicineStock?.length || 5) * 32)}>
+                            <BarChart
+                                data={medicineStock?.map(m => ({ ...m, fullName: m.name, name: truncateName(m.name) }))}
+                                layout="vertical"
+                                margin={{ left: 0, right: 8, top: 4, bottom: 4 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <XAxis type="number" tick={{ fontSize: 10 }} />
+                                <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    tick={{ fontSize: 9 }}
+                                    width={yAxisWidth}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                    content={({ active, payload }) => {
+                                        if (!active || !payload?.length) return null;
+                                        const d = payload[0].payload;
+                                        const color = d.status === 'out' ? '#ef4444' : d.status === 'low' ? '#f59e0b' : '#10b981';
+                                        return (
+                                            <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm min-w-[140px]">
+                                                <p className="font-semibold text-gray-700 mb-1">{d.fullName}</p>
+                                                <p style={{ color }}>quantity : {d.quantity}</p>
+                                            </div>
+                                        );
                                     }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                    <XAxis type="number" tick={{ fontSize: 10 }} />
-                                    <YAxis
-                                        dataKey="name"
-                                        type="category"
-                                        tick={{ fontSize: 9 }}
-                                        width={yAxisWidth}
-                                    />
-                                    <Tooltip content={() => null} />
-                                    <Bar dataKey="quantity" radius={[0, 4, 4, 0]} isAnimationActive={false}>
-                                        {medicineStock?.map((m, i) => {
-                                            const isActive = i === stockIndex;
-                                            const color = m.status === 'out' ? '#ef4444' : m.status === 'low' ? '#f59e0b' : '#10b981';
-                                            return (
-                                                <Cell
-                                                    key={`${i}-${isActive}`}
-                                                    fill={color}
-                                                    style={{
-                                                        animation: `${isActive ? 'barFadeIn' : 'barFadeOut'} 1200ms cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
+                                />
+                                <Bar dataKey="quantity" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                                    {medicineStock?.map((m, i) => {
+                                        const color = m.status === 'out' ? '#ef4444' : m.status === 'low' ? '#f59e0b' : '#10b981';
+                                        return <Cell key={i} fill={color} />;
+                                    })}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
             </div>
@@ -468,7 +452,12 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                             <tbody>
                                 {recentAppointments?.map(a => (
                                     <tr key={a.id}>
-                                        <td className="font-medium whitespace-nowrap">{a.patient}</td>
+                                        <td className="font-medium whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                <UserAvatar user={{ name: a.patient, profile_photo_url: a.patient_photo }} size="sm" />
+                                                <span>{a.patient}</span>
+                                            </div>
+                                        </td>
                                         <td className="text-gray-500 whitespace-nowrap">{a.purpose}</td>
                                         <td className="whitespace-nowrap">{a.date}</td>
                                         <td className="whitespace-nowrap">{a.time}</td>

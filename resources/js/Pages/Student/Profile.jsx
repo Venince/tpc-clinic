@@ -123,7 +123,7 @@ export default function StudentProfile({ profile, programs }) {
                                     id="block"
                                     value={data.block}
                                     onChange={val => setData('block', val)}
-                                    options={Array.from({ length: 20 }, (_, i) => i + 1).map(b => ({ value: b, label: `Block ${b}` }))}
+                                    options={Array.from({ length: 20 }, (_, i) => String(i + 1)).map(b => ({ value: b, label: `Block ${b}` }))}
                                     error={errors.block}
                                 />
                                 {errors.block && <p className="error-msg">{errors.block}</p>}
@@ -136,7 +136,7 @@ export default function StudentProfile({ profile, programs }) {
                                     id="birth_date"
                                     name="birth_date"
                                     type="date"
-                                    autoComplete="bday"
+                                    autoComplete="off"
                                     value={data.birth_date}
                                     onChange={e => setData('birth_date', e.target.value)}
                                     className={`input ${errors.birth_date ? 'input-error' : ''}`}
