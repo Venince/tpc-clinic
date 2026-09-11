@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 // Maps notification type + role to the correct route
 function resolveUrl(notif, role) {
     if (!role) return null;
-    const { type, record_id, conversation_id } = notif.data ?? {};
+    const { type, record_id, conversation_id, date } = notif.data ?? {};
     const convId  = conversation_id ?? record_id;
     const isAdmin = role === 'admin' || role === 'super_admin';
     const prefix  = isAdmin ? 'admin' : (role === 'faculty_staff' ? 'faculty' : role);
@@ -39,6 +39,11 @@ function resolveUrl(notif, role) {
 
         case 'NewMedicineRequestNotification':
             return route('admin.medicine.requests');
+
+        case 'NewAppointmentNotification':
+            return date
+                ? route('admin.appointments.list', { date_from: date, date_to: date })
+                : route('admin.appointments.list');
 
         case 'LowStockAlertNotification':
             return route('admin.medicine.index');

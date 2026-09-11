@@ -3,7 +3,7 @@ import { BellIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 
 function resolveUrl(notif, role) {
-    const { type, record_id, conversation_id } = notif.data ?? {};
+    const { type, record_id, conversation_id, date } = notif.data ?? {};
     const convId  = conversation_id ?? record_id;
     const isAdmin = role === 'admin' || role === 'super_admin';
     const prefix  = isAdmin ? 'admin' : (role === 'faculty_staff' ? 'faculty' : role);
@@ -28,6 +28,11 @@ function resolveUrl(notif, role) {
 
         case 'AppointmentStatusNotification':
             return route(`${prefix}.appointments.index`);
+
+        case 'NewAppointmentNotification':
+            return date
+                ? route('admin.appointments.list', { date_from: date, date_to: date })
+                : route('admin.appointments.list');
 
         case 'MedicineRequestStatusNotification':
             return isAdmin

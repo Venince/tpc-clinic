@@ -3,13 +3,15 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
+use App\Services\AppointmentService;
 use App\Support\PhilippineHolidays;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AppointmentController extends Controller
 {
+    public function __construct(private AppointmentService $appointmentService) {}
+
     private function isStudent(Request $request): bool
     {
         return $request->user()->role->name === 'student';
@@ -123,22 +125,9 @@ class AppointmentController extends Controller
             'notes'               => ['nullable','string'],
         ]);
 
-        $slot = AppointmentSlot::lockForUpdate()->find($data['appointment_slot_id']);
+        $this->appointmentService->book($data, $request->user()->id);
 
-        if (!$slot || !$slot->is_available || $slot->isFullyBooked()) {
-            return back()->with('error','This slot is not available.');
-        }
-        if (Appointment::where('user_id',$request->user()->id)->where('appointment_slot_id',$slot->id)->whereNotIn('status',['declined','cancelled'])->exists()) {
-            return back()->with('error','You already have a booking for this slot.');
-        }
-
-        DB::transaction(function() use($data,$request,$slot) {
-            Appointment::create(array_merge($data,['user_id'=>$request->user()->id,'status'=>'pending']));
-            $slot->increment('booked_count');
-            if ($slot->fresh()->isFullyBooked()) $slot->update(['is_available'=>false]);
-        });
-
-        return back()->with('success','Appointment booked successfully.');
+        return back()->with('success', 'Appointment booked successfully.');
     }
 
     public function cancel(Request $request, Appointment $appointment)

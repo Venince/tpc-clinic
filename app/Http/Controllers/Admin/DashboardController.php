@@ -71,7 +71,7 @@ class DashboardController extends Controller
         $medicineStock = Medicine::where('is_active', true)
             ->select('name', 'quantity', 'reorder_level')
             ->orderBy('quantity')
-            ->limit(8)
+            ->limit(20)
             ->get()
             ->map(fn($m) => [
                 'name'     => $m->name,

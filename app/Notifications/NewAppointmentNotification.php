@@ -31,6 +31,7 @@ class NewAppointmentNotification extends Notification implements ShouldQueue
         return [
             'type'      => 'NewAppointmentNotification',
             'record_id' => $this->record->id ?? null,
+            'date'      => $this->record->slot?->date?->toDateString(),
             'message'   => $this->message(),
             'status'    => 'pending',
         ];
