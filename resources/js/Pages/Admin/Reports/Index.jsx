@@ -1,6 +1,6 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DocumentArrowDownIcon, PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import Modal from '@/Components/UI/Modal';
 
@@ -53,6 +53,26 @@ export default function Reports({ reports }) {
     };
 
     const closeForm = () => { setShowForm(false); reset(); };
+
+    // Poll for status updates while any report is still pending/processing,
+    // since generation happens in a background job and the page won't
+    // otherwise know a report finished until it's manually refreshed.
+    const hasActiveReports = reports.data.some(r => r.status === 'pending' || r.status === 'processing');
+    const pollingRef = useRef(null);
+
+    useEffect(() => {
+        if (!hasActiveReports) return;
+
+        pollingRef.current = setInterval(() => {
+            router.reload({
+                only: ['reports'],
+                preserveScroll: true,
+                preserveState: true,
+            });
+        }, 4000);
+
+        return () => clearInterval(pollingRef.current);
+    }, [hasActiveReports]);
 
     return (
         <AdminLayout title="Reports">
