@@ -35,7 +35,6 @@ export default function FacultyProfile({ profile, programs }) {
             <div className="max-w-2xl mx-auto">
                 <div className="page-header">
                     <div>
-                        <h2 className="page-title">My Profile</h2>
                         <p className="page-subtitle">Update your personal information</p>
                     </div>
                 </div>

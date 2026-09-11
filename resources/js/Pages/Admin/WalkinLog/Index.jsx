@@ -130,7 +130,6 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
             {/* ── Page header ── */}
             <div className="flex items-start justify-between gap-3 mb-5">
                 <div>
-                    <h2 className="page-title">Walk-in Log</h2>
                     <p className="page-subtitle">Record and track unscheduled clinic visits</p>
                 </div>
                 <button onClick={() => setShowCreate(true)} className="btn-primary btn-sm whitespace-nowrap flex-shrink-0">

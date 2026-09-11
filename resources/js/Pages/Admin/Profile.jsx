@@ -37,7 +37,6 @@ export default function AdminProfile({ profile }) {
                 {/* ── Page header ── */}
                 <div className="page-header">
                     <div>
-                        <h2 className="page-title">My Profile</h2>
                         <p className="page-subtitle">Manage your account information</p>
                     </div>
                 </div>

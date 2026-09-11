@@ -89,8 +89,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
         <AdminLayout title="Medical Requirements">
             <Head title="Requirements" />
 
-            <div className="flex items-start justify-between gap-3 mb-6">
-                <h2 className="page-title">Medical Requirements</h2>
+            <div className="flex items-center justify-center gap-3 -mt-4 mb-4">
                 <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={() => document.getElementById('submissions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}

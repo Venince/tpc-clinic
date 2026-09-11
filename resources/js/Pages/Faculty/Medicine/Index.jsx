@@ -29,7 +29,6 @@ export default function FacultyMedicine({ medicines, myRequests }) {
 
             <div className="page-header">
                 <div>
-                    <h2 className="page-title">Medicine Request</h2>
                     <p className="page-subtitle">Request medicine from the clinic</p>
                 </div>
             </div>

@@ -58,6 +58,11 @@
 }
 
 @layer utilities {
+    .min-h-screen-safe {
+        min-height: 100vh;
+        min-height: var(--app-height, 100vh);
+    }
+
     .animate-slide-up {
         animation: slideUp 0.5s ease-out both;
     }

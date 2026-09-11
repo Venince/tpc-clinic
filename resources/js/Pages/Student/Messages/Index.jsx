@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import StudentLayout from '@/Layouts/StudentLayout';
 import { useState } from 'react';
-import { PlusIcon, ChatBubbleLeftIcon, TrashIcon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, ChatBubbleLeftIcon, TrashIcon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import Modal from '@/Components/UI/Modal';
 
@@ -53,37 +53,37 @@ export default function StudentMessagesIndex({ conversations, contacts }) {
             <Head title="Messages" />
 
             {/* Page header */}
-            <div className="page-header flex-wrap gap-y-3">
-                <div><h2 className="page-title">Messages</h2></div>
-                <button onClick={() => setShowNew(true)} className="btn-primary btn-sm w-full sm:w-auto justify-center">
-                    <PlusIcon className="w-4 h-4 mr-1" />New Message
+            <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                    <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                        id="conversation-search"
+                        name="conversation-search"
+                        value={conversationSearch}
+                        onChange={e => setConversationSearch(e.target.value)}
+                        className="input pl-9 w-full"
+                        placeholder="Search by name or message…"
+                    />
+                    {conversationSearch && (
+                        <button
+                            onClick={() => setConversationSearch('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <XMarkIcon className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+                <button
+                    onClick={() => setShowNew(true)}
+                    className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors flex-shrink-0"
+                    title="New Message"
+                    aria-label="New Message"
+                >
+                    <PencilSquareIcon className="w-5 h-5" />
                 </button>
             </div>
 
             <div className="card">
-                {/* Search bar */}
-                <div className="px-4 sm:px-6 py-3 border-b border-gray-100">
-                    <div className="relative">
-                        <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                            id="conversation-search"
-                            name="conversation-search"
-                            value={conversationSearch}
-                            onChange={e => setConversationSearch(e.target.value)}
-                            className="input pl-9 w-full"
-                            placeholder="Search by name or message…"
-                        />
-                        {conversationSearch && (
-                            <button
-                                onClick={() => setConversationSearch('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                <XMarkIcon className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
                 <div className="divide-y divide-gray-100">
                     {filteredConversations.map(c => {
                         const other = c.participants?.find(p => p.id !== auth.user.id) ?? c.participants?.[0];

@@ -27,7 +27,6 @@ export default function StudentSurvey({ questions, answers, completed }) {
             <div className="max-w-2xl mx-auto">
                 <div className="page-header">
                     <div>
-                        <h2 className="page-title">Health Survey</h2>
                         <p className="page-subtitle">Please answer all required questions honestly.</p>
                     </div>
                     {completed && (

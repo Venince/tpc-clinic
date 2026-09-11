@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import FacultyLayout from '@/Layouts/FacultyLayout';
 import { useState } from 'react';
-import { PlusIcon, ChatBubbleLeftIcon, TrashIcon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, ChatBubbleLeftIcon, TrashIcon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import Modal from '@/Components/UI/Modal';
 
@@ -14,7 +14,6 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
     const [confirmDelete, setConfirmDelete] = useState(null);
     const { data, setData, post, processing, errors, reset } = useForm({ recipient_id: '', body: '' });
 
-    // Client-side filter by recipient name or last message text
     const filteredConversations = conversations.data.filter(c => {
         const q = conversationSearch.toLowerCase();
         if (!q) return true;
@@ -53,37 +52,37 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
             <Head title="Messages" />
 
             {/* Page header */}
-            <div className="page-header flex-wrap gap-y-3">
-                <div><h2 className="page-title">Messages</h2></div>
-                <button onClick={() => setShowNew(true)} className="btn-primary btn-sm w-full sm:w-auto justify-center">
-                    <PlusIcon className="w-4 h-4 mr-1" />New Message
+            <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                    <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                        id="conversation-search"
+                        name="conversation-search"
+                        value={conversationSearch}
+                        onChange={e => setConversationSearch(e.target.value)}
+                        className="input pl-9 w-full"
+                        placeholder="Search by name or message…"
+                    />
+                    {conversationSearch && (
+                        <button
+                            onClick={() => setConversationSearch('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <XMarkIcon className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+                <button
+                    onClick={() => setShowNew(true)}
+                    className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors flex-shrink-0"
+                    title="New Message"
+                    aria-label="New Message"
+                >
+                    <PencilSquareIcon className="w-5 h-5" />
                 </button>
             </div>
 
             <div className="card">
-                {/* Search bar */}
-                <div className="px-4 sm:px-6 py-3 border-b border-gray-100">
-                    <div className="relative">
-                        <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                            id="conversation-search"
-                            name="conversation-search"
-                            value={conversationSearch}
-                            onChange={e => setConversationSearch(e.target.value)}
-                            className="input pl-9 w-full"
-                            placeholder="Search by name or message…"
-                        />
-                        {conversationSearch && (
-                            <button
-                                onClick={() => setConversationSearch('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                <XMarkIcon className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
                 <div className="divide-y divide-gray-100">
                     {filteredConversations.map(c => {
                         const other = c.participants?.find(p => p.id !== auth.user.id) ?? c.participants?.[0];
@@ -94,11 +93,9 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
                         return (
                             <div key={c.id} className="flex items-center gap-2 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors group">
                                 <Link href={route('faculty.messages.show', c.id)} className="flex items-start gap-3 flex-1 min-w-0">
-                                    {/* Recipient avatar */}
                                     <UserAvatar user={other} size="md" className="mt-0.5 flex-shrink-0" />
 
                                     <div className="min-w-0 flex-1">
-                                        {/* Recipient name as conversation title, last message as preview */}
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
                                                 <p className={`truncate text-sm sm:text-base leading-snug ${c.unread > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-900'}`}>
@@ -120,7 +117,6 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
                                     </div>
                                 </Link>
 
-                                {/* Delete */}
                                 <button
                                     onClick={() => setConfirmDelete(c)}
                                     className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg flex-shrink-0"
@@ -151,7 +147,6 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
             {/* New Message Modal */}
             {showNew && (
                 <Modal onClose={closeNew} size="md">
-                    {/* Header */}
                     <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
                         <h3 className="font-semibold text-gray-900">New Message to Clinic</h3>
                         <button onClick={closeNew} className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
@@ -159,9 +154,7 @@ export default function FacultyMessagesIndex({ conversations, contacts }) {
                         </button>
                     </div>
 
-                    {/* Form */}
                     <form onSubmit={submit} className="px-5 py-4 space-y-4">
-                        {/* Recipient */}
                         <div className="relative">
                             <label className="label" htmlFor="recipient-search">To</label>
                             <input

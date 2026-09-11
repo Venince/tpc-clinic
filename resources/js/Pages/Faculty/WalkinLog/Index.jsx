@@ -55,7 +55,6 @@ export default function FacultyWalkinLog({ logs, highlight }) {
             <div className="max-w-2xl mx-auto">
 
                 <div className="mb-5">
-                    <h2 className="page-title">Walk-in History</h2>
                     <p className="page-subtitle">Your unscheduled clinic visit records</p>
                 </div>
 

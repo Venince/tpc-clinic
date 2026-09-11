@@ -59,7 +59,6 @@ export default function Programs({ programs }) {
             {/* Header */}
             <div className="page-header">
                 <div>
-                    <h2 className="page-title">Academic Programs</h2>
                     <p className="page-subtitle">Manage college programs and view enrolled students</p>
                 </div>
                 <button onClick={() => open(null)} className="btn-primary btn-sm">

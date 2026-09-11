@@ -104,8 +104,8 @@ export default function MessagesShow({ conversation, messages }) {
                     </div>
                 </div>
 
-                {/* Message list */}
-                <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4 bg-gray-50">
+                {/* Message list — extra bottom padding on mobile clears the fixed reply box below */}
+                <div className="flex-1 overflow-y-auto px-3 sm:px-4 pt-4 pb-24 lg:pb-4 space-y-4 bg-gray-50">
                     {orderedMessages.map(msg => {
                         const isOwn = msg.sender_id === auth.user.id;
                         const isMenuOpen = openMenuId === msg.id;
@@ -163,8 +163,8 @@ export default function MessagesShow({ conversation, messages }) {
                     <div ref={bottomRef} />
                 </div>
 
-                {/* Reply box */}
-                <div className="px-4 py-3 bg-white border-t border-gray-200 flex-shrink-0">
+                {/* Reply box — fixed to the real viewport bottom on mobile, back in normal flow on desktop */}
+                <div className="fixed inset-x-0 bottom-0 z-30 lg:static lg:inset-auto lg:z-auto px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-3 bg-white border-t border-gray-200 flex-shrink-0">
                     <form onSubmit={submit} className="flex gap-2 items-end">
                         <textarea
                             id="reply-body"

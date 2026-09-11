@@ -31,7 +31,6 @@ export default function UsersImport({ roles }) {
 
             <div className="page-header">
                 <div>
-                    <h2 className="page-title">Bulk Import Users</h2>
                     <p className="page-subtitle">Upload a .txt file with one email per line</p>
                 </div>
                 <Link href={route('admin.users.index')} className="btn-secondary btn-sm">

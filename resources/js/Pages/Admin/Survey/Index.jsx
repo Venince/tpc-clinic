@@ -59,7 +59,6 @@ export default function SurveyIndex({ questions, responses, filters, role_tab })
 
             <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
-                    <h2 className="page-title">Health Survey</h2>
                     <p className="page-subtitle">Build and manage the health survey form</p>
                 </div>
                 {tab === 'questions' && (

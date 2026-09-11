@@ -36,7 +36,6 @@ export default function StudentRequirements({ types, requirements }) {
 
             <div className="page-header">
                 <div>
-                    <h2 className="page-title">Medical Requirements</h2>
                     <p className="page-subtitle">Upload your required medical documents</p>
                 </div>
             </div>

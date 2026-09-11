@@ -61,7 +61,6 @@ export default function Reports({ reports }) {
             {/* ── Page header ── */}
             <div className="page-header">
                 <div>
-                    <h2 className="page-title">Reports</h2>
                     <p className="page-subtitle">Generate and download clinic reports</p>
                 </div>
                 <button onClick={() => setShowForm(true)} className="btn-primary btn-sm">

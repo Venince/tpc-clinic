@@ -80,7 +80,7 @@ export default function FacultyLayout({ children, title }) {
     );
 
     return (
-        <div className="min-h-screen min-h-[100dvh] bg-gray-50 lg:flex">
+        <div className="min-h-screen-safe bg-gray-50 lg:flex">
             {/* Desktop sidebar — sticky, scrolls independently of the page */}
             <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:h-screen lg:sticky lg:top-0 bg-white border-r border-gray-200 flex-shrink-0">
                 <SidebarContent />
@@ -103,7 +103,7 @@ export default function FacultyLayout({ children, title }) {
                 </aside>
             </div>
 
-            <div className="flex flex-col min-h-screen min-h-[100dvh] lg:flex-1 min-w-0">
+            <div className="flex flex-col min-h-screen-safe lg:flex-1 min-w-0">
                 <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 flex-shrink-0 min-w-0">
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <button onClick={() => setOpen(true)} className="lg:hidden text-gray-500 flex-shrink-0">

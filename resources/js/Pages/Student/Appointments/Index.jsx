@@ -42,7 +42,6 @@ export default function StudentAppointments({ appointments, slots }) {
 
             <div className="page-header flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div>
-                    <h2 className="page-title">Appointments</h2>
                     <p className="page-subtitle">Book and manage your clinic appointments</p>
                 </div>
                 {/* Side-by-side on every breakpoint; compact padding/text on mobile, full size from sm+ */}

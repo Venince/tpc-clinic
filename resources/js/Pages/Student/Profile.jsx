@@ -57,7 +57,6 @@ export default function StudentProfile({ profile, programs }) {
                 {/* Editable profile */}
                 <div className="card">
                     <div className="card-header">
-                        <h3 className="font-semibold text-gray-900">My Profile</h3>
                         <p className="text-xs text-gray-400 mt-0.5">
                             Keep your information up to date. Fields marked <span className="text-red-500">*</span> are required.
                         </p>

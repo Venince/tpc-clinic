@@ -93,7 +93,6 @@ export default function NotificationsPage({ notifications, notificationsRoute, r
             {/* ── Page header ── */}
             <div className="page-header">
                 <div>
-                    <h2 className="page-title">Notifications</h2>
                     <p className="page-subtitle">Tap a notification to go to the relevant page.</p>
                 </div>
 

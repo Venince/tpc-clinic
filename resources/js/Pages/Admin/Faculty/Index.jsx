@@ -26,12 +26,7 @@ export default function Faculty({ faculty }) {
         <AdminLayout title="Faculty & Staff">
             <Head title="Faculty & Staff" />
 
-            <div className="page-header">
-                <div>
-                    <h2 className="page-title">Faculty &amp; Staff</h2>
-                    <p className="page-subtitle">View all faculty and staff records</p>
-                </div>
-            </div>
+            <p className="text-sm text-gray-500">View all faculty and staff records</p>
 
             <div className="card">
                 <div className="px-4 sm:px-6 py-4 border-b border-gray-100">

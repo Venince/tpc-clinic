@@ -31,7 +31,6 @@ export default function UsersIndex({ users, filters, roles, auth }) {
             {/* Header */}
             <div className="page-header flex flex-col sm:flex-row sm:items-center gap-3">
                 <div>
-                    <h2 className="page-title">Users</h2>
                     <p className="page-subtitle">Manage all system accounts</p>
                 </div>
                 <div className="flex gap-2 sm:ml-auto">

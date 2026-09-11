@@ -38,7 +38,6 @@ export default function AnnouncementsIndex({ announcements }) {
             {/* Page header — stacks on mobile */}
             <div className="page-header flex-wrap gap-y-3">
                 <div>
-                    <h2 className="page-title">Announcements</h2>
                 </div>
                 <button onClick={() => open(null)} className="btn-primary btn-sm w-full sm:w-auto justify-center">
                     <PlusIcon className="w-4 h-4 mr-1" />
