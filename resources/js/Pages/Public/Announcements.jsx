@@ -83,9 +83,6 @@ export default function PublicAnnouncements({ announcements }) {
                                             <p className="text-xs text-clinic-500 uppercase mt-0.5">{new Date(a.published_at).toLocaleString('default', { month: 'short' })}</p>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full mb-2 ${catColor(a.category)}`}>
-                                                {a.category}
-                                            </span>
                                             <h2 className="font-semibold text-gray-900 text-lg mb-1">{a.title}</h2>
                                             <p className="text-gray-500 text-sm leading-relaxed">{a.content}</p>
                                         </div>

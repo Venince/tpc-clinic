@@ -114,11 +114,7 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
                 <div className="page-fade">
                 {/* ── Hero ── */}
                 <section className="section-animate grid grid-cols-1 md:grid-cols-2 items-center">
-                    <div className="flex flex-col justify-center px-6 md:px-12 py-10 md:py-16">
-                        <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-3 py-1.5 mb-5 w-fit">
-                            <span className="w-1.5 h-1.5 rounded-full bg-clinic-500 animate-pulse"></span>
-                            <span className="text-sm text-clinic-700 font-medium">Talibon Polytechnic College</span>
-                        </div>
+                    <div className="flex flex-col justify-center px-6 md:px-12 pt-6 pb-10 md:py-16">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4 md:mb-5">
                             Excellence in <span className="text-clinic-600">Clinical Care</span> for the TPC Community.
                         </h1>
@@ -209,17 +205,12 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         {services.map(s => (
                             <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-3">
-                                <div className="flex items-start justify-between">
-                                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${tagStyles[s.tag_type] || tagStyles.available}`}>
-                                        {s.tag}
-                                    </span>
-                                    {isAdmin && (
-                                        <div className="flex gap-2">
-                                            <button onClick={() => openEdit(s)} className="text-gray-400 hover:text-clinic-600 transition-colors"><PencilIcon className="w-4 h-4" /></button>
-                                            <button onClick={() => { if (confirm('Delete this service?')) router.delete(route('admin.services.destroy', s.id)); }} className="text-gray-400 hover:text-red-500 transition-colors"><TrashIcon className="w-4 h-4" /></button>
-                                        </div>
-                                    )}
-                                </div>
+                                {isAdmin && (
+                                    <div className="flex items-start justify-end gap-2">
+                                        <button onClick={() => openEdit(s)} className="text-gray-400 hover:text-clinic-600 transition-colors"><PencilIcon className="w-4 h-4" /></button>
+                                        <button onClick={() => { if (confirm('Delete this service?')) router.delete(route('admin.services.destroy', s.id)); }} className="text-gray-400 hover:text-red-500 transition-colors"><TrashIcon className="w-4 h-4" /></button>
+                                    </div>
+                                )}
                                 <div>
                                     <h3 className="font-semibold text-gray-900 text-sm mb-1">{s.title}</h3>
                                     <p className="text-xs text-gray-500 leading-relaxed">{s.description}</p>
@@ -252,7 +243,6 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
                                     <p className="text-xs text-clinic-500 uppercase mt-0.5">{new Date(a.published_at).toLocaleString('default',{month:'short'})}</p>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full mb-2 ${catColor(a.category)}`}>{a.category}</span>
                                     <h3 className="font-semibold text-gray-900 text-sm mb-1">{a.title}</h3>
                                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{a.content}</p>
                                 </div>
