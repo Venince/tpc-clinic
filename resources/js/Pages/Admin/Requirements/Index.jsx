@@ -3,7 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import {
     PlusIcon, TrashIcon, CheckIcon, XMarkIcon,
-    EyeIcon, MagnifyingGlassIcon, ExclamationTriangleIcon, ArrowDownIcon,
+    EyeIcon, MagnifyingGlassIcon, ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import Modal from '@/Components/UI/Modal';
@@ -12,6 +12,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
     const { auth } = usePage().props;
     const isSuperAdmin = auth?.user?.role?.name === 'super_admin';
 
+    const [tab, setTab]               = useState('requirements');
     const [showAdd, setShowAdd]       = useState(false);
     const [reviewing, setReviewing]   = useState(null);
     const [previewing, setPreviewing] = useState(null);
@@ -89,39 +90,55 @@ export default function RequirementsIndex({ types, requirements, programs, filte
         <AdminLayout title="Medical Requirements">
             <Head title="Requirements" />
 
-            <div className="flex items-center justify-center gap-3 -mt-4 mb-4">
-                <div className="flex items-center gap-2 shrink-0">
-                    <button
-                        onClick={() => document.getElementById('submissions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        className="btn-secondary btn-sm flex items-center gap-1"
-                    >
-                        <ArrowDownIcon className="w-4 h-4" />
-                        <span className="hidden sm:inline">Jump to Submissions</span>
-                    </button>
-                    {isSuperAdmin && (
-                        <button onClick={() => setShowClear(true)} className="btn-danger btn-sm flex items-center gap-1">
-                            <TrashIcon className="w-4 h-4" />
-                            <span className="hidden sm:inline">Clear Submissions</span>
-                        </button>
-                    )}
-                    <button onClick={() => setShowAdd(true)} className="btn-primary btn-sm flex items-center gap-1">
+            <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                    <p className="page-subtitle">Manage requirement types and review student/faculty submissions</p>
+                </div>
+                {tab === 'requirements' && (
+                    <button onClick={() => setShowAdd(true)} className="btn-primary btn-sm whitespace-nowrap flex items-center gap-1">
                         <PlusIcon className="w-4 h-4" />
                         <span className="hidden sm:inline">Add Type</span>
                     </button>
-                </div>
+                )}
+                {tab === 'submissions' && isSuperAdmin && (
+                    <button onClick={() => setShowClear(true)} className="btn-danger btn-sm whitespace-nowrap flex items-center gap-1">
+                        <TrashIcon className="w-4 h-4" />
+                        <span className="hidden sm:inline">Clear Submissions</span>
+                    </button>
+                )}
             </div>
 
-            {/* Requirement Types */}
-            <div className="card mb-6">
-                <div className="card-header">
-                    <h3 className="font-semibold text-gray-900">Requirement Types</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                        Required types must be uploaded by students before they can access the portal.
-                    </p>
-                </div>
-                <div className="divide-y divide-gray-100">
-                    {types.map(t => (
-                        <div key={t.id} className="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Content Tabs — Requirements vs Submissions */}
+            <div className="flex gap-1 mb-6 border-b border-gray-200">
+                {[['requirements', 'Requirements'], ['submissions', 'Submissions']].map(([key, label]) => (
+                    <button key={key} onClick={() => setTab(key)}
+                        className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                            tab === key
+                                ? 'border-clinic-600 text-clinic-700'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}>
+                        {label}
+                        {key === 'submissions' && (
+                            <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
+                                {requirements?.total || 0}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {/* Requirements Tab */}
+            {tab === 'requirements' && (
+                <div className="card mb-6">
+                    <div className="card-header">
+                        <h3 className="font-semibold text-gray-900">Requirement Types</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                            Required types must be uploaded by students before they can access the portal.
+                        </p>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                        {types.map(t => (
+                            <div key={t.id} className="px-4 md:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className="font-medium text-gray-900 break-words">{t.name}</p>
@@ -143,203 +160,126 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                     {t.description && <p className="text-xs text-gray-400 break-words">{t.description}</p>}
                                     <p className="text-xs text-gray-400 mt-0.5">{t.user_requirements_count} submissions</p>
                                 </div>
-                            <div className="flex items-center gap-3 flex-shrink-0 self-start sm:self-center">
-                                {/* Required toggle */}
-                                <label className="flex items-center gap-1.5 cursor-pointer select-none" title={t.is_required ? 'Mark as optional' : 'Mark as required'}>
-                                    <span className="text-xs text-gray-500 hidden sm:inline">
-                                        {t.is_required ? 'Required' : 'Optional'}
-                                    </span>
+                                <div className="flex items-center gap-3 flex-shrink-0 self-start sm:self-center">
+                                    {/* Required toggle */}
+                                    <label className="flex items-center gap-1.5 cursor-pointer select-none" title={t.is_required ? 'Mark as optional' : 'Mark as required'}>
+                                        <span className="text-xs text-gray-500 hidden sm:inline">
+                                            {t.is_required ? 'Required' : 'Optional'}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleRequired(t)}
+                                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                                                t.is_required ? 'bg-red-500' : 'bg-gray-200'
+                                            }`}
+                                            aria-label="Toggle required"
+                                        >
+                                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                                t.is_required ? 'translate-x-4' : 'translate-x-1'
+                                            }`} />
+                                        </button>
+                                    </label>
                                     <button
-                                        type="button"
-                                        onClick={() => toggleRequired(t)}
-                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                                            t.is_required ? 'bg-red-500' : 'bg-gray-200'
-                                        }`}
-                                        aria-label="Toggle required"
+                                        onClick={() => { if (confirm('Delete this requirement type?')) router.delete(route('admin.requirements.types.destroy', t.id)); }}
+                                        className="text-gray-400 hover:text-red-500"
                                     >
-                                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-                                            t.is_required ? 'translate-x-4' : 'translate-x-1'
-                                        }`} />
+                                        <TrashIcon className="w-4 h-4" />
                                     </button>
-                                </label>
-                                <button
-                                    onClick={() => { if (confirm('Delete this requirement type?')) router.delete(route('admin.requirements.types.destroy', t.id)); }}
-                                    className="text-gray-400 hover:text-red-500"
-                                >
-                                    <TrashIcon className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                    {!types.length && (
-                        <div className="px-6 py-6 text-center text-gray-400 text-sm">No requirement types.</div>
-                    )}
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="card mb-4">
-                <div className="card-body">
-                    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                        <div className="flex-1 min-w-0">
-                            <label className="label" htmlFor="filter-search">Search</label>
-                            <div className="relative">
-                                <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    id="filter-search"
-                                    name="filter-search"
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && applyFilters()}
-                                    className="input pl-9"
-                                    placeholder="Search by name or email…"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex gap-3 flex-wrap">
-                            <div>
-                                <label className="label" htmlFor="filter-status">Status</label>
-                                <select id="filter-status" name="filter-status" value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-auto">
-                                    <option value="">All Statuses</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="label" htmlFor="filter-program">Program</label>
-                                <select id="filter-program" name="filter-program" value={programId} onChange={e => setProgramId(e.target.value)} className="input w-full sm:w-auto">
-                                    <option value="">All Programs</option>
-                                    {programs.map(p => <option key={p.id} value={p.id}>{p.code}</option>)}
-                                </select>
-                            </div>
-                            <div className="flex items-end gap-2">
-                                <button onClick={applyFilters} className="btn-primary btn-sm">Filter</button>
-                                {(search || status || programId) && (
-                                    <button onClick={clearFilters} className="btn-secondary btn-sm">Clear</button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="submissions">
-                {/* Submissions — Mobile Cards */}
-                <div className="md:hidden space-y-3 mb-4">
-                <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900">Submissions</h3>
-                    <span className="text-xs text-gray-400">{requirements.total} total</span>
-                </div>
-                {requirements.data.map(r => (
-                    <div key={r.id} className="card p-4">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                <UserAvatar user={r.user} size="sm" className="flex-shrink-0" />
-                                <div className="min-w-0">
-                                    <p className="font-medium text-sm text-gray-900 truncate">{r.user?.name}</p>
-                                    <p className="text-xs text-gray-400 truncate">{r.user?.email}</p>
                                 </div>
                             </div>
-                            {statusBadge(r.approval_status)}
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
-                            <div>
-                                <span className="text-gray-400">Requirement: </span>
-                                <span className="text-gray-700">{r.requirement_type?.name}</span>
-                                {r.requirement_type?.is_required && (
-                                    <span className="badge badge-red text-[10px] ml-1">Required</span>
-                                )}
-                            </div>
-                            <div>
-                                <span className="text-gray-400">Program: </span>
-                                <span className="text-gray-700">{r.user?.student_profile?.program?.code || '—'}</span>
-                            </div>
-                            <div>
-                                <span className="text-gray-400">Uploaded: </span>
-                                <span className="text-gray-700">{new Date(r.created_at).toLocaleDateString()}</span>
-                            </div>
-                            <div className="min-w-0">
-                                {r.file_path ? (
-                                    <button onClick={() => setPreviewing(r)} className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0 text-left">
-                                        <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                                        <span className="break-all">{r.original_filename || 'View file'}</span>
-                                    </button>
-                                ) : (
-                                    <span className="text-xs text-gray-400">No file</span>
-                                )}
-                            </div>
-                        </div>
-                        {r.approval_status === 'pending' ? (
-                            <div className="flex gap-2 pt-2 border-t border-gray-100">
-                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
-                                    className="btn-success btn-sm flex-1 flex items-center justify-center gap-1">
-                                    <CheckIcon className="w-4 h-4" /> Approve
-                                </button>
-                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
-                                    className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1">
-                                    <XMarkIcon className="w-4 h-4" /> Reject
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
-                                <p className="text-xs text-gray-400 italic">
-                                    {r.reviewer?.name ? `Reviewed by ${r.reviewer.name}` : '—'}
-                                </p>
-                                {isSuperAdmin && (
-                                    <button
-                                        onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
-                                        className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium flex-shrink-0"
-                                        title="Delete submission"
-                                    >
-                                        <TrashIcon className="w-3.5 h-3.5" /> Delete
-                                    </button>
-                                )}
-                            </div>
+                        ))}
+                        {!types.length && (
+                            <div className="px-6 py-6 text-center text-gray-400 text-sm">No requirement types.</div>
                         )}
                     </div>
-                ))}
-                {!requirements.data?.length && (
-                    <div className="card p-8 text-center text-gray-400">No submissions found.</div>
-                )}
-            </div>
-
-            {/* Submissions — Desktop Table */}
-            <div className="card hidden md:block">
-                <div className="card-header">
-                    <h3 className="font-semibold text-gray-900">Submissions</h3>
-                    <span className="text-xs text-gray-400">{requirements.total} total</span>
                 </div>
-                <div className="table-wrapper">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Student</th><th>Program</th><th>Requirement</th>
-                                <th>File</th><th>Uploaded</th><th>Status</th><th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {requirements.data.map(r => (
-                                <tr key={r.id}>
-                                    <td>
-                                        <div className="flex items-center gap-2.5">
-                                            <UserAvatar user={r.user} size="sm" />
-                                            <div>
-                                                <p className="font-medium text-sm">{r.user?.name}</p>
-                                                <p className="text-xs text-gray-400">{r.user?.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="text-xs text-gray-500">
-                                        {r.user?.student_profile?.program?.code || '—'}
-                                    </td>
-                                    <td className="text-sm">
-                                        <span>{r.requirement_type?.name}</span>
-                                        {r.requirement_type?.is_required && (
-                                            <span className="badge badge-red text-[10px] ml-1.5">Required</span>
+            )}
+
+            {/* Submissions Tab */}
+            {tab === 'submissions' && (
+                <>
+                    {/* Filters */}
+                    <div className="card mb-4">
+                        <div className="card-body">
+                            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <label className="label" htmlFor="filter-search">Search</label>
+                                    <div className="relative">
+                                        <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <input
+                                            id="filter-search"
+                                            name="filter-search"
+                                            value={search}
+                                            onChange={e => setSearch(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && applyFilters()}
+                                            className="input pl-9"
+                                            placeholder="Search by name or email…"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 flex-wrap">
+                                    <div>
+                                        <label className="label" htmlFor="filter-status">Status</label>
+                                        <select id="filter-status" name="filter-status" value={status} onChange={e => setStatus(e.target.value)} className="input w-full sm:w-auto">
+                                            <option value="">All Statuses</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="label" htmlFor="filter-program">Program</label>
+                                        <select id="filter-program" name="filter-program" value={programId} onChange={e => setProgramId(e.target.value)} className="input w-full sm:w-auto">
+                                            <option value="">All Programs</option>
+                                            {programs.map(p => <option key={p.id} value={p.id}>{p.code}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="flex items-end gap-2">
+                                        <button onClick={applyFilters} className="btn-primary btn-sm">Filter</button>
+                                        {(search || status || programId) && (
+                                            <button onClick={clearFilters} className="btn-secondary btn-sm">Clear</button>
                                         )}
-                                    </td>
-                                    <td className="max-w-[10rem]">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Submissions — Mobile Cards */}
+                    <div className="md:hidden space-y-3 mb-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-gray-900">Submissions</h3>
+                            <span className="text-xs text-gray-400">{requirements.total} total</span>
+                        </div>
+                        {requirements.data.map(r => (
+                            <div key={r.id} className="card p-4">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <UserAvatar user={r.user} size="sm" className="flex-shrink-0" />
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-sm text-gray-900 truncate">{r.user?.name}</p>
+                                            <p className="text-xs text-gray-400 truncate">{r.user?.email}</p>
+                                        </div>
+                                    </div>
+                                    {statusBadge(r.approval_status)}
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
+                                    <div>
+                                        <span className="text-gray-400">Requirement: </span>
+                                        <span className="text-gray-700">{r.requirement_type?.name}</span>
+                                        {r.requirement_type?.is_required && (
+                                            <span className="badge badge-red text-[10px] ml-1">Required</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-400">Program: </span>
+                                        <span className="text-gray-700">{r.user?.student_profile?.program?.code || '—'}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-400">Uploaded: </span>
+                                        <span className="text-gray-700">{new Date(r.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="min-w-0">
                                         {r.file_path ? (
                                             <button onClick={() => setPreviewing(r)} className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0 text-left">
                                                 <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
@@ -348,75 +288,156 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                                         ) : (
                                             <span className="text-xs text-gray-400">No file</span>
                                         )}
-                                    </td>
-                                    <td className="text-xs text-gray-400">
-                                        {new Date(r.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td>{statusBadge(r.approval_status)}</td>
-                                    <td>
-                                        <div className="flex items-center gap-2">
-                                            {r.approval_status === 'pending' && <>
-                                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
-                                                    className="btn-success btn-sm px-2 py-1" title="Approve">
-                                                    <CheckIcon className="w-3.5 h-3.5" />
-                                                </button>
-                                                <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
-                                                    className="btn-danger btn-sm px-2 py-1" title="Reject">
-                                                    <XMarkIcon className="w-3.5 h-3.5" />
-                                                </button>
-                                            </>}
-                                            {r.approval_status !== 'pending' && (
-                                                <span className="text-xs text-gray-400 italic">
-                                                    {r.reviewer?.name ? `by ${r.reviewer.name}` : '—'}
-                                                </span>
-                                            )}
-                                            {r.approval_status !== 'pending' && isSuperAdmin && (
-                                                <button
-                                                    onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
-                                                    className="text-gray-400 hover:text-red-600 p-1"
-                                                    title="Delete submission"
-                                                >
-                                                    <TrashIcon className="w-3.5 h-3.5" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {!requirements.data?.length && (
-                                <tr>
-                                    <td colSpan={7} className="text-center text-gray-400 py-8">No submissions found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-                {requirements.links?.length > 3 && (
-                    <div className="px-6 py-4 flex flex-wrap justify-center gap-1 border-t border-gray-100">
-                        {requirements.links.map((link, i) => (
-                            <button key={i} disabled={!link.url}
-                                onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
-                                className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
-                                dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    </div>
+                                </div>
+                                {r.approval_status === 'pending' ? (
+                                    <div className="flex gap-2 pt-2 border-t border-gray-100">
+                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
+                                            className="btn-success btn-sm flex-1 flex items-center justify-center gap-1">
+                                            <CheckIcon className="w-4 h-4" /> Approve
+                                        </button>
+                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
+                                            className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1">
+                                            <XMarkIcon className="w-4 h-4" /> Reject
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                                        <p className="text-xs text-gray-400 italic">
+                                            {r.reviewer?.name ? `Reviewed by ${r.reviewer.name}` : '—'}
+                                        </p>
+                                        {isSuperAdmin && (
+                                            <button
+                                                onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
+                                                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium flex-shrink-0"
+                                                title="Delete submission"
+                                            >
+                                                <TrashIcon className="w-3.5 h-3.5" /> Delete
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         ))}
+                        {!requirements.data?.length && (
+                            <div className="card p-8 text-center text-gray-400">No submissions found.</div>
+                        )}
                     </div>
-                )}
-            </div>
-            </div>
 
-            {/* Mobile Pagination */}
-            {requirements.links?.length > 3 && (
-                <div className="md:hidden flex flex-wrap justify-center gap-1 mt-3">
-                    {requirements.links.map((link, i) => (
-                        <button key={i} disabled={!link.url}
-                            onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
-                            className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
-                            dangerouslySetInnerHTML={{ __html: link.label }} />
-                    ))}
-                </div>
+                    {/* Submissions — Desktop Table */}
+                    <div className="card hidden md:block">
+                        <div className="card-header">
+                            <h3 className="font-semibold text-gray-900">Submissions</h3>
+                            <span className="text-xs text-gray-400">{requirements.total} total</span>
+                        </div>
+                        <div className="table-wrapper">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th><th>Program</th><th>Requirement</th>
+                                        <th>File</th><th>Uploaded</th><th>Status</th><th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {requirements.data.map(r => (
+                                        <tr key={r.id}>
+                                            <td>
+                                                <div className="flex items-center gap-2.5">
+                                                    <UserAvatar user={r.user} size="sm" />
+                                                    <div>
+                                                        <p className="font-medium text-sm">{r.user?.name}</p>
+                                                        <p className="text-xs text-gray-400">{r.user?.email}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="text-xs text-gray-500">
+                                                {r.user?.student_profile?.program?.code || '—'}
+                                            </td>
+                                            <td className="text-sm">
+                                                <span>{r.requirement_type?.name}</span>
+                                                {r.requirement_type?.is_required && (
+                                                    <span className="badge badge-red text-[10px] ml-1.5">Required</span>
+                                                )}
+                                            </td>
+                                            <td className="max-w-[10rem]">
+                                                {r.file_path ? (
+                                                    <button onClick={() => setPreviewing(r)} className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0 text-left">
+                                                        <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                                        <span className="break-all">{r.original_filename || 'View file'}</span>
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-xs text-gray-400">No file</span>
+                                                )}
+                                            </td>
+                                            <td className="text-xs text-gray-400">
+                                                {new Date(r.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td>{statusBadge(r.approval_status)}</td>
+                                            <td>
+                                                <div className="flex items-center gap-2">
+                                                    {r.approval_status === 'pending' && <>
+                                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
+                                                            className="btn-success btn-sm px-2 py-1" title="Approve">
+                                                            <CheckIcon className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
+                                                            className="btn-danger btn-sm px-2 py-1" title="Reject">
+                                                            <XMarkIcon className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </>}
+                                                    {r.approval_status !== 'pending' && (
+                                                        <span className="text-xs text-gray-400 italic">
+                                                            {r.reviewer?.name ? `by ${r.reviewer.name}` : '—'}
+                                                        </span>
+                                                    )}
+                                                    {r.approval_status !== 'pending' && isSuperAdmin && (
+                                                        <button
+                                                            onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
+                                                            className="text-gray-400 hover:text-red-600 p-1"
+                                                            title="Delete submission"
+                                                        >
+                                                            <TrashIcon className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {!requirements.data?.length && (
+                                        <tr>
+                                            <td colSpan={7} className="text-center text-gray-400 py-8">No submissions found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        {requirements.links?.length > 3 && (
+                            <div className="px-6 py-4 flex flex-wrap justify-center gap-1 border-t border-gray-100">
+                                {requirements.links.map((link, i) => (
+                                    <button key={i} disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
+                                        className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Mobile Pagination */}
+                    {requirements.links?.length > 3 && (
+                        <div className="md:hidden flex flex-wrap justify-center gap-1 mt-3">
+                            {requirements.links.map((link, i) => (
+                                <button key={i} disabled={!link.url}
+                                    onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
+                                    className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }} />
+                            ))}
+                        </div>
+                    )}
+                </>
             )}
 
-                        {/* Add Requirement Type Modal */}
+            {/* Add Requirement Type Modal */}
             {showAdd && (
                 <Modal onClose={() => { setShowAdd(false); addForm.reset(); }} size="md">
                     <div className="p-6">
@@ -424,7 +445,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         <form onSubmit={submitAdd} className="space-y-3">
                             <div>
                                 <label className="label" htmlFor="reqtype-name">Name</label>
-                                                                <input id="reqtype-name" name="name" autoComplete="off" value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)}
+                                <input id="reqtype-name" name="name" autoComplete="off" value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)}
                                     className="input" placeholder="e.g. X-ray Result" />
                                 {addForm.errors.name && <p className="error-msg">{addForm.errors.name}</p>}
                             </div>
@@ -490,7 +511,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </Modal>
             )}
 
-                        {/* Clear Submissions Modal */}
+            {/* Clear Submissions Modal */}
             {showClear && (
                 <Modal onClose={() => { setShowClear(false); clearForm.reset(); }} size="md">
                     <div className="flex items-start gap-3 px-6 pt-6 pb-4">
@@ -546,7 +567,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </Modal>
             )}
 
-                        {/* File Preview Modal */}
+            {/* File Preview Modal */}
             {previewing && (
                 <Modal onClose={() => setPreviewing(null)} size="lg">
                     <div className="flex flex-col max-h-[90vh]">
@@ -583,7 +604,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                 </Modal>
             )}
 
-                        {/* Review Modal */}
+            {/* Review Modal */}
             {reviewing && (
                 <Modal onClose={() => setReviewing(null)} size="md">
                     <div className="p-6">
