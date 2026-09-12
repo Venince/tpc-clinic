@@ -1,17 +1,55 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { useState } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useState, useRef, useEffect } from 'react';
+import {
+    PlusIcon, PencilIcon, TrashIcon, XMarkIcon,
+    EllipsisHorizontalIcon, GlobeAltIcon, LockClosedIcon,
+} from '@heroicons/react/24/outline';
 import Modal from '@/Components/UI/Modal';
 
+const CATEGORY_STYLES = {
+    general: { label: 'General', className: 'bg-blue-50 text-blue-700' },
+    health:  { label: 'Health',  className: 'bg-green-50 text-green-700' },
+    event:   { label: 'Event',   className: 'bg-purple-50 text-purple-700' },
+};
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
+    return date.toLocaleDateString(undefined, {
+        month: 'short', day: 'numeric',
+        year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+    });
+}
+
 export default function AnnouncementsIndex({ announcements }) {
-    const [modal, setModal] = useState(null);
+    const [modal, setModal]       = useState(null);
+    const [openMenu, setOpenMenu] = useState(null);
+    const menuRef = useRef(null);
+
     const { data, setData, post, put, processing, reset } = useForm({
         title: '', content: '', category: 'general', is_published: false, expires_at: ''
     });
 
+    useEffect(() => {
+        const closeOnOutsideClick = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenu(null);
+        };
+        document.addEventListener('mousedown', closeOnOutsideClick);
+        return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+    }, []);
+
     const open = (a) => {
         setModal(a || 'new');
+        setOpenMenu(null);
         setData(a
             ? { title: a.title, content: a.content, category: a.category, is_published: a.is_published, expires_at: a.expires_at || '' }
             : { title: '', content: '', category: 'general', is_published: false, expires_at: '' }
@@ -27,73 +65,121 @@ export default function AnnouncementsIndex({ announcements }) {
         }
     };
 
-    const del = (a) => { if (confirm('Delete announcement?')) router.delete(route('admin.announcements.destroy', a.id)); };
-
-    const catBadge = (c) => ({ general: 'badge-blue', health: 'badge-green', event: 'badge-purple' })[c] || 'badge-gray';
+    const del = (a) => {
+        setOpenMenu(null);
+        if (confirm('Delete announcement?')) router.delete(route('admin.announcements.destroy', a.id));
+    };
 
     return (
         <AdminLayout title="Announcements">
             <Head title="Announcements" />
 
-            {/* Page header — stacks on mobile */}
-            <div className="page-header flex-wrap gap-y-3">
-                <div>
+            <div className="max-w-2xl mx-auto">
+                {/* Composer bar */}
+                <div className="card p-3 sm:p-4 mb-4 flex items-center gap-3">
+                    <img src="/images/tpc-logo.png" alt="TPC e-Clinic" className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-100" />
+                    <button
+                        onClick={() => open(null)}
+                        className="flex-1 text-left px-4 py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-sm text-gray-500 transition-colors"
+                    >
+                        Post an announcement…
+                    </button>
+                    <button onClick={() => open(null)} className="btn-primary btn-sm flex-shrink-0 hidden sm:flex">
+                        <PlusIcon className="w-4 h-4 mr-1" /> New
+                    </button>
                 </div>
-                <button onClick={() => open(null)} className="btn-primary btn-sm w-full sm:w-auto justify-center">
-                    <PlusIcon className="w-4 h-4 mr-1" />
-                    New Announcement
-                </button>
-            </div>
 
-            <div className="card">
-                <div className="divide-y divide-gray-100">
-                    {announcements.data.map(a => (
-                        <div key={a.id} className="px-4 sm:px-6 py-4">
-                            {/* Top row: badges + actions */}
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                                <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-                                    <span className={`badge ${catBadge(a.category)} text-xs flex-shrink-0`}>{a.category}</span>
-                                    {!a.is_published && <span className="badge badge-gray text-xs flex-shrink-0">Draft</span>}
+                {/* Feed */}
+                <div className="space-y-4">
+                    {announcements.data.map(a => {
+                        const cat = CATEGORY_STYLES[a.category] || { label: a.category, className: 'bg-gray-100 text-gray-600' };
+                        return (
+                            <div key={a.id} className="card overflow-visible">
+                                {/* Post header */}
+                                <div className="flex items-start justify-between px-4 sm:px-5 pt-4 pb-2">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <img src="/images/tpc-logo.png" alt="TPC e-Clinic" className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-100" />
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-gray-900 text-sm leading-tight truncate">TPC e-Clinic</p>
+                                            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                                                <span>{a.is_published ? timeAgo(a.published_at) : 'Draft'}</span>
+                                                <span>·</span>
+                                                {a.is_published
+                                                    ? <GlobeAltIcon className="w-3 h-3" title="Published" />
+                                                    : <LockClosedIcon className="w-3 h-3" title="Draft — not visible to users" />}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Kebab menu */}
+                                    <div className="relative flex-shrink-0" ref={openMenu === a.id ? menuRef : null}>
+                                        <button
+                                            onClick={() => setOpenMenu(openMenu === a.id ? null : a.id)}
+                                            className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                            aria-label="Post options"
+                                        >
+                                            <EllipsisHorizontalIcon className="w-5 h-5" />
+                                        </button>
+                                        {openMenu === a.id && (
+                                            <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                                                <button onClick={() => open(a)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                    <PencilIcon className="w-4 h-4" /> Edit post
+                                                </button>
+                                                <button onClick={() => del(a)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                                    <TrashIcon className="w-4 h-4" /> Delete post
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                {/* Action buttons always visible, right-aligned */}
-                                <div className="flex gap-2 flex-shrink-0 ml-auto">
-                                    <button
-                                        onClick={() => open(a)}
-                                        className="p-1.5 rounded-md text-gray-400 hover:text-clinic-600 hover:bg-gray-100 transition-colors"
-                                        title="Edit"
-                                    >
-                                        <PencilIcon className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => del(a)}
-                                        className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                                        title="Delete"
-                                    >
-                                        <TrashIcon className="w-4 h-4" />
-                                    </button>
+
+                                {/* Post body */}
+                                <div className="px-4 sm:px-5 pb-2">
+                                    <p className="font-semibold text-gray-900 text-[15px] leading-snug mb-1">{a.title}</p>
+                                    <p className="text-gray-700 text-sm whitespace-pre-line">{a.content}</p>
+                                </div>
+
+                                {/* Footer: category pill + expiry note */}
+                                <div className="px-4 sm:px-5 pb-4 pt-2 mt-1 flex flex-wrap items-center gap-2 border-t border-gray-50">
+                                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cat.className}`}>{cat.label}</span>
+                                    {a.expires_at && (
+                                        <span className="text-xs text-gray-400">
+                                            Expires {new Date(a.expires_at).toLocaleDateString()}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-
-                            {/* Title */}
-                            <p className="font-medium text-gray-900 text-sm sm:text-base leading-snug">{a.title}</p>
-
-                            {/* Content preview */}
-                            <p className="text-sm text-gray-500 line-clamp-2 mt-0.5">{a.content}</p>
-
-                            {/* Meta */}
-                            <p className="text-xs text-gray-400 mt-1.5">
-                                By {a.creator?.name} · {a.published_at ? new Date(a.published_at).toLocaleDateString() : 'Not published'}
-                            </p>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     {!announcements.data.length && (
-                        <div className="px-6 py-10 text-center text-gray-400">No announcements yet.</div>
+                        <div className="card px-6 py-14 text-center text-gray-400">No announcements yet.</div>
                     )}
                 </div>
+
+                {/* Pagination */}
+                {announcements.links?.length > 3 && (
+                    <div className="flex flex-wrap justify-center gap-1 mt-6">
+                        {announcements.links.map((link, i) => (
+                            <button key={i} disabled={!link.url}
+                                onClick={() => link.url && router.get(link.url)}
+                                className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
+                                dangerouslySetInnerHTML={{ __html: link.label }} />
+                        ))}
+                    </div>
+                )}
             </div>
 
-                        {/* Modal */}
+            {/* Floating "new" button on mobile */}
+            <button
+                onClick={() => open(null)}
+                className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-clinic-600 text-white shadow-lg flex items-center justify-center hover:bg-clinic-700 transition-colors z-30"
+                aria-label="New announcement"
+            >
+                <PlusIcon className="w-6 h-6" />
+            </button>
+
+            {/* Modal */}
             {modal !== null && (
                 <Modal onClose={() => setModal(null)} size="lg">
                     {/* Modal header */}
@@ -197,7 +283,7 @@ export default function AnnouncementsIndex({ announcements }) {
                         </div>
                     </form>
                 </Modal>
-            )} 
+            )}
         </AdminLayout>
     );
 }

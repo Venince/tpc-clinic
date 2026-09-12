@@ -1,13 +1,24 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { MegaphoneIcon, HomeIcon } from '@heroicons/react/24/outline';
+import { MegaphoneIcon, HomeIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d`;
+    return date.toLocaleDateString(undefined, {
+        month: 'short', day: 'numeric',
+        year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+    });
+}
 
 export default function PublicAnnouncements({ announcements }) {
-    const catColor = (c) => ({
-        general: 'bg-green-50 text-green-700',
-        health:  'bg-blue-50 text-blue-700',
-        event:   'bg-purple-50 text-purple-700',
-    })[c] || 'bg-gray-100 text-gray-600';
-
     const goToSection = (hash) => {
         router.visit(route('home'), {
             onSuccess: () => {
@@ -69,32 +80,54 @@ export default function PublicAnnouncements({ announcements }) {
 
                 {/* ── Content ── */}
                 <div className="page-fade">
-                    <div className="max-w-3xl mx-auto px-6 py-10">
+                    <div className="max-w-2xl mx-auto px-6 py-10">
                         <div className="flex items-center gap-3 mb-8">
                             <MegaphoneIcon className="w-7 h-7 text-clinic-600" />
                             <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
                         </div>
                         <div className="space-y-4">
-                            {announcements.data.map(a => (
-                                <div key={a.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:bg-gray-50 transition-colors">
-                                    <div className="flex gap-4 items-start">
-                                        <div className="flex-shrink-0 w-12 text-center bg-green-50 rounded-xl py-2 px-1">
-                                            <p className="text-lg font-bold text-clinic-700 leading-none">{new Date(a.published_at).getDate()}</p>
-                                            <p className="text-xs text-clinic-500 uppercase mt-0.5">{new Date(a.published_at).toLocaleString('default', { month: 'short' })}</p>
+                            {announcements.data.map(a => {
+                                return (
+                                    <div key={a.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors">
+                                        {/* Post header */}
+                                        <div className="flex items-center gap-3 px-5 sm:px-6 pt-4 pb-2">
+                                            <img src="/images/tpc-logo.png" alt="TPC e-Clinic" className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-gray-100" />
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-gray-900 text-sm leading-tight truncate">TPC e-Clinic</p>
+                                                <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                                                    <span>{timeAgo(a.published_at)}</span>
+                                                    <span>·</span>
+                                                    <GlobeAltIcon className="w-3 h-3" title="Public announcement" />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h2 className="font-semibold text-gray-900 text-lg mb-1">{a.title}</h2>
-                                            <p className="text-gray-500 text-sm leading-relaxed">{a.content}</p>
+
+                                        {/* Post body */}
+                                        <div className="px-5 sm:px-6 pb-4">
+                                            <h2 className="font-semibold text-gray-900 text-base sm:text-lg leading-snug mb-1">{a.title}</h2>
+                                            <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{a.content}</p>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {!announcements.data.length && (
                                 <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-400 text-sm">
                                     No announcements at this time.
                                 </div>
                             )}
                         </div>
+
+                        {/* Pagination */}
+                        {announcements.links?.length > 3 && (
+                            <div className="flex flex-wrap justify-center gap-1 mt-6">
+                                {announcements.links.map((link, i) => (
+                                    <button key={i} disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url)}
+                                        className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }} />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
