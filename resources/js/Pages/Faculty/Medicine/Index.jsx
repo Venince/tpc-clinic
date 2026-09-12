@@ -41,12 +41,12 @@ export default function FacultyMedicine({ medicines, myRequests }) {
                     </div>
                     <div className="divide-y divide-gray-100">
                         {medicines.map(med => (
-                            <div key={med.id} className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-                                <div className="min-w-0">
-                                    <p className="font-medium text-gray-900 truncate">{med.name}</p>
-                                    <p className="text-xs text-gray-400 mt-0.5">{med.quantity} {med.unit} available</p>
+                            <div key={med.id} className="px-4 sm:px-6 py-3.5">
+                                <p className="font-medium text-gray-900 break-words leading-snug">{med.name}</p>
+                                <div className="flex items-center justify-between gap-3 mt-1">
+                                    <p className="text-xs text-gray-400">{med.quantity} {med.unit} available</p>
+                                    <button onClick={() => openRequest(med)} className="btn-primary btn-sm shrink-0">Request</button>
                                 </div>
-                                <button onClick={() => openRequest(med)} className="btn-primary btn-sm flex-shrink-0">Request</button>
                             </div>
                         ))}
                         {!medicines.length && (
