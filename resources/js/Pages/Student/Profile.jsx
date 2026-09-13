@@ -33,36 +33,38 @@ export default function StudentProfile({ profile, programs }) {
         <StudentLayout title="My Profile">
             <Head title="Profile" />
 
-            <div className="max-w-2xl mx-auto px-4 sm:px-0">
-                {/* Account info */}
-                <div className="card mb-6">
-                    <div className="card-header bg-clinic-50">
-                        <h3 className="font-semibold text-clinic-900">Account Information</h3>
-                    </div>
-                    <div className="card-body">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-4">
-                            <ProfilePhotoUploader
-                                photoUrl={profile.profile_photo_url}
-                                uploadRoute={route('student.profile.photo.update')}
-                                deleteRoute={route('student.profile.photo.delete')}
-                            />
-                            <div className="text-sm text-center sm:text-left">
-                                <p className="font-medium text-gray-900">{profile.name}</p>
-                                <p className="text-gray-400 text-xs mt-0.5">{profile.email}</p>
+            <div className="max-w-5xl mx-auto px-4 sm:px-0">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
+
+                    {/* Account info — sticky on the left on desktop */}
+                    <div className="card lg:sticky lg:top-6">
+                        <div className="card-header bg-clinic-50">
+                            <h3 className="font-semibold text-clinic-900">Account Information</h3>
+                        </div>
+                        <div className="card-body">
+                            <div className="flex flex-col items-center text-center gap-4">
+                                <ProfilePhotoUploader
+                                    photoUrl={profile.profile_photo_url}
+                                    uploadRoute={route('student.profile.photo.update')}
+                                    deleteRoute={route('student.profile.photo.delete')}
+                                />
+                                <div className="text-sm min-w-0">
+                                    <p className="font-medium text-gray-900 truncate">{profile.name}</p>
+                                    <p className="text-gray-400 text-xs mt-0.5 truncate">{profile.email}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Editable profile */}
-                <div className="card">
-                    <div className="card-header">
-                        <p className="text-xs text-gray-400 mt-0.5">
-                            Keep your information up to date. Fields marked <span className="text-red-500">*</span> are required.
-                        </p>
-                    </div>
-                    <div className="card-body">
-                        <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Editable profile */}
+                    <div className="lg:col-span-2 card">
+                        <div className="card-header">
+                            <p className="text-xs text-gray-400 mt-0.5">
+                                Keep your information up to date. Fields marked <span className="text-red-500">*</span> are required.
+                            </p>
+                        </div>
+                        <div className="card-body">
+                            <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                             {/* --- Account --- */}
                             <div className="sm:col-span-2">
@@ -272,6 +274,7 @@ export default function StudentProfile({ profile, programs }) {
                             </div>
                         </form>
                     </div>
+                </div>
                 </div>
             </div>
         </StudentLayout>

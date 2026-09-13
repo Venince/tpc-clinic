@@ -226,6 +226,15 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
         return <span className={`badge ${map[s] || 'badge-gray'}`}>{s}</span>;
     };
 
+    const formatTime = (t) => {
+        if (!t) return '';
+        // time-only strings like "13:00:00" need a date part or `new Date()` fails
+        const isTimeOnly = /^\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(t);
+        const date = isTimeOnly ? new Date(`1970-01-01T${t}`) : new Date(t);
+        if (isNaN(date.getTime())) return t;
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    };
+
     const [trendIndex, setTrendIndex] = useState(0);
     const trendPaused = useRef(false);
     const trendContainerRef = useRef(null);
@@ -480,7 +489,7 @@ export default function Dashboard({ stats, appointmentTrend, medicineStock, prog
                                         </td>
                                         <td className="text-gray-500 whitespace-nowrap">{a.purpose}</td>
                                         <td className="whitespace-nowrap">{a.date}</td>
-                                        <td className="whitespace-nowrap">{a.time}</td>
+                                        <td className="whitespace-nowrap">{formatTime(a.time)}</td>
                                         <td className="whitespace-nowrap">{statusBadge(a.status)}</td>
                                     </tr>
                                 ))}

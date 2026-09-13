@@ -32,7 +32,7 @@ export default function AdminProfile({ profile }) {
         <AdminLayout title="My Profile">
             <Head title="Profile" />
 
-            <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+            <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
 
                 {/* ── Page header ── */}
                 <div className="page-header">
@@ -41,176 +41,180 @@ export default function AdminProfile({ profile }) {
                     </div>
                 </div>
 
-                {/* ── Avatar / identity banner ── */}
-                <div className="card p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-5">
-                        {/* Photo uploader — mirrors student/faculty behaviour */}
-                        <ProfilePhotoUploader
-                            photoUrl={profile.profile_photo_url}
-                            uploadRoute={route('admin.profile.photo.update')}
-                            deleteRoute={route('admin.profile.photo.delete')}
-                        />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
 
-                        {/* Identity info */}
-                        <div className="text-center sm:text-left min-w-0">
-                            <p className="font-semibold text-gray-900 text-lg truncate">{profile.name}</p>
-                            <p className="text-sm text-gray-500 truncate">{profile.email}</p>
-                            {profile.role?.display_name && (
-                                <span className="inline-block mt-1.5 text-xs font-medium bg-clinic-50 text-clinic-700 px-2 py-0.5 rounded-full">
-                                    {profile.role.display_name}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* ── Account Information ── */}
-                <div className="card">
-                    <div className="card-header">
-                        <h3 className="font-semibold text-gray-900">Account Information</h3>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                            {isSuperAdmin ? 'Update your display name and email' : 'Update your display name'}
-                        </p>
-                    </div>
-                    <div className="card-body">
-                        <form onSubmit={submitName} className="space-y-4">
-                            <div>
-                                <label className="label" htmlFor="admin-profile-name">Full Name</label>
-                                <input
-                                    id="admin-profile-name"
-                                    name="name"
-                                    autoComplete="name"
-                                    value={nameForm.data.name}
-                                    onChange={e => nameForm.setData('name', e.target.value)}
-                                    className={`input ${nameForm.errors.name ? 'input-error' : ''}`}
-                                    placeholder="Juan Dela Cruz"
-                                />
-                                {nameForm.errors.name && (
-                                    <p className="error-msg">{nameForm.errors.name}</p>
+                    {/* ── Avatar / identity banner — sticky on the left on desktop ── */}
+                    <div className="card p-4 sm:p-6 lg:sticky lg:top-6">
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <ProfilePhotoUploader
+                                photoUrl={profile.profile_photo_url}
+                                uploadRoute={route('admin.profile.photo.update')}
+                                deleteRoute={route('admin.profile.photo.delete')}
+                            />
+                            <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 text-lg truncate">{profile.name}</p>
+                                <p className="text-sm text-gray-500 truncate">{profile.email}</p>
+                                {profile.role?.display_name && (
+                                    <span className="inline-block mt-1.5 text-xs font-medium bg-clinic-50 text-clinic-700 px-2 py-0.5 rounded-full">
+                                        {profile.role.display_name}
+                                    </span>
                                 )}
                             </div>
-                            <div>
-                                <label className="label" htmlFor="admin-profile-email">Email</label>
-                                {isSuperAdmin ? (
-                                    <>
+                        </div>
+                    </div>
+
+                    {/* ── Forms column ── */}
+                    <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+
+                        {/* ── Account Information ── */}
+                        <div className="card">
+                            <div className="card-header">
+                                <h3 className="font-semibold text-gray-900">Account Information</h3>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {isSuperAdmin ? 'Update your display name and email' : 'Update your display name'}
+                                </p>
+                            </div>
+                            <div className="card-body">
+                                <form onSubmit={submitName} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="sm:col-span-2">
+                                        <label className="label" htmlFor="admin-profile-name">Full Name</label>
                                         <input
-                                            id="admin-profile-email"
-                                            name="email"
-                                            type="email"
-                                            autoComplete="email"
-                                            value={nameForm.data.email}
-                                            onChange={e => nameForm.setData('email', e.target.value)}
-                                            className={`input ${nameForm.errors.email ? 'input-error' : ''}`}
-                                            placeholder="you@tpc.edu.ph"
+                                            id="admin-profile-name"
+                                            name="name"
+                                            autoComplete="name"
+                                            value={nameForm.data.name}
+                                            onChange={e => nameForm.setData('name', e.target.value)}
+                                            className={`input ${nameForm.errors.name ? 'input-error' : ''}`}
+                                            placeholder="Juan Dela Cruz"
                                         />
-                                        {nameForm.errors.email && (
-                                            <p className="error-msg">{nameForm.errors.email}</p>
+                                        {nameForm.errors.name && (
+                                            <p className="error-msg">{nameForm.errors.name}</p>
                                         )}
-                                    </>
-                                ) : (
-                                    <>
+                                    </div>
+                                    <div>
+                                        <label className="label" htmlFor="admin-profile-email">Email</label>
+                                        {isSuperAdmin ? (
+                                            <>
+                                                <input
+                                                    id="admin-profile-email"
+                                                    name="email"
+                                                    type="email"
+                                                    autoComplete="email"
+                                                    value={nameForm.data.email}
+                                                    onChange={e => nameForm.setData('email', e.target.value)}
+                                                    className={`input ${nameForm.errors.email ? 'input-error' : ''}`}
+                                                    placeholder="you@tpc.edu.ph"
+                                                />
+                                                {nameForm.errors.email && (
+                                                    <p className="error-msg">{nameForm.errors.email}</p>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <input
+                                                    id="admin-profile-email"
+                                                    name="email"
+                                                    autoComplete="email"
+                                                    value={profile.email}
+                                                    disabled
+                                                    className="input opacity-60 cursor-not-allowed"
+                                                />
+                                                <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="label" htmlFor="admin-profile-role">Role</label>
                                         <input
-                                            id="admin-profile-email"
-                                            name="email"
-                                            autoComplete="email"
-                                            value={profile.email}
+                                            id="admin-profile-role"
+                                            name="role"
+                                            autoComplete="off"
+                                            value={profile.role?.display_name ?? ''}
                                             disabled
                                             className="input opacity-60 cursor-not-allowed"
                                         />
-                                        <p className="text-xs text-gray-400 mt-1">Email cannot be changed.</p>
-                                    </>
-                                )}
+                                    </div>
+                                    <div className="sm:col-span-2 flex justify-end">
+                                        <button
+                                            type="submit"
+                                            disabled={nameForm.processing}
+                                            className="btn-primary w-full sm:w-auto"
+                                        >
+                                            {nameForm.processing ? 'Saving…' : 'Save Changes'}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                            <div>
-                                <label className="label" htmlFor="admin-profile-role">Role</label>
-                                <input
-                                    id="admin-profile-role"
-                                    name="role"
-                                    autoComplete="off"
-                                    value={profile.role?.display_name ?? ''}
-                                    disabled
-                                    className="input opacity-60 cursor-not-allowed"
-                                />
+                        </div>
+
+                        {/* ── Change Password ── */}
+                        <div className="card">
+                            <div className="card-header">
+                                <h3 className="font-semibold text-gray-900">Change Password</h3>
+                                <p className="text-xs text-gray-400 mt-0.5">Use a strong password of at least 8 characters</p>
                             </div>
-                            <div className="flex justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={nameForm.processing}
-                                    className="btn-primary w-full sm:w-auto"
-                                >
-                                    {nameForm.processing ? 'Saving…' : 'Save Changes'}
-                                </button>
+                            <div className="card-body">
+                                <form onSubmit={submitPassword} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="sm:col-span-2">
+                                        <label className="label" htmlFor="admin-current-password">Current Password</label>
+                                        <input
+                                            id="admin-current-password"
+                                            name="current_password"
+                                            type="password"
+                                            value={passwordForm.data.current_password}
+                                            onChange={e => passwordForm.setData('current_password', e.target.value)}
+                                            className={`input ${passwordForm.errors.current_password ? 'input-error' : ''}`}
+                                            autoComplete="current-password"
+                                        />
+                                        {passwordForm.errors.current_password && (
+                                            <p className="error-msg">{passwordForm.errors.current_password}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="label" htmlFor="admin-new-password">New Password</label>
+                                        <input
+                                            id="admin-new-password"
+                                            name="password"
+                                            type="password"
+                                            value={passwordForm.data.password}
+                                            onChange={e => passwordForm.setData('password', e.target.value)}
+                                            className={`input ${passwordForm.errors.password ? 'input-error' : ''}`}
+                                            autoComplete="new-password"
+                                        />
+                                        {passwordForm.errors.password && (
+                                            <p className="error-msg">{passwordForm.errors.password}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="label" htmlFor="admin-confirm-password">Confirm New Password</label>
+                                        <input
+                                            id="admin-confirm-password"
+                                            name="password_confirmation"
+                                            type="password"
+                                            value={passwordForm.data.password_confirmation}
+                                            onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
+                                            className={`input ${passwordForm.errors.password_confirmation ? 'input-error' : ''}`}
+                                            autoComplete="new-password"
+                                        />
+                                        {passwordForm.errors.password_confirmation && (
+                                            <p className="error-msg">{passwordForm.errors.password_confirmation}</p>
+                                        )}
+                                    </div>
+                                    <div className="sm:col-span-2 flex justify-end">
+                                        <button
+                                            type="submit"
+                                            disabled={passwordForm.processing}
+                                            className="btn-primary w-full sm:w-auto"
+                                        >
+                                            {passwordForm.processing ? 'Updating…' : 'Update Password'}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                        </div>
+
                     </div>
                 </div>
-
-                {/* ── Change Password ── */}
-                <div className="card">
-                    <div className="card-header">
-                        <h3 className="font-semibold text-gray-900">Change Password</h3>
-                        <p className="text-xs text-gray-400 mt-0.5">Use a strong password of at least 8 characters</p>
-                    </div>
-                    <div className="card-body">
-                        <form onSubmit={submitPassword} className="space-y-4">
-                            <div>
-                                <label className="label" htmlFor="admin-current-password">Current Password</label>
-                                <input
-                                    id="admin-current-password"
-                                    name="current_password"
-                                    type="password"
-                                    value={passwordForm.data.current_password}
-                                    onChange={e => passwordForm.setData('current_password', e.target.value)}
-                                    className={`input ${passwordForm.errors.current_password ? 'input-error' : ''}`}
-                                    autoComplete="current-password"
-                                />
-                                {passwordForm.errors.current_password && (
-                                    <p className="error-msg">{passwordForm.errors.current_password}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="label" htmlFor="admin-new-password">New Password</label>
-                                <input
-                                    id="admin-new-password"
-                                    name="password"
-                                    type="password"
-                                    value={passwordForm.data.password}
-                                    onChange={e => passwordForm.setData('password', e.target.value)}
-                                    className={`input ${passwordForm.errors.password ? 'input-error' : ''}`}
-                                    autoComplete="new-password"
-                                />
-                                {passwordForm.errors.password && (
-                                    <p className="error-msg">{passwordForm.errors.password}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label className="label" htmlFor="admin-confirm-password">Confirm New Password</label>
-                                <input
-                                    id="admin-confirm-password"
-                                    name="password_confirmation"
-                                    type="password"
-                                    value={passwordForm.data.password_confirmation}
-                                    onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
-                                    className={`input ${passwordForm.errors.password_confirmation ? 'input-error' : ''}`}
-                                    autoComplete="new-password"
-                                />
-                                {passwordForm.errors.password_confirmation && (
-                                    <p className="error-msg">{passwordForm.errors.password_confirmation}</p>
-                                )}
-                            </div>
-                            <div className="flex justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={passwordForm.processing}
-                                    className="btn-primary w-full sm:w-auto"
-                                >
-                                    {passwordForm.processing ? 'Updating…' : 'Update Password'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
             </div>
         </AdminLayout>
     );
