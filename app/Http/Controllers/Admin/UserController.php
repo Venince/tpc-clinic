@@ -51,7 +51,10 @@ class UserController extends Controller
             ? Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name'])
             : Role::whereNotIn('name', ['super_admin', 'admin'])->get(['id', 'name', 'display_name']);
 
-        return Inertia::render('Admin/Users/Create', ['roles' => $roles]);
+        return Inertia::render('Admin/Users/Create', [
+            'roles'    => $roles,
+            'programs' => \App\Models\Program::orderBy('name')->get(['id', 'code', 'name']),
+        ]);
     }
 
     public function importForm()
@@ -72,6 +75,12 @@ class UserController extends Controller
                 Rule::unique('users')->whereNull('deleted_at'),
             ],
             'role' => ['required', Rule::in(['student', 'faculty_staff', 'admin'])],
+            // Only relevant when role is admin — lets the nurse designate which
+            // personal account (Student or Faculty/Staff) this admin can switch
+            // into. Optional: an admin can also have no personal account.
+            'personal_type' => ['nullable', Rule::in(['student', 'faculty_staff'])],
+            'program_id'    => ['nullable', 'exists:programs,id'],
+            'year_level'    => ['nullable', 'integer', 'min:1', 'max:6'],
         ]);
 
         $role = Role::where('name', $data['role'])->firstOrFail();
@@ -85,6 +94,21 @@ class UserController extends Controller
             'force_password_change' => true,
             'is_active' => true,
         ]);
+
+        // If this is an admin account with a designated personal type, create
+        // the matching (initially empty) profile so they can switch into it
+        // and complete the remaining details themselves, just like a regular
+        // student/faculty account would on first login.
+        if ($data['role'] === 'admin' && !empty($data['personal_type'])) {
+            if ($data['personal_type'] === 'student') {
+                $user->studentProfile()->create([
+                    'program_id' => $data['program_id'] ?? null,
+                    'year_level' => $data['year_level'] ?? null,
+                ]);
+            } else {
+                $user->facultyProfile()->create([]);
+            }
+        }
 
         try {
             SendCredentialsEmail::dispatch($user, $password);
@@ -108,8 +132,9 @@ class UserController extends Controller
         abort_if($user->role->name === 'super_admin' && !request()->user()->isSuperAdmin(), 403);
 
         return Inertia::render('Admin/Users/Edit', [
-            'user' => $user->load('role', 'studentProfile.program', 'facultyProfile'),
-            'roles' => Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name']),
+            'user'     => $user->load('role', 'studentProfile.program', 'facultyProfile'),
+            'roles'    => Role::whereNotIn('name', ['super_admin'])->get(['id', 'name', 'display_name']),
+            'programs' => \App\Models\Program::orderBy('name')->get(['id', 'code', 'name']),
         ]);
     }
 
@@ -140,9 +165,50 @@ class UserController extends Controller
                 Rule::unique('users')->ignore($user->id)->whereNull('deleted_at'),
             ],
             'is_active' => ['boolean'],
+            // Only meaningful for admin accounts — lets the nurse add, change,
+            // or remove which personal account (Student / Faculty-Staff) this
+            // admin can switch into.
+            'personal_type' => ['nullable', Rule::in(['student', 'faculty_staff'])],
+            'program_id'    => ['nullable', 'exists:programs,id'],
+            'year_level'    => ['nullable', 'integer', 'min:1', 'max:6'],
         ]);
 
-        $user->update($data);
+        $user->update([
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'is_active' => $data['is_active'] ?? $user->is_active,
+        ]);
+
+        if ($user->role->name === 'admin') {
+            $currentType = $user->studentProfile ? 'student' : ($user->facultyProfile ? 'faculty_staff' : null);
+            $newType     = $data['personal_type'] ?? null;
+
+            if ($newType !== $currentType) {
+                // Remove whichever profile no longer applies
+                if ($currentType === 'student' && $newType !== 'student') {
+                    $user->studentProfile()->delete();
+                }
+                if ($currentType === 'faculty_staff' && $newType !== 'faculty_staff') {
+                    $user->facultyProfile()->delete();
+                }
+                // Create the newly designated profile
+                if ($newType === 'student' && $currentType !== 'student') {
+                    $user->studentProfile()->create([
+                        'program_id' => $data['program_id'] ?? null,
+                        'year_level' => $data['year_level'] ?? null,
+                    ]);
+                }
+                if ($newType === 'faculty_staff' && $currentType !== 'faculty_staff') {
+                    $user->facultyProfile()->create([]);
+                }
+            } elseif ($newType === 'student' && $user->studentProfile) {
+                // Type unchanged but program/year may have been adjusted
+                $user->studentProfile()->update([
+                    'program_id' => $data['program_id'] ?? $user->studentProfile->program_id,
+                    'year_level' => $data['year_level'] ?? $user->studentProfile->year_level,
+                ]);
+            }
+        }
 
         AuditLog::create([
             'user_id' => $request->user()->id,

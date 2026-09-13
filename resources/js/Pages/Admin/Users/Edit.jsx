@@ -3,9 +3,14 @@ import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { ArrowLeftIcon, KeyIcon } from '@heroicons/react/24/outline';
 
-export default function EditUser({ user }) {
+export default function EditUser({ user, programs }) {
+    const currentPersonalType = user.student_profile ? 'student' : (user.faculty_profile ? 'faculty_staff' : '');
+
     const { data, setData, put, processing, errors } = useForm({
         name: user.name, email: user.email, is_active: user.is_active,
+        personal_type: currentPersonalType,
+        program_id: user.student_profile?.program_id ?? '',
+        year_level: user.student_profile?.year_level ?? '',
     });
 
     const submit = (e) => { e.preventDefault(); put(route('admin.users.update', user.id)); };
@@ -56,6 +61,58 @@ export default function EditUser({ user }) {
                                     className="rounded border-gray-300 text-clinic-600 focus:ring-clinic-500" />
                                 <label htmlFor="is_active" className="text-sm text-gray-700">Account is active</label>
                             </div>
+
+                            {user.role?.name === 'admin' && (
+                                <div className="rounded-lg border border-gray-200 p-4 space-y-3 bg-gray-50">
+                                    <div>
+                                        <label className="label" htmlFor="edit-user-personal-type">
+                                            Personal Account <span className="text-gray-400 font-normal">(optional)</span>
+                                        </label>
+                                        <select
+                                            id="edit-user-personal-type"
+                                            name="personal_type"
+                                            value={data.personal_type}
+                                            onChange={e => setData('personal_type', e.target.value)}
+                                            className="input"
+                                        >
+                                            <option value="">None</option>
+                                            <option value="student">Student</option>
+                                            <option value="faculty_staff">Faculty / Staff</option>
+                                        </select>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Lets this admin switch to a Student or Faculty/Staff view of their own account —
+                                            to book appointments, request medicine, answer surveys, and submit requirements.
+                                            {currentPersonalType && data.personal_type !== currentPersonalType && (
+                                                <span className="text-amber-600 font-medium">
+                                                    {' '}Changing this will {data.personal_type ? 're-create' : 'delete'} their {currentPersonalType === 'student' ? 'student' : 'faculty/staff'} profile data.
+                                                </span>
+                                            )}
+                                        </p>
+                                        {errors.personal_type && <p className="error-msg">{errors.personal_type}</p>}
+                                    </div>
+
+                                    {data.personal_type === 'student' && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="label" htmlFor="edit-user-program">Program <span className="text-gray-400 font-normal">(optional)</span></label>
+                                                <select id="edit-user-program" name="program_id" value={data.program_id} onChange={e => setData('program_id', e.target.value)} className="input">
+                                                    <option value="">Not set</option>
+                                                    {programs.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+                                                </select>
+                                                {errors.program_id && <p className="error-msg">{errors.program_id}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="label" htmlFor="edit-user-year-level">Year Level <span className="text-gray-400 font-normal">(optional)</span></label>
+                                                <select id="edit-user-year-level" name="year_level" value={data.year_level} onChange={e => setData('year_level', e.target.value)} className="input">
+                                                    <option value="">Not set</option>
+                                                    {[1,2,3,4,5,6].map(y => <option key={y} value={y}>Year {y}</option>)}
+                                                </select>
+                                                {errors.year_level && <p className="error-msg">{errors.year_level}</p>}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             <div className="flex gap-3 pt-2">
                                 <button type="submit" disabled={processing} className="btn-primary">
                                     {processing ? 'Saving…' : 'Save Changes'}

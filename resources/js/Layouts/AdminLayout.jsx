@@ -11,7 +11,7 @@ import {
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LogoutConfirmModal from '@/Components/Common/LogoutConfirmModal';
 
 const navigation = [
@@ -44,7 +44,19 @@ export default function AdminLayout({ children, title }) {
     const [showLogout, setShowLogout] = useState(false);
     const logout = () => router.post(route('logout'));
 
-    const SidebarContent = () => (
+    const SidebarContent = () => {
+        const [userMenuOpen, setUserMenuOpen] = useState(false);
+        const userMenuRef = useRef(null);
+
+        useEffect(() => {
+            const closeOnOutsideClick = (e) => {
+                if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
+            };
+            document.addEventListener('mousedown', closeOnOutsideClick);
+            return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+        }, []);
+
+        return (
         <div className="flex flex-col h-full">
             <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
                 <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
@@ -68,20 +80,34 @@ export default function AdminLayout({ children, title }) {
                     </Link>
                 </div>
             </nav>
-            <div className="border-t border-gray-100 p-4">
-                <div className="flex items-center gap-3">
+            <div className="border-t border-gray-100 p-4 relative" ref={userMenuRef}>
+                {userMenuOpen && (
+                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                        <Link
+                            href={route(auth.user?.has_student_profile ? 'student.dashboard' : 'faculty.dashboard')}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                            <UserCircleIcon className="w-4 h-4" /> Personal Account
+                        </Link>
+                        <button
+                            onClick={() => { setUserMenuOpen(false); setShowLogout(true); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                            <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
+                        </button>
+                    </div>
+                )}
+                <button onClick={() => setUserMenuOpen(o => !o)} className="flex items-center gap-3 w-full text-left">
                     <UserAvatar user={auth.user} size="sm" className="flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
                         <p className="text-xs text-gray-500 truncate">{auth.user?.role?.display_name}</p>
                     </div>
-                    <button onClick={() => setShowLogout(true)} className="text-gray-400 hover:text-red-500 transition-colors" title="Logout">
-                        <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                    </button>
-                </div>
+                </button>
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="min-h-screen-safe bg-gray-50 lg:flex">

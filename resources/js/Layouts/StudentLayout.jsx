@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import NotificationBell from '@/Components/Common/NotificationBell';
 import PushNotificationPrompt from '@/Components/Common/PushNotificationPrompt';
 import {
     HomeIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon,
-    ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon,
+    ArrowRightOnRectangleIcon, ArrowLeftOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon,
     CheckCircleIcon, ExclamationTriangleIcon, ClipboardDocumentCheckIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
@@ -87,6 +87,7 @@ export default function StudentLayout({ children, title }) {
     const { url } = usePage();
     const [open, setOpen] = useState(false);
     const [showLogout, setShowLogout] = useState(false);
+    const isAdminUser = ['admin', 'super_admin'].includes(auth.user?.role?.name);
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -95,13 +96,25 @@ export default function StudentLayout({ children, title }) {
 
     const isLocked = (href) => onboarding && !onboarding.done && !ALWAYS_ACCESSIBLE.has(href);
 
-    const SidebarContent = () => (
+    const SidebarContent = () => {
+        const [userMenuOpen, setUserMenuOpen] = useState(false);
+        const userMenuRef = useRef(null);
+
+        useEffect(() => {
+            const closeOnOutsideClick = (e) => {
+                if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
+            };
+            document.addEventListener('mousedown', closeOnOutsideClick);
+            return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+        }, []);
+
+        return (
         <div className="flex flex-col h-full">
             <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
                 <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
                 <div>
                     <p className="font-semibold text-gray-900 text-sm">TPC e-Clinic</p>
-                    <p className="text-xs text-gray-500">Student Portal</p>
+                    <p className="text-xs text-gray-500">{isAdminUser ? 'Personal Account' : 'Student Portal'}</p>
                 </div>
             </div>
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -132,8 +145,23 @@ export default function StudentLayout({ children, title }) {
                     </Link>
                 </div>
             </nav>
-            <div className="border-t border-gray-100 p-4">
-                <div className="flex items-center gap-3">
+            <div className="border-t border-gray-100 p-4 relative" ref={userMenuRef}>
+                {userMenuOpen && (
+                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                        {isAdminUser && (
+                            <Link href={route('admin.dashboard')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <ArrowLeftOnRectangleIcon className="w-4 h-4" /> Back to Admin Panel
+                            </Link>
+                        )}
+                        <button
+                            onClick={() => { setUserMenuOpen(false); setShowLogout(true); }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                            <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
+                        </button>
+                    </div>
+                )}
+                <button onClick={() => setUserMenuOpen(o => !o)} className="flex items-center gap-3 w-full text-left">
                     {auth.user?.profile_photo_url ? (
                         <img src={auth.user.profile_photo_url} alt={auth.user.name}
                             className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
@@ -144,15 +172,13 @@ export default function StudentLayout({ children, title }) {
                     )}
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
-                        <p className="text-xs text-gray-500">Student</p>
+                        <p className="text-xs text-gray-500">{auth.user?.role?.display_name || 'Student'}</p>
                     </div>
-                    <button onClick={() => setShowLogout(true)} className="text-gray-400 hover:text-red-500 transition-colors">
-                        <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                    </button>
-                </div>
+                </button>
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="min-h-screen-safe bg-gray-50 lg:flex">

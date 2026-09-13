@@ -2,8 +2,11 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
-export default function CreateUser({ roles }) {
-    const { data, setData, post, processing, errors } = useForm({ name: '', email: '', role: 'student' });
+export default function CreateUser({ roles, programs }) {
+    const { data, setData, post, processing, errors } = useForm({
+        name: '', email: '', role: 'student',
+        personal_type: '', program_id: '', year_level: '',
+    });
 
     const submit = (e) => { e.preventDefault(); post(route('admin.users.store')); };
 
@@ -41,6 +44,56 @@ export default function CreateUser({ roles }) {
                                 </select>
                                 {errors.role && <p className="error-msg">{errors.role}</p>}
                             </div>
+
+                            {data.role === 'admin' && (
+                                <div className="rounded-lg border border-gray-200 p-4 space-y-3 bg-gray-50">
+                                    <div>
+                                        <label className="label" htmlFor="create-user-personal-type">
+                                            Personal Account <span className="text-gray-400 font-normal">(optional)</span>
+                                        </label>
+                                        <select
+                                            id="create-user-personal-type"
+                                            name="personal_type"
+                                            value={data.personal_type}
+                                            onChange={e => setData('personal_type', e.target.value)}
+                                            className="input"
+                                        >
+                                            <option value="">None</option>
+                                            <option value="student">Student</option>
+                                            <option value="faculty_staff">Faculty / Staff</option>
+                                        </select>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Lets this admin switch to a Student or Faculty/Staff view of their own account —
+                                            to book appointments, request medicine, answer surveys, and submit requirements.
+                                        </p>
+                                        {errors.personal_type && <p className="error-msg">{errors.personal_type}</p>}
+                                    </div>
+
+                                    {data.personal_type === 'student' && (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="label" htmlFor="create-user-program">Program <span className="text-gray-400 font-normal">(optional)</span></label>
+                                                <select id="create-user-program" name="program_id" value={data.program_id} onChange={e => setData('program_id', e.target.value)} className="input">
+                                                    <option value="">Not set</option>
+                                                    {programs.map(p => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
+                                                </select>
+                                                {errors.program_id && <p className="error-msg">{errors.program_id}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="label" htmlFor="create-user-year-level">Year Level <span className="text-gray-400 font-normal">(optional)</span></label>
+                                                <select id="create-user-year-level" name="year_level" value={data.year_level} onChange={e => setData('year_level', e.target.value)} className="input">
+                                                    <option value="">Not set</option>
+                                                    {[1,2,3,4,5,6].map(y => <option key={y} value={y}>Year {y}</option>)}
+                                                </select>
+                                                {errors.year_level && <p className="error-msg">{errors.year_level}</p>}
+                                            </div>
+                                            <p className="text-xs text-gray-400 col-span-2 -mt-1">
+                                                Can be left unset — the admin can complete this themselves after logging in.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             <div className="flex gap-3 pt-2">
                                 <button type="submit" disabled={processing} className="btn-primary">
                                     {processing ? 'Creating…' : 'Create User'}

@@ -210,7 +210,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     // ─── Student ───────────────────────────────────────────────────────────
-    Route::middleware(['role:student', 'password.changed'])
+    // Also open to admin/super_admin so an admin who genuinely has a linked
+    // student profile (program, year level) uses the real Student portal —
+    // correct program/year-scoped requirements, survey, and onboarding.
+    Route::middleware(['role:student,admin,super_admin', 'password.changed'])
         ->prefix('student')->name('student.')->group(function () {
 
         Route::get('/profile',          [Student\ProfileController::class, 'show'])->name('profile');
@@ -271,7 +274,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     // ─── Faculty ───────────────────────────────────────────────────────────
-    Route::middleware(['role:faculty_staff', 'password.changed'])
+    // Also open to admin/super_admin so admins can use these same personal
+    // features (appointments, walk-in, medicine, survey, requirements) under
+    // their own account, without needing a second faculty/student login.
+    Route::middleware(['role:faculty_staff,admin,super_admin', 'password.changed'])
         ->prefix('faculty')->name('faculty.')->group(function () {
 
         Route::get('/profile',          [Faculty\ProfileController::class, 'show'])->name('profile');

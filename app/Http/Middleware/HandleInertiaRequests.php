@@ -17,9 +17,12 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        // Compute onboarding status for students only
+        // Compute onboarding status for anyone with a real student profile —
+        // not just accounts whose role is literally "student". An admin who
+        // also has a linked studentProfile (program, year level) goes through
+        // the same onboarding checks when using the Student portal.
         $onboarding = null;
-        if ($user && optional($user->role)->name === 'student') {
+        if ($user && $user->studentProfile) {
             $profile    = $user->studentProfile;
             $profileOk  = $profile
                 && $profile->student_id
@@ -87,6 +90,8 @@ class HandleInertiaRequests extends Middleware
                     ] : null,
                     'force_password_change' => $user->force_password_change,
                     'profile_photo_url'     => $user->profile_photo_url,
+                    'has_student_profile'   => (bool) $user->studentProfile,
+                    'has_faculty_profile'   => (bool) $user->facultyProfile,
                 ] : null,
             ],
             'flash' => [
