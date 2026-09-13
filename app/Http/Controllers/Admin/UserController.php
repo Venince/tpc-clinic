@@ -42,6 +42,13 @@ class UserController extends Controller
             'users' => $users,
             'filters' => $request->only('search', 'role', 'is_active'),
             'roles' => $roles,
+            // Only super_admin sees/uses the bulk-delete action, and it never
+            // targets other super_admin accounts regardless of login status.
+            'neverLoggedInCount' => $isSuperAdmin
+                ? User::whereNull('last_login_at')
+                    ->whereHas('role', fn($r) => $r->where('name', '!=', 'super_admin'))
+                    ->count()
+                : 0,
         ]);
     }
 
@@ -268,6 +275,46 @@ class UserController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')->with('success', 'User deleted.');
+    }
+
+    public function destroyNeverLoggedIn(Request $request)
+    {
+        abort_unless($request->user()->isSuperAdmin(), 403, 'Super admin only.');
+
+        // Never touch super_admin accounts here, regardless of login status —
+        // this action only targets student/faculty/admin accounts that have
+        // literally never authenticated.
+        $query = User::whereNull('last_login_at')
+            ->whereHas('role', fn($r) => $r->where('name', '!=', 'super_admin'));
+
+        $users = $query->get();
+        $count = $users->count();
+
+        if ($count === 0) {
+            return back()->with('error', 'No never-logged-in accounts to delete.');
+        }
+
+        foreach ($users as $user) {
+            $user->studentProfile?->delete();
+            $user->facultyProfile?->delete();
+        }
+
+        // Re-run the same scoping condition for the actual delete, rather than
+        // deleting by collected IDs, so this stays correct even if the table
+        // changed between the SELECT and the DELETE.
+        User::whereNull('last_login_at')
+            ->whereHas('role', fn($r) => $r->where('name', '!=', 'super_admin'))
+            ->delete();
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'bulk_delete_never_logged_in',
+            'model_type' => 'User',
+            'model_id' => null,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->route('admin.users.index')->with('success', "Deleted {$count} account(s) that never logged in.");
     }
 
     public function toggleActive(Request $request, User $user)

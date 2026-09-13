@@ -1,19 +1,29 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
-import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import PhotoLightbox from '@/Components/Common/PhotoLightbox';
+import Modal from '@/Components/UI/Modal';
 
-export default function UsersIndex({ users, filters, roles, auth }) {
+export default function UsersIndex({ users, filters, roles, auth, neverLoggedInCount }) {
     const [search, setSearch] = useState(filters.search || '');
     const [role,   setRole]   = useState(filters.role   || '');
     const [viewingPhoto, setViewingPhoto] = useState(null);
+    const [showDeleteNeverLoggedIn, setShowDeleteNeverLoggedIn] = useState(false);
+    const [deletingNeverLoggedIn, setDeletingNeverLoggedIn] = useState(false);
     const { post, delete: destroy } = useForm();
 
     const applyFilters = () => router.get(route('admin.users.index'), { search, role }, { preserveState: true });
     const toggleActive = (user) => router.post(route('admin.users.toggle', user.id));
     const deleteUser   = (user) => { if (confirm(`Delete ${user.name}?`)) router.delete(route('admin.users.destroy', user.id)); };
+
+    const confirmDeleteNeverLoggedIn = () => {
+        setDeletingNeverLoggedIn(true);
+        router.delete(route('admin.users.destroy-never-logged-in'), {
+            onFinish: () => { setDeletingNeverLoggedIn(false); setShowDeleteNeverLoggedIn(false); },
+        });
+    };
 
     const statusBadge = (active) => (
         <span className={`badge ${active ? 'badge-green' : 'badge-red'}`}>{active ? 'Active' : 'Inactive'}</span>
@@ -34,11 +44,24 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                     <p className="page-subtitle">Manage all system accounts</p>
                 </div>
                 <div className="flex gap-2 sm:ml-auto">
-                    <Link href={route('admin.users.import')} method="get" className="btn-secondary btn-sm flex-1 sm:flex-none justify-center">
-                        <ArrowUpTrayIcon className="w-4 h-4 mr-1" /> Bulk Import
+                    {auth.user.role?.name === 'super_admin' && neverLoggedInCount > 0 && (
+                        <button
+                            onClick={() => setShowDeleteNeverLoggedIn(true)}
+                            title={`Delete Never Logged In (${neverLoggedInCount})`}
+                            className="btn-danger btn-sm flex-1 sm:flex-none justify-center"
+                        >
+                            <TrashIcon className="w-4 h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Delete Never Logged In ({neverLoggedInCount})</span>
+                            <span className="sm:hidden ml-1">{neverLoggedInCount}</span>
+                        </button>
+                    )}
+                    <Link href={route('admin.users.import')} method="get" title="Bulk Import" className="btn-secondary btn-sm flex-1 sm:flex-none justify-center">
+                        <ArrowUpTrayIcon className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Bulk Import</span>
                     </Link>
-                    <Link href={route('admin.users.create')} className="btn-primary btn-sm flex-1 sm:flex-none justify-center">
-                        <PlusIcon className="w-4 h-4 mr-1" /> Add User
+                    <Link href={route('admin.users.create')} title="Add User" className="btn-primary btn-sm flex-1 sm:flex-none justify-center">
+                        <PlusIcon className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Add User</span>
                     </Link>
                 </div>
             </div>
@@ -100,7 +123,7 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                                     <td className="text-gray-400 text-xs whitespace-nowrap">{user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Never'}</td>
                                     <td className="whitespace-nowrap">
                                         <div className="flex items-center gap-2">
-                                            {user.role?.name !== 'super_admin' || auth.user.role === 'super_admin' ? (
+                                            {user.role?.name !== 'super_admin' || auth.user.role?.name === 'super_admin' ? (
                                                 <>
                                                     <Link href={route('admin.users.edit', user.id)} onClick={e => e.stopPropagation()} className="text-gray-400 hover:text-clinic-600 transition-colors">
                                                         <PencilIcon className="w-4 h-4" />
@@ -146,6 +169,35 @@ export default function UsersIndex({ users, filters, roles, auth }) {
                 name={viewingPhoto?.name}
                 onClose={() => setViewingPhoto(null)}
             />
+
+            {showDeleteNeverLoggedIn && (
+                <Modal onClose={() => setShowDeleteNeverLoggedIn(false)} size="md">
+                    <div className="flex items-start gap-3 px-6 pt-6 pb-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                            <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-900 text-base">Delete Never-Logged-In Accounts</h3>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                This permanently deletes <strong>{neverLoggedInCount}</strong> account{neverLoggedInCount !== 1 ? 's' : ''} that
+                                {' '}{neverLoggedInCount !== 1 ? 'have' : 'has'} never logged in, along with any linked student/faculty profile data.
+                                Super Admin accounts are never included. This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
+                        <button type="button" onClick={() => setShowDeleteNeverLoggedIn(false)} className="btn-secondary btn-sm">Cancel</button>
+                        <button
+                            type="button"
+                            onClick={confirmDeleteNeverLoggedIn}
+                            disabled={deletingNeverLoggedIn}
+                            className="btn-danger btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {deletingNeverLoggedIn ? 'Deleting…' : `Delete ${neverLoggedInCount} Account${neverLoggedInCount !== 1 ? 's' : ''}`}
+                        </button>
+                    </div>
+                </Modal>
+            )}
         </AdminLayout>
     );
 }
