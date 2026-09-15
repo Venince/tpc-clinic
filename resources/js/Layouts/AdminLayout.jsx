@@ -31,32 +31,19 @@ const navigation = [
     { name: 'Profile',           href: 'admin.profile',            icon: UserCircleIcon },
 ];
 
-export default function AdminLayout({ children, title }) {
-    const { auth, flash } = usePage().props;
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { url } = usePage();
+function SidebarContent({ auth, onLogout }) {
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef(null);
 
     useEffect(() => {
-        if (flash?.success) toast.success(flash.success);
-        if (flash?.error)   toast.error(flash.error);
-    }, [flash?.success, flash?.error]);
+        const closeOnOutsideClick = (e) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
+        };
+        document.addEventListener('mousedown', closeOnOutsideClick);
+        return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+    }, []);
 
-    const [showLogout, setShowLogout] = useState(false);
-    const logout = () => router.post(route('logout'));
-
-    const SidebarContent = () => {
-        const [userMenuOpen, setUserMenuOpen] = useState(false);
-        const userMenuRef = useRef(null);
-
-        useEffect(() => {
-            const closeOnOutsideClick = (e) => {
-                if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
-            };
-            document.addEventListener('mousedown', closeOnOutsideClick);
-            return () => document.removeEventListener('mousedown', closeOnOutsideClick);
-        }, []);
-
-        return (
+    return (
         <div className="flex flex-col h-full">
             <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
                 <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
@@ -90,7 +77,7 @@ export default function AdminLayout({ children, title }) {
                             <UserCircleIcon className="w-4 h-4" /> Personal Account
                         </Link>
                         <button
-                            onClick={() => { setUserMenuOpen(false); setShowLogout(true); }}
+                            onClick={() => { setUserMenuOpen(false); onLogout(); }}
                             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                         >
                             <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
@@ -106,14 +93,27 @@ export default function AdminLayout({ children, title }) {
                 </button>
             </div>
         </div>
-        );
-    };
+    );
+}
+
+export default function AdminLayout({ children, title }) {
+    const { auth, flash } = usePage().props;
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { url } = usePage();
+
+    useEffect(() => {
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error)   toast.error(flash.error);
+    }, [flash?.success, flash?.error]);
+
+    const [showLogout, setShowLogout] = useState(false);
+    const logout = () => router.post(route('logout'));
 
     return (
         <div className="min-h-screen-safe bg-gray-50 lg:flex">
             {/* Desktop sidebar — sticky, scrolls independently of the page */}
             <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:h-screen lg:sticky lg:top-0 bg-white border-r border-gray-200 flex-shrink-0">
-                <SidebarContent />
+                <SidebarContent auth={auth} onLogout={() => setShowLogout(true)} />
             </aside>
 
             {/* Mobile sidebar */}
@@ -129,7 +129,7 @@ export default function AdminLayout({ children, title }) {
                     <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
-                    <SidebarContent />
+                    <SidebarContent auth={auth} onLogout={() => setShowLogout(true)} />
                 </aside>
             </div>
 

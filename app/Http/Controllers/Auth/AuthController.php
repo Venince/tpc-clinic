@@ -28,6 +28,8 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $request->validate(['remember' => ['sometimes', 'boolean']]);
+
         $key        = 'login_attempts:' . md5($credentials['email'] . '|' . $request->ip());
         $lockoutKey = 'login_lockout:'  . md5($credentials['email'] . '|' . $request->ip());
 
@@ -66,8 +68,15 @@ class AuthController extends Controller
         $user = \App\Models\User::find(Auth::id());
 
         if (!$user->is_active) {
+            // Full teardown — otherwise a lingering "remember me" cookie could
+            // silently re-authenticate a deactivated account later.
             Auth::logout();
-            return back()->withErrors(['email' => 'Your account has been deactivated.'])->onlyInput('email');
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Your account has been deactivated.']);
         }
 
         // Clear on success

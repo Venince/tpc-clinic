@@ -22,6 +22,77 @@ const nav = [
     { name: 'Profile',         href: 'faculty.profile',            icon: UserCircleIcon },
 ];
 
+function SidebarContent({ auth, isAdminUser, onLogout }) {
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef(null);
+
+    useEffect(() => {
+        const closeOnOutsideClick = (e) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
+        };
+        document.addEventListener('mousedown', closeOnOutsideClick);
+        return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+    }, []);
+
+    return (
+    <div className="flex flex-col h-full">
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
+            <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
+            <div>
+                <p className="font-semibold text-gray-900 text-sm">TPC e-Clinic</p>
+                <p className="text-xs text-gray-500">{isAdminUser ? 'Personal Account' : 'Faculty Portal'}</p>
+            </div>
+        </div>
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+            {nav.map(item => (
+                <Link key={item.name} href={route(item.href)}
+                    className={clsx('sidebar-link', { active: route().current(item.href) })}>
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    {item.name}
+                </Link>
+            ))}
+            <div className="pt-2 mt-2 border-t border-gray-100">
+                <Link href={route('home')} className={clsx('sidebar-link', { active: route().current('home') })}>
+                    <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
+                    Public Home
+                </Link>
+            </div>
+        </nav>
+        <div className="border-t border-gray-100 p-4 relative" ref={userMenuRef}>
+            {userMenuOpen && (
+                <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                    {isAdminUser && (
+                        <Link href={route('admin.dashboard')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                            <ArrowLeftOnRectangleIcon className="w-4 h-4" /> Back to Admin Panel
+                        </Link>
+                    )}
+                    <button
+                        onClick={() => { setUserMenuOpen(false); onLogout(); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                        <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
+                    </button>
+                </div>
+            )}
+            <button onClick={() => setUserMenuOpen(o => !o)} className="flex items-center gap-3 w-full text-left">
+                {auth.user?.profile_photo_url ? (
+                    <img src={auth.user.profile_photo_url} alt={auth.user.name}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                    <div className="w-8 h-8 bg-clinic-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-clinic-700 font-semibold text-xs">{auth.user?.name?.charAt(0)}</span>
+                    </div>
+                )}
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
+                    <p className="text-xs text-gray-500">{auth.user?.role?.display_name || 'Faculty / Staff'}</p>
+                </div>
+            </button>
+        </div>
+    </div>
+    );
+}
+
 export default function FacultyLayout({ children, title }) {
     const { auth, flash } = usePage().props;
     const { url } = usePage();
@@ -34,82 +105,12 @@ export default function FacultyLayout({ children, title }) {
         if (flash?.error)   toast.error(flash.error);
     }, [flash?.success, flash?.error]);
 
-    const SidebarContent = () => {
-        const [userMenuOpen, setUserMenuOpen] = useState(false);
-        const userMenuRef = useRef(null);
-
-        useEffect(() => {
-            const closeOnOutsideClick = (e) => {
-                if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
-            };
-            document.addEventListener('mousedown', closeOnOutsideClick);
-            return () => document.removeEventListener('mousedown', closeOnOutsideClick);
-        }, []);
-
-        return (
-        <div className="flex flex-col h-full">
-            <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
-                <img src="/images/tpc-logo.png" alt="TPC Logo" className="w-9 h-9 object-contain rounded-full flex-shrink-0" />
-                <div>
-                    <p className="font-semibold text-gray-900 text-sm">TPC e-Clinic</p>
-                    <p className="text-xs text-gray-500">{isAdminUser ? 'Personal Account' : 'Faculty Portal'}</p>
-                </div>
-            </div>
-            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                {nav.map(item => (
-                    <Link key={item.name} href={route(item.href)}
-                        className={clsx('sidebar-link', { active: route().current(item.href) })}>
-                        <item.icon className="w-5 h-5 flex-shrink-0" />
-                        {item.name}
-                    </Link>
-                ))}
-                <div className="pt-2 mt-2 border-t border-gray-100">
-                    <Link href={route('home')} className={clsx('sidebar-link', { active: route().current('home') })}>
-                        <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
-                        Public Home
-                    </Link>
-                </div>
-            </nav>
-            <div className="border-t border-gray-100 p-4 relative" ref={userMenuRef}>
-                {userMenuOpen && (
-                    <div className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
-                        {isAdminUser && (
-                            <Link href={route('admin.dashboard')} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                <ArrowLeftOnRectangleIcon className="w-4 h-4" /> Back to Admin Panel
-                            </Link>
-                        )}
-                        <button
-                            onClick={() => { setUserMenuOpen(false); setShowLogout(true); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                        >
-                            <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
-                        </button>
-                    </div>
-                )}
-                <button onClick={() => setUserMenuOpen(o => !o)} className="flex items-center gap-3 w-full text-left">
-                    {auth.user?.profile_photo_url ? (
-                        <img src={auth.user.profile_photo_url} alt={auth.user.name}
-                            className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-                    ) : (
-                        <div className="w-8 h-8 bg-clinic-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-clinic-700 font-semibold text-xs">{auth.user?.name?.charAt(0)}</span>
-                        </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{auth.user?.name}</p>
-                        <p className="text-xs text-gray-500">{auth.user?.role?.display_name || 'Faculty / Staff'}</p>
-                    </div>
-                </button>
-            </div>
-        </div>
-        );
-    };
 
     return (
         <div className="min-h-screen-safe bg-gray-50 lg:flex">
             {/* Desktop sidebar — sticky, scrolls independently of the page */}
             <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:h-screen lg:sticky lg:top-0 bg-white border-r border-gray-200 flex-shrink-0">
-                <SidebarContent />
+                <SidebarContent auth={auth} isAdminUser={isAdminUser} onLogout={() => setShowLogout(true)} />
             </aside>
 
             {/* Mobile sidebar */}
@@ -125,7 +126,7 @@ export default function FacultyLayout({ children, title }) {
                     <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-gray-500">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
-                    <SidebarContent />
+                    <SidebarContent auth={auth} isAdminUser={isAdminUser} onLogout={() => setShowLogout(true)} />
                 </aside>
             </div>
 
