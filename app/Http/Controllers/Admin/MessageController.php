@@ -14,30 +14,47 @@ class MessageController extends Controller
 {
     public function __construct(private MessagingService $messagingService) {}
 
+    /**
+     * Which portal this request is being served through — based on the
+     * route prefix, not the user's role. An admin/super_admin can browse
+     * their personal Student or Faculty portal, so keying this off role
+     * would always resolve to "admin" and bounce them back to the Admin
+     * Panel even while they're inside student.* or faculty.* routes.
+     */
+    private function currentPortal(Request $request): string
+    {
+        $routeName = $request->route()?->getName() ?? '';
+        return match (true) {
+            str_starts_with($routeName, 'student.') => 'student',
+            str_starts_with($routeName, 'faculty.') => 'faculty',
+            default                                 => 'admin',
+        };
+    }
+
     private function indexPage(Request $request): string
     {
-        return match($request->user()->role->name) {
-            'student'       => 'Student/Messages/Index',
-            'faculty_staff' => 'Faculty/Messages/Index',
-            default         => 'Admin/Messages/Index',
+        return match($this->currentPortal($request)) {
+            'student' => 'Student/Messages/Index',
+            'faculty' => 'Faculty/Messages/Index',
+            default   => 'Admin/Messages/Index',
         };
     }
 
     private function showPage(Request $request): string
     {
-        return match($request->user()->role->name) {
-            'student'       => 'Student/Messages/Show',
-            'faculty_staff' => 'Faculty/Messages/Show',
-            default         => 'Admin/Messages/Show',
+        return match($this->currentPortal($request)) {
+            'student' => 'Student/Messages/Show',
+            'faculty' => 'Faculty/Messages/Show',
+            default   => 'Admin/Messages/Show',
         };
     }
 
     private function indexRoute(Request $request): string
     {
-        return match($request->user()->role->name) {
-            'student'       => 'student.messages.index',
-            'faculty_staff' => 'faculty.messages.index',
-            default         => 'admin.messages.index',
+        return match($this->currentPortal($request)) {
+            'student' => 'student.messages.index',
+            'faculty' => 'faculty.messages.index',
+            default   => 'admin.messages.index',
         };
     }
 
@@ -110,11 +127,10 @@ class MessageController extends Controller
             $data['body']
         );
 
-        $role = $request->user()->role->name;
-        $route = match($role) {
-            'student'       => 'student.messages.show',
-            'faculty_staff' => 'faculty.messages.show',
-            default         => 'admin.messages.show',
+        $route = match($this->currentPortal($request)) {
+            'student' => 'student.messages.show',
+            'faculty' => 'faculty.messages.show',
+            default   => 'admin.messages.show',
         };
 
         return redirect()->route($route, $conversation)->with('success', 'Message sent.');

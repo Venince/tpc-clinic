@@ -88,15 +88,23 @@ class DashboardController extends Controller
             ->map(fn($s) => ['program' => $s->program?->code ?? 'N/A', 'total' => $s->total]);
 
         // Recent appointments
-        $recentAppointments = Appointment::with(['user:id,name,profile_photo_path', 'slot'])
+        // NOTE: `user` is loaded with withTrashed() because the patient account
+        // may have been soft-deleted since the appointment was made — without
+        // it, the relation silently comes back null and ->name/->profile_photo_url
+        // below would throw. `slot` and the mapped fields are null-safe for the
+        // same reason (a slot could theoretically be missing too).
+        $recentAppointments = Appointment::with([
+                'user'  => fn($q) => $q->withTrashed()->select('id', 'name', 'profile_photo_path'),
+                'slot',
+            ])
             ->latest()->limit(5)->get()
             ->map(fn($a) => [
                 'id'            => $a->id,
-                'patient'       => $a->user->name,
-                'patient_photo' => $a->user->profile_photo_url,
+                'patient'       => $a->user?->name ?? 'Deleted User',
+                'patient_photo' => $a->user?->profile_photo_url,
                 'purpose'       => $a->purpose,
-                'date'          => $a->slot->date->format('M d, Y'),
-                'time'          => $a->slot->start_time,
+                'date'          => $a->slot?->date?->format('M d, Y') ?? '—',
+                'time'          => $a->slot?->start_time ?? '—',
                 'status'        => $a->status,
             ]);
 

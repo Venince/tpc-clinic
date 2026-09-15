@@ -25,22 +25,24 @@ class WalkinLogController extends Controller
             ->when($request->date_from, fn($q) => $q->whereDate('visited_at', '>=', $request->date_from))
             ->when($request->date_to,   fn($q) => $q->whereDate('visited_at', '<=', $request->date_to))
             ->when($request->user_type, fn($q) => $q->whereHas('user.role', fn($r) =>
-                $r->where('name', $request->user_type)
+                $request->user_type === 'admin'
+                    ? $r->whereIn('name', ['admin', 'super_admin'])
+                    : $r->where('name', $request->user_type)
             ))
             ->latest('visited_at')
             ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('Admin/WalkinLog/Index', [
-            'logs'  => $logs,
-            'stats' => [
+            'logs'      => $logs,
+            'stats'     => [
                 'today'      => WalkinLog::whereDate('visited_at', today())->count(),
                 'this_month' => WalkinLog::whereMonth('visited_at', now()->month)
                                     ->whereYear('visited_at', now()->year)->count(),
                 'total'      => WalkinLog::count(),
             ],
-            'users' => User::with('role')
-                ->whereHas('role', fn($q) => $q->whereIn('name', ['student', 'faculty_staff']))
+            'users'     => User::with('role')
+                ->whereHas('role', fn($q) => $q->whereIn('name', ['student', 'faculty_staff', 'admin', 'super_admin']))
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'email', 'role_id'])
@@ -54,7 +56,8 @@ class WalkinLogController extends Controller
                 ->where('quantity', '>', 0)
                 ->orderBy('name')
                 ->get(['id', 'name', 'unit', 'quantity']),
-            'filters' => $request->only('search', 'date_from', 'date_to', 'user_type'),
+            'filters'   => $request->only('search', 'date_from', 'date_to', 'user_type'),
+            'highlight' => $request->query('highlight'),
         ]);
     }
 

@@ -1,6 +1,6 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     PlusIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon,
     XMarkIcon, MagnifyingGlassIcon, FunnelIcon, HeartIcon, BeakerIcon,
@@ -30,20 +30,21 @@ function DetailCard({ label, value }) {
 }
 
 function RoleBadge({ role }) {
+    const labels = { student: 'Student', faculty_staff: 'Faculty', admin: 'Admin', super_admin: 'Admin' };
     return (
         <span className={`badge text-[10px] ${role === 'student' ? 'badge-blue' : 'badge-purple'}`}>
-            {role === 'student' ? 'Student' : 'Faculty'}
+            {labels[role] ?? role}
         </span>
     );
 }
 
 /* ── main component ── */
-export default function WalkinLogIndex({ logs, stats, users, medicines, filters }) {
+export default function WalkinLogIndex({ logs, stats, users, medicines, filters, highlight }) {
     const { auth } = usePage().props;
     const isSuperAdmin = auth?.user?.role?.name === 'super_admin';
 
     const [showCreate,      setShowCreate]      = useState(false);
-    const [expanded,        setExpanded]        = useState(null);
+    const [expanded,        setExpanded]        = useState(highlight ? parseInt(highlight) : null);
     const [showFilters,     setShowFilters]     = useState(false);
     const [patientSearch,   setPatientSearch]   = useState('');
     const [showPatientDrop, setShowPatientDrop] = useState(false);
@@ -51,8 +52,18 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
     const [dateFrom,        setDateFrom]        = useState(filters?.date_from || '');
     const [dateTo,          setDateTo]          = useState(filters?.date_to   || '');
     const [userType,        setUserType]        = useState(filters?.user_type || '');
+    const highlightRef = useRef(null);
 
     const hasActiveFilters = search || dateFrom || dateTo || userType;
+
+    // Scroll to the highlighted log once mounted (deep-link from notification)
+    useEffect(() => {
+        if (highlight && highlightRef.current) {
+            setTimeout(() => {
+                highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+        }
+    }, [highlight]);
 
     const now = new Date();
     const localDT = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
@@ -203,6 +214,7 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                     <option value="">All</option>
                                     <option value="student">Student</option>
                                     <option value="faculty_staff">Faculty/Staff</option>
+                                    <option value="admin">Admin</option>
                                 </select>
                             </div>
                             <div className="flex gap-2 items-end">
@@ -222,9 +234,17 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
             <div className="lg:hidden space-y-3">
                 {logs.data.map(log => {
                     const isOpen = expanded === log.id;
+                    const isHighlight = highlight && parseInt(highlight) === log.id;
                     const vs = log.vital_signs;
                     return (
-                        <div key={log.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div
+                            key={log.id}
+                            ref={isHighlight ? highlightRef : null}
+                            className={[
+                                'bg-white rounded-xl border shadow-sm overflow-hidden',
+                                isHighlight ? 'border-clinic-300 ring-1 ring-clinic-200' : 'border-gray-200',
+                            ].join(' ')}
+                        >
                             <button
                                 type="button"
                                 className="w-full text-left px-4 py-4 flex items-start gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors focus:outline-none"
@@ -236,6 +256,9 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className="font-semibold text-sm text-gray-900 truncate">{log.user?.name}</p>
                                         <RoleBadge role={log.user?.role?.name} />
+                                        {isHighlight && (
+                                            <span className="w-1.5 h-1.5 rounded-full bg-clinic-500 animate-pulse flex-shrink-0" />
+                                        )}
                                     </div>
                                     <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">{log.chief_complaint}</p>
                                     <div className="flex items-center gap-2 mt-1">
@@ -333,17 +356,26 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
 
                     {logs.data.map(log => {
                         const isOpen = expanded === log.id;
+                        const isHighlight = highlight && parseInt(highlight) === log.id;
                         const vs = log.vital_signs;
                         return (
-                            <div key={log.id}>
+                            <div key={log.id} ref={isHighlight ? highlightRef : null}>
                                 <div
-                                    className="px-6 py-4 grid grid-cols-12 gap-4 hover:bg-gray-50 cursor-pointer"
+                                    className={[
+                                        'px-6 py-4 grid grid-cols-12 gap-4 hover:bg-gray-50 cursor-pointer',
+                                        isHighlight ? 'bg-clinic-50' : '',
+                                    ].join(' ')}
                                     onClick={() => setExpanded(isOpen ? null : log.id)}
                                 >
                                     <div className="col-span-3 flex items-center gap-2.5 min-w-0">
                                         <UserAvatar user={log.user} size="sm" className="flex-shrink-0" />
                                         <div className="min-w-0">
-                                            <p className="font-medium text-sm text-gray-900 truncate">{log.user?.name}</p>
+                                            <div className="flex items-center gap-1.5">
+                                                <p className="font-medium text-sm text-gray-900 truncate">{log.user?.name}</p>
+                                                {isHighlight && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-clinic-500 animate-pulse flex-shrink-0" />
+                                                )}
+                                            </div>
                                             <RoleBadge role={log.user?.role?.name} />
                                         </div>
                                     </div>
@@ -450,7 +482,9 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters 
                                                         onMouseDown={() => { setData('user_id', u.id); setShowPatientDrop(false); }}
                                                         className="w-full text-left px-4 py-2.5 hover:bg-gray-50 border-b border-gray-50 last:border-0">
                                                         <p className="text-sm font-medium text-gray-900">{u.name}</p>
-                                                        <p className="text-xs text-gray-400">{u.email} · {u.role === 'student' ? 'Student' : 'Faculty/Staff'}</p>
+                                                        <p className="text-xs text-gray-400">
+                                                            {u.email} · {u.role === 'student' ? 'Student' : u.role === 'faculty_staff' ? 'Faculty/Staff' : 'Admin'}
+                                                        </p>
                                                     </button>
                                                 ))}
                                             </div>

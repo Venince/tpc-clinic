@@ -47,9 +47,10 @@ class WalkinLogNotification extends Notification implements ShouldQueue
         // Resolve the deep-link URL based on the patient's role
         $role = $notifiable->role?->name;
         $url  = match ($role) {
-            'student'       => route('student.walkin.index', ['highlight' => $this->log->id]),
-            'faculty_staff' => route('faculty.walkin.index', ['highlight' => $this->log->id]),
-            default         => null,
+            'student'              => route('student.walkin.index', ['highlight' => $this->log->id]),
+            'faculty_staff'        => route('faculty.walkin.index', ['highlight' => $this->log->id]),
+            'admin', 'super_admin' => route('admin.walkin.index', ['highlight' => $this->log->id]),
+            default                => null,
         };
 
         return [
