@@ -88,6 +88,22 @@ class EnsureProfileCompleted
             }
         }
 
+        if ($role === 'faculty_staff') {
+
+            // Profile check only — Faculty doesn't have a mandatory
+            // survey/requirements step, just a completed profile.
+            $profile   = $user->facultyProfile;
+            $profileOk = $profile
+                && $profile->department
+                && $profile->position
+                && $profile->contact_number;
+
+            if (!$profileOk && !$request->routeIs('faculty.profile', 'faculty.profile.*')) {
+                return redirect()->route('faculty.profile')
+                    ->with('error', 'Please complete your profile before using other features.');
+            }
+        }
+
         return $next($request);
     }
 }

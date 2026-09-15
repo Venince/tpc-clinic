@@ -6,6 +6,7 @@ import {
     HomeIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon,
     ArrowRightOnRectangleIcon, ArrowLeftOnRectangleIcon, Bars3Icon, XMarkIcon, GlobeAltIcon, ClipboardDocumentCheckIcon,
+    ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
@@ -22,7 +23,33 @@ const nav = [
     { name: 'Profile',         href: 'faculty.profile',            icon: UserCircleIcon },
 ];
 
-function SidebarContent({ auth, isAdminUser, onLogout }) {
+// Only the profile (and notifications, which isn't in the nav) stays reachable
+// until the profile is complete — everything else is locked.
+const ALWAYS_ACCESSIBLE = new Set([
+    'faculty.profile',
+    'faculty.notifications',
+]);
+
+function OnboardingBanner({ facultyOnboarding }) {
+    if (!facultyOnboarding || facultyOnboarding.done) return null;
+
+    return (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p className="text-xs sm:text-sm font-semibold text-amber-800 flex-1 min-w-0">
+                    Complete your profile to access all features.
+                </p>
+                <Link href={route('faculty.profile')}
+                    className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-full px-2.5 py-1 transition-colors whitespace-nowrap">
+                    Complete Profile
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+function SidebarContent({ auth, isAdminUser, isLocked, onLogout }) {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const userMenuRef = useRef(null);
 
@@ -44,13 +71,26 @@ function SidebarContent({ auth, isAdminUser, onLogout }) {
             </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-            {nav.map(item => (
-                <Link key={item.name} href={route(item.href)}
-                    className={clsx('sidebar-link', { active: route().current(item.href) })}>
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
-                    {item.name}
-                </Link>
-            ))}
+            {nav.map(item => {
+                const locked = isLocked(item.href);
+                if (locked) {
+                    return (
+                        <div key={item.name} title="Complete your profile to unlock this section"
+                            className="sidebar-link opacity-40 cursor-not-allowed select-none">
+                            <item.icon className="w-5 h-5 flex-shrink-0" />
+                            <span className="flex-1">{item.name}</span>
+                            <span className="text-[10px] bg-gray-100 text-gray-500 rounded px-1.5 py-0.5 font-medium">Locked</span>
+                        </div>
+                    );
+                }
+                return (
+                    <Link key={item.name} href={route(item.href)}
+                        className={clsx('sidebar-link', { active: route().current(item.href) })}>
+                        <item.icon className="w-5 h-5 flex-shrink-0" />
+                        {item.name}
+                    </Link>
+                );
+            })}
             <div className="pt-2 mt-2 border-t border-gray-100">
                 <Link href={route('home')} className={clsx('sidebar-link', { active: route().current('home') })}>
                     <GlobeAltIcon className="w-5 h-5 flex-shrink-0" />
@@ -94,7 +134,7 @@ function SidebarContent({ auth, isAdminUser, onLogout }) {
 }
 
 export default function FacultyLayout({ children, title }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, facultyOnboarding } = usePage().props;
     const { url } = usePage();
     const [open, setOpen] = useState(false);
     const [showLogout, setShowLogout] = useState(false);
@@ -105,12 +145,13 @@ export default function FacultyLayout({ children, title }) {
         if (flash?.error)   toast.error(flash.error);
     }, [flash?.success, flash?.error]);
 
+    const isLocked = (href) => facultyOnboarding && !facultyOnboarding.done && !ALWAYS_ACCESSIBLE.has(href);
 
     return (
         <div className="min-h-screen-safe bg-gray-50 lg:flex">
             {/* Desktop sidebar — sticky, scrolls independently of the page */}
             <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:h-screen lg:sticky lg:top-0 bg-white border-r border-gray-200 flex-shrink-0">
-                <SidebarContent auth={auth} isAdminUser={isAdminUser} onLogout={() => setShowLogout(true)} />
+                <SidebarContent auth={auth} isAdminUser={isAdminUser} isLocked={isLocked} onLogout={() => setShowLogout(true)} />
             </aside>
 
             {/* Mobile sidebar */}
@@ -126,7 +167,7 @@ export default function FacultyLayout({ children, title }) {
                     <button onClick={() => setOpen(false)} className="absolute top-4 right-4 text-gray-500">
                         <XMarkIcon className="w-6 h-6" />
                     </button>
-                    <SidebarContent auth={auth} isAdminUser={isAdminUser} onLogout={() => setShowLogout(true)} />
+                    <SidebarContent auth={auth} isAdminUser={isAdminUser} isLocked={isLocked} onLogout={() => setShowLogout(true)} />
                 </aside>
             </div>
 
@@ -142,6 +183,8 @@ export default function FacultyLayout({ children, title }) {
                         <NotificationBell notificationsRoute="faculty.notifications" role="faculty_staff" userId={auth.user?.id} />
                     </div>
                 </header>
+
+                <OnboardingBanner facultyOnboarding={facultyOnboarding} />
 
                 {/* p-4 on mobile, p-6 on sm+ */}
                 <main className="flex-1 overflow-x-hidden p-4 sm:p-6 flex flex-col">

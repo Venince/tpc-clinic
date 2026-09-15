@@ -78,6 +78,25 @@ class HandleInertiaRequests extends Middleware
             ];
         }
 
+        // Same idea for Faculty, but scoped to its own profile relation so it
+        // doesn't collide with $onboarding above — an admin can have both a
+        // studentProfile and a facultyProfile and browse either portal, and
+        // each one needs its own independent completion status. Faculty only
+        // requires a completed profile (no survey/requirements step).
+        $facultyOnboarding = null;
+        if ($user && $user->facultyProfile) {
+            $fProfile         = $user->facultyProfile;
+            $facultyProfileOk = $fProfile
+                && $fProfile->department
+                && $fProfile->position
+                && $fProfile->contact_number;
+
+            $facultyOnboarding = [
+                'profile_completed' => (bool) $facultyProfileOk,
+                'done'              => (bool) $facultyProfileOk,
+            ];
+        }
+
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $user ? [
@@ -111,7 +130,8 @@ class HandleInertiaRequests extends Middleware
                     'created_at' => $n->created_at,
                 ]),
             ] : null,
-            'onboarding' => $onboarding,   // ← only new line in the return
+            'onboarding'        => $onboarding,
+            'facultyOnboarding' => $facultyOnboarding,   // ← new
         ]);
     }
 }

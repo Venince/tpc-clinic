@@ -22,9 +22,9 @@ class ProfileController extends Controller
     {
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:255'],
-            'department' => ['nullable', 'string', 'max:255'],
-            'position'   => ['nullable', 'string', 'max:255'],
-            'phone'      => ['nullable', 'string', 'max:50'],
+            'department' => ['required', 'string', 'max:255'],
+            'position'   => ['required', 'string', 'max:255'],
+            'phone'      => ['required', 'string', 'max:50'],
         ]);
 
         $request->user()->update(['name' => $data['name']]);
