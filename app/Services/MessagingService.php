@@ -206,12 +206,21 @@ class MessagingService
         $senderRole    = $sender->role->name;
         $recipientRole = $recipient->role->name;
 
+        $adminRoles = ['admin', 'super_admin'];
+
+        // Any admin/super_admin can message any other admin/super_admin —
+        // including two admins, or two super_admins, talking to each other.
+        // Checked as a set rather than enumerated pairs so this stays correct
+        // if another admin-tier role is ever added.
+        if (in_array($senderRole, $adminRoles, true) && in_array($recipientRole, $adminRoles, true)) {
+            return;
+        }
+
         $allowedPairs = [
             ['student', 'admin'], ['admin', 'student'],
             ['student', 'super_admin'], ['super_admin', 'student'],
             ['faculty_staff', 'admin'], ['admin', 'faculty_staff'],
             ['faculty_staff', 'super_admin'], ['super_admin', 'faculty_staff'],
-            ['admin', 'super_admin'], ['super_admin', 'admin'],
         ];
 
         $pair = [$senderRole, $recipientRole];
