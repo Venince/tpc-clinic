@@ -50,7 +50,10 @@ export default function Select({ id, value, onChange, options, placeholder = 'â€
                             >
                                 {({ selected }) => (
                                     <>
-                                        <span className={clsx('block truncate', selected && 'font-medium')}>
+                                        {/* Options wrap onto multiple lines instead of truncating with an
+                                            ellipsis â€” unlike the closed button, there's no single-line
+                                            constraint here, so long program names should stay fully readable. */}
+                                        <span className={clsx('block break-words leading-snug', selected && 'font-medium')}>
                                             {opt.label}
                                         </span>
                                         {selected && (

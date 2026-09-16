@@ -9,16 +9,32 @@ use Inertia\Inertia;
 
 class ProgramController extends Controller {
     public function index() {
+        // Just the counts here — the full per-program student list now lives
+        // on its own page (show()), so we don't need to eager-load every
+        // program's students just to render the index row.
         $programs = Program::withCount('studentProfiles')
-            ->with([
-                'studentProfiles' => fn($q) => $q->select('id', 'user_id', 'program_id', 'student_id', 'year_level', 'block', 'is_pregnant'),
-                'studentProfiles.user' => fn($q) => $q->select('id', 'name', 'email', 'is_active', 'last_login_at', 'profile_photo_path'),
-            ])
             ->orderBy('name')
             ->get();
 
         return Inertia::render('Admin/Programs/Index', ['programs' => $programs]);
     }
+
+    /**
+     * Students enrolled in a single program. This is what the program row
+     * on the index page now links to, instead of an inline dropdown.
+     */
+    public function show(Program $program)
+    {
+        $program->load([
+            'studentProfiles' => fn($q) => $q->select('id', 'user_id', 'program_id', 'student_id', 'year_level', 'block', 'is_pregnant'),
+            'studentProfiles.user' => fn($q) => $q->select('id', 'name', 'email', 'is_active', 'last_login_at', 'profile_photo_path'),
+        ]);
+
+        return Inertia::render('Admin/Programs/Students', [
+            'program' => $program,
+        ]);
+    }
+
     public function store(Request $request) {
         $request->validate([
             'code' => ['required','string','max:20', Rule::unique('programs','code')->whereNull('deleted_at')],

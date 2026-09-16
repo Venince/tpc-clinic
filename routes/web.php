@@ -82,6 +82,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
             // Programs
             Route::get('/programs',              [Admin\ProgramController::class, 'index'])->name('programs.index');
+            Route::get('/programs/{program}',    [Admin\ProgramController::class, 'show'])->name('programs.show');  
             Route::post('/programs',             [Admin\ProgramController::class, 'store'])->name('programs.store');
             Route::put('/programs/{program}',    [Admin\ProgramController::class, 'update'])->name('programs.update');
             Route::delete('/programs/{program}', [Admin\ProgramController::class, 'destroy'])->name('programs.destroy');
