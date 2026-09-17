@@ -1,6 +1,7 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import StudentLayout from '@/Layouts/StudentLayout';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
     ArrowLeftIcon,
     PaperAirplaneIcon,
@@ -44,7 +45,12 @@ export default function StudentMessageShow({ conversation, messages }) {
     useEffect(() => {
         if (!openMenuId) return;
         const handleOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) closeMenu();
+            // The menu itself now renders in a portal (document.body), so it's
+            // no longer a DOM descendant of menuRef — check for it separately
+            // via its data attribute, or every click inside it would register
+            // as "outside" and close the menu before its own buttons fire.
+            const inPortalMenu = e.target.closest('[data-kebab-menu]');
+            if (menuRef.current && !menuRef.current.contains(e.target) && !inPortalMenu) closeMenu();
         };
         const handleEscape = (e) => { if (e.key === 'Escape') closeMenu(); };
         document.addEventListener('mousedown', handleOutside);
@@ -82,7 +88,7 @@ export default function StudentMessageShow({ conversation, messages }) {
     };
 
     return (
-        <StudentLayout title={otherParticipant?.name ?? 'Conversation'}>
+        <StudentLayout title="Messages">
             <Head title={otherParticipant?.name ?? 'Conversation'} />
 
             {/* -m-6 cancels the layout's p-6 so we can go full-height edge-to-edge */}
@@ -139,7 +145,7 @@ export default function StudentMessageShow({ conversation, messages }) {
                                         {msg.body}
                                     </div>
                                     <p className="text-[11px] text-gray-400 px-1">
-                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                                     </p>
                                 </div>
                                 {isOwn && (
@@ -207,9 +213,43 @@ export default function StudentMessageShow({ conversation, messages }) {
  * the button so it never runs off the edge of a narrow/mobile screen.
  */
 function MessageKebab({ isOwn, isOpen, stage, menuRef, onToggle, onOpenChoices, onBack, onDelete }) {
+    const buttonRef = useRef(null);
+    const [pos, setPos] = useState(null);
+
+    // Position the menu with real viewport coordinates instead of guessing a
+    // side from `isOwn` — a short own-message kebab sits near the right edge
+    // while a long one sits near the left edge, so a fixed left-0/right-0
+    // rule clips one case or the other. Measuring the button and clamping to
+    // the viewport works regardless of message length or position, and
+    // `position: fixed` keeps it floating above neighboring messages instead
+    // of being squeezed into the small gap between bubbles.
+    useEffect(() => {
+        if (!isOpen) { setPos(null); return; }
+
+        const compute = () => {
+            const btn = buttonRef.current;
+            if (!btn) return;
+            const rect = btn.getBoundingClientRect();
+            const menuWidth = window.innerWidth < 640 ? 176 : 192; // w-44 / w-48
+            const padding = 8;
+            const rawLeft = isOwn ? rect.right - menuWidth : rect.left;
+            const left = Math.min(Math.max(rawLeft, padding), window.innerWidth - menuWidth - padding);
+            setPos({ top: rect.bottom + 4, left });
+        };
+
+        compute();
+        window.addEventListener('resize', compute);
+        window.addEventListener('scroll', compute, true);
+        return () => {
+            window.removeEventListener('resize', compute);
+            window.removeEventListener('scroll', compute, true);
+        };
+    }, [isOpen, isOwn]);
+
     return (
         <div className="relative flex-shrink-0" ref={menuRef}>
             <button
+                ref={buttonRef}
                 type="button"
                 onClick={onToggle}
                 aria-label="Message options"
@@ -220,8 +260,12 @@ function MessageKebab({ isOwn, isOpen, stage, menuRef, onToggle, onOpenChoices, 
                 <EllipsisVerticalIcon className="w-4 h-4" />
             </button>
 
-            {isOpen && (
-                <div className="absolute z-20 top-full mt-1 right-0 w-44 sm:w-48 max-w-[85vw] bg-white rounded-xl shadow-lg border border-gray-100 py-1 overflow-hidden">
+            {isOpen && pos && createPortal(
+                <div
+                    data-kebab-menu
+                    style={{ position: 'fixed', top: pos.top, left: pos.left }}
+                    className="z-50 w-44 sm:w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 overflow-hidden"
+                >
                     {stage === 'root' ? (
                         <button
                             type="button"
@@ -262,7 +306,8 @@ function MessageKebab({ isOwn, isOpen, stage, menuRef, onToggle, onOpenChoices, 
                             </button>
                         </>
                     )}
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
