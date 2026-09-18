@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
     PlusIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon,
     XMarkIcon, MagnifyingGlassIcon, FunnelIcon, HeartIcon, BeakerIcon,
+    PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import Modal from '@/Components/UI/Modal';
@@ -44,6 +45,7 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
     const isSuperAdmin = auth?.user?.role?.name === 'super_admin';
 
     const [showCreate,      setShowCreate]      = useState(false);
+    const [editingLog,      setEditingLog]      = useState(null); // null = create mode, otherwise the log being edited
     const [expanded,        setExpanded]        = useState(highlight ? parseInt(highlight) : null);
     const [showFilters,     setShowFilters]     = useState(false);
     const [patientSearch,   setPatientSearch]   = useState('');
@@ -68,11 +70,48 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
     const now = new Date();
     const localDT = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, put, processing, errors, reset } = useForm({
         user_id: '', visited_at: localDT, chief_complaint: '',
         vital_signs: { blood_pressure: '', temperature: '', pulse_rate: '', o2_saturation: '', weight: '' },
         diagnosis: '', treatment: '', medicines_dispensed: [], notes: '',
     });
+
+    // Converts a stored ISO datetime into the local value a datetime-local input expects.
+    const toLocalDT = (iso) => {
+        const d = new Date(iso);
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
+
+    const closeModal = () => {
+        setShowCreate(false);
+        setEditingLog(null);
+        reset();
+        setPatientSearch('');
+    };
+
+    const openEdit = (log) => {
+        setEditingLog(log);
+        setData({
+            user_id: log.user_id ?? log.user?.id ?? '',
+            visited_at: toLocalDT(log.visited_at),
+            chief_complaint: log.chief_complaint || '',
+            vital_signs: {
+                blood_pressure: log.vital_signs?.blood_pressure || '',
+                temperature:    log.vital_signs?.temperature    || '',
+                pulse_rate:     log.vital_signs?.pulse_rate     || '',
+                o2_saturation:  log.vital_signs?.o2_saturation  || '',
+                weight:         log.vital_signs?.weight         || '',
+            },
+            diagnosis: log.diagnosis || '',
+            treatment: log.treatment || '',
+            medicines_dispensed: (log.medicines_dispensed || []).map(m => ({
+                medicine_id: m.medicine_id, quantity: m.quantity,
+            })),
+            notes: log.notes || '',
+        });
+        setPatientSearch('');
+        setShowCreate(true);
+    };
 
     const selectedPatient = users.find(u => u.id == data.user_id);
     const filteredUsers   = users.filter(u =>
@@ -90,9 +129,15 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('admin.walkin.store'), {
-            onSuccess: () => { setShowCreate(false); reset(); setPatientSearch(''); },
-        });
+        if (editingLog) {
+            put(route('admin.walkin.update', editingLog.id), {
+                onSuccess: closeModal,
+            });
+        } else {
+            post(route('admin.walkin.store'), {
+                onSuccess: closeModal,
+            });
+        }
     };
 
     const applyFilters = () => router.get(route('admin.walkin.index'), {
@@ -320,13 +365,20 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
                                         <p className="text-[11px] text-gray-400">
                                             Logged by <span className="font-medium">{log.logged_by?.name}</span>
                                         </p>
-                                        {isSuperAdmin && (
+                                        <div className="flex items-center gap-2">
                                             <button
-                                                onClick={() => { if (confirm('Delete this log?')) router.delete(route('admin.walkin.destroy', log.id)); }}
-                                                className="btn-danger btn-sm text-xs">
-                                                <TrashIcon className="w-3.5 h-3.5 mr-1 inline" /> Delete
+                                                onClick={() => openEdit(log)}
+                                                className="btn-secondary btn-sm text-xs">
+                                                <PencilSquareIcon className="w-3.5 h-3.5 mr-1 inline" /> Edit
                                             </button>
-                                        )}
+                                            {isSuperAdmin && (
+                                                <button
+                                                    onClick={() => { if (confirm('Delete this log?')) router.delete(route('admin.walkin.destroy', log.id)); }}
+                                                    className="btn-danger btn-sm text-xs">
+                                                    <TrashIcon className="w-3.5 h-3.5 mr-1 inline" /> Delete
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -393,6 +445,10 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
                                     </div>
                                     <div className="col-span-1 flex items-center gap-2 justify-end">
                                         {isOpen ? <ChevronUpIcon className="w-4 h-4 text-gray-400" /> : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
+                                        <button onClick={e => { e.stopPropagation(); openEdit(log); }}
+                                            className="text-gray-400 hover:text-clinic-600">
+                                            <PencilSquareIcon className="w-4 h-4" />
+                                        </button>
                                         {isSuperAdmin && (
                                             <button onClick={e => { e.stopPropagation(); if (confirm('Delete this log?')) router.delete(route('admin.walkin.destroy', log.id)); }}
                                                 className="text-gray-400 hover:text-red-500">
@@ -447,11 +503,11 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
 
                         {/* ── Create Modal ── */}
             {showCreate && (
-                <Modal onClose={() => { setShowCreate(false); reset(); setPatientSearch(''); }} size="lg">
+                <Modal onClose={closeModal} size="lg">
                     <div className="flex flex-col max-h-[95vh]">
                         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
-                            <h3 className="font-semibold text-gray-900">Log Walk-in Visit</h3>
-                            <button onClick={() => { setShowCreate(false); reset(); setPatientSearch(''); }}
+                            <h3 className="font-semibold text-gray-900">{editingLog ? 'Edit Walk-in Log' : 'Log Walk-in Visit'}</h3>
+                            <button onClick={closeModal}
                                 className="text-gray-400 hover:text-gray-600">
                                 <XMarkIcon className="w-5 h-5" />
                             </button>
@@ -652,10 +708,10 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
                                 <button type="submit"
                                     disabled={processing || !data.user_id || !data.chief_complaint}
                                     className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {processing ? 'Saving…' : 'Save Walk-in Log'}
+                                    {processing ? 'Saving…' : editingLog ? 'Update Walk-in Log' : 'Save Walk-in Log'}
                                 </button>
                                 <button type="button"
-                                    onClick={() => { setShowCreate(false); reset(); setPatientSearch(''); }}
+                                    onClick={closeModal}
                                     className="btn-secondary">
                                     Cancel
                                 </button>

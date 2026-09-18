@@ -105,6 +105,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             // Walk-in Log
             Route::get('/walkin',              [\App\Http\Controllers\Admin\WalkinLogController::class, 'index'])->name('walkin.index');
             Route::post('/walkin',             [\App\Http\Controllers\Admin\WalkinLogController::class, 'store'])->name('walkin.store');
+            Route::put('/walkin/{walkinLog}',   [\App\Http\Controllers\Admin\WalkinLogController::class, 'update'])->name('walkin.update');
             Route::delete('/walkin/{walkinLog}', [\App\Http\Controllers\Admin\WalkinLogController::class, 'destroy'])->name('walkin.destroy')->middleware('role:super_admin');
 
             // Medicine

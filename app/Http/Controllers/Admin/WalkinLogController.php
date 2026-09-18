@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\WalkinLog;
 use App\Notifications\WalkinLogNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class WalkinLogController extends Controller
@@ -116,6 +118,70 @@ class WalkinLogController extends Controller
         $patient?->notify(new WalkinLogNotification($log));
 
         return back()->with('success', 'Walk-in log recorded successfully.');
+    }
+
+    public function update(Request $request, WalkinLog $walkinLog)
+    {
+        $data = $request->validate([
+            'user_id'                           => ['required', 'exists:users,id'],
+            'visited_at'                        => ['required', 'date'],
+            'chief_complaint'                   => ['required', 'string', 'max:500'],
+            'vital_signs'                       => ['nullable', 'array'],
+            'vital_signs.blood_pressure'        => ['nullable', 'string', 'max:20'],
+            'vital_signs.temperature'           => ['nullable', 'string', 'max:10'],
+            'vital_signs.weight'                => ['nullable', 'string', 'max:10'],
+            'vital_signs.pulse_rate'            => ['nullable', 'string', 'max:10'],
+            'vital_signs.o2_saturation'         => ['nullable', 'string', 'max:10'],
+            'diagnosis'                         => ['nullable', 'string', 'max:1000'],
+            'treatment'                         => ['nullable', 'string', 'max:1000'],
+            'medicines_dispensed'               => ['nullable', 'array'],
+            'medicines_dispensed.*.medicine_id' => ['required', 'exists:medicines,id'],
+            'medicines_dispensed.*.quantity'    => ['required', 'integer', 'min:1'],
+            'notes'                             => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        try {
+            DB::transaction(function () use ($data, $walkinLog) {
+                // Return the previously dispensed quantities to stock before re-validating,
+                // so editing a log doesn't permanently "lose" or double-count medicine.
+                foreach ($walkinLog->medicines_dispensed ?? [] as $old) {
+                    Medicine::whereKey($old['medicine_id'])->increment('quantity', $old['quantity']);
+                }
+
+                // Re-validate stock against the new list and build the dispensed snapshot.
+                $dispensed = [];
+                foreach ($data['medicines_dispensed'] ?? [] as $item) {
+                    $medicine = Medicine::findOrFail($item['medicine_id']);
+                    if ($medicine->quantity < $item['quantity']) {
+                        throw ValidationException::withMessages([
+                            'medicines_dispensed' => "Insufficient stock for {$medicine->name}. Available: {$medicine->quantity} {$medicine->unit}.",
+                        ]);
+                    }
+                    $dispensed[] = [
+                        'medicine_id' => $medicine->id,
+                        'name'        => $medicine->name,
+                        'quantity'    => $item['quantity'],
+                        'unit'        => $medicine->unit,
+                    ];
+                    $medicine->decrement('quantity', $item['quantity']);
+                }
+
+                $walkinLog->update([
+                    'user_id'             => $data['user_id'],
+                    'visited_at'          => $data['visited_at'],
+                    'chief_complaint'     => $data['chief_complaint'],
+                    'vital_signs'         => $data['vital_signs']  ?? null,
+                    'diagnosis'           => $data['diagnosis']    ?? null,
+                    'treatment'           => $data['treatment']    ?? null,
+                    'medicines_dispensed' => !empty($dispensed) ? $dispensed : null,
+                    'notes'               => $data['notes']        ?? null,
+                ]);
+            });
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+
+        return back()->with('success', 'Walk-in log updated successfully.');
     }
 
     public function destroy(Request $request, WalkinLog $walkinLog)
