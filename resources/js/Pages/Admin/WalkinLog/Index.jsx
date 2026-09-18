@@ -504,7 +504,7 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
                         {/* ── Create Modal ── */}
             {showCreate && (
                 <Modal onClose={closeModal} size="lg">
-                    <div className="flex flex-col max-h-[95vh]">
+                    <div className="flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
                             <h3 className="font-semibold text-gray-900">{editingLog ? 'Edit Walk-in Log' : 'Log Walk-in Visit'}</h3>
                             <button onClick={closeModal}
