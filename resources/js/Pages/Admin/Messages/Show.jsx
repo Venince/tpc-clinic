@@ -145,7 +145,7 @@ export default function MessagesShow({ conversation, messages }) {
                                         {msg.body}
                                     </div>
                                     <p className="text-[11px] text-gray-400 px-1">
-                                        {new Date(msg.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                        {new Date(msg.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}
                                     </p>
                                 </div>
                                 {isOwn && (
