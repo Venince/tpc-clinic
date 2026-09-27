@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Medicine;
 use App\Models\User;
 use App\Models\WalkinLog;
+use App\Notifications\WalkinFollowUpNotification;
 use App\Notifications\WalkinLogNotification;
+use App\Support\PhilippineHolidays;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -189,5 +191,101 @@ class WalkinLogController extends Controller
         abort_unless($request->user()->isSuperAdmin(), 403);
         $walkinLog->delete();
         return back()->with('success', 'Walk-in log deleted.');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Follow-Up Calendar
+    |--------------------------------------------------------------------------
+    */
+
+    public function followUpCalendar(Request $request)
+    {
+        $month = $request->get('month', now()->format('Y-m'));
+        [$year, $m] = explode('-', $month);
+
+        $logs = WalkinLog::whereYear('follow_up_date', $year)
+            ->whereMonth('follow_up_date', $m)
+            ->with(['user:id,name,email,profile_photo_path', 'followUpScheduledBy:id,name'])
+            ->orderBy('follow_up_date')
+            ->get();
+
+        return Inertia::render('Admin/WalkinLog/FollowUpCalendar', [
+            'followupsByDate' => $logs->groupBy(fn($l) => $l->follow_up_date->toDateString()),
+            'month'           => $month,
+            'currentDate'     => now()->toDateString(),
+            'holidays'        => array_merge(
+                PhilippineHolidays::getHolidaysForYear((int) $year),
+                PhilippineHolidays::getHolidaysForYear((int) $year + 1),
+            ),
+        ]);
+    }
+
+    public function scheduleFollowUp(Request $request, WalkinLog $walkinLog)
+    {
+        $data = $request->validate([
+            'follow_up_date'  => ['required', 'date', 'after_or_equal:today'],
+            'follow_up_time'  => ['nullable', 'date_format:H:i'],
+            'follow_up_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $walkinLog->update([
+            'follow_up_date'                        => $data['follow_up_date'],
+            'follow_up_time'                         => $data['follow_up_time']  ?? null,
+            'follow_up_notes'                        => $data['follow_up_notes'] ?? null,
+            'follow_up_status'                       => 'scheduled',
+            'follow_up_scheduled_by'                 => $request->user()->id,
+            'follow_up_reminder_day_before_sent_at'   => null,
+            'follow_up_reminder_day_of_sent_at'       => null,
+        ]);
+
+        $walkinLog->user?->notify(new WalkinFollowUpNotification($walkinLog->fresh(), 'scheduled'));
+
+        return back()->with('success', 'Follow-up visit scheduled.');
+    }
+
+    public function updateFollowUp(Request $request, WalkinLog $walkinLog)
+    {
+        abort_unless($walkinLog->follow_up_date, 404);
+
+        $data = $request->validate([
+            'follow_up_date'  => ['required', 'date', 'after_or_equal:today'],
+            'follow_up_time'  => ['nullable', 'date_format:H:i'],
+            'follow_up_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $walkinLog->update([
+            'follow_up_date'                        => $data['follow_up_date'],
+            'follow_up_time'                         => $data['follow_up_time']  ?? null,
+            'follow_up_notes'                        => $data['follow_up_notes'] ?? null,
+            'follow_up_status'                       => 'scheduled',
+            'follow_up_scheduled_by'                 => $request->user()->id,
+            'follow_up_reminder_day_before_sent_at'   => null,
+            'follow_up_reminder_day_of_sent_at'       => null,
+        ]);
+
+        $walkinLog->user?->notify(new WalkinFollowUpNotification($walkinLog->fresh(), 'rescheduled'));
+
+        return back()->with('success', 'Follow-up visit rescheduled.');
+    }
+
+    public function cancelFollowUp(Request $request, WalkinLog $walkinLog)
+    {
+        abort_unless($walkinLog->follow_up_date, 404);
+
+        $walkinLog->update(['follow_up_status' => 'cancelled']);
+
+        $walkinLog->user?->notify(new WalkinFollowUpNotification($walkinLog->fresh(), 'cancelled'));
+
+        return back()->with('success', 'Follow-up visit cancelled.');
+    }
+
+    public function completeFollowUp(Request $request, WalkinLog $walkinLog)
+    {
+        abort_unless($walkinLog->follow_up_date, 404);
+
+        $walkinLog->update(['follow_up_status' => 'completed']);
+
+        return back()->with('success', 'Follow-up marked as completed.');
     }
 }

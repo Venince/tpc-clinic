@@ -108,6 +108,13 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::put('/walkin/{walkinLog}',   [\App\Http\Controllers\Admin\WalkinLogController::class, 'update'])->name('walkin.update');
             Route::delete('/walkin/{walkinLog}', [\App\Http\Controllers\Admin\WalkinLogController::class, 'destroy'])->name('walkin.destroy')->middleware('role:super_admin');
 
+            // Walk-In Follow-Up Calendar
+            Route::get('/walkin/followups',                     [\App\Http\Controllers\Admin\WalkinLogController::class, 'followUpCalendar'])->name('walkin.followups.index');
+            Route::post('/walkin/{walkinLog}/followup',          [\App\Http\Controllers\Admin\WalkinLogController::class, 'scheduleFollowUp'])->name('walkin.followup.store');
+            Route::put('/walkin/{walkinLog}/followup',           [\App\Http\Controllers\Admin\WalkinLogController::class, 'updateFollowUp'])->name('walkin.followup.update');
+            Route::post('/walkin/{walkinLog}/followup/complete', [\App\Http\Controllers\Admin\WalkinLogController::class, 'completeFollowUp'])->name('walkin.followup.complete');
+            Route::post('/walkin/{walkinLog}/followup/cancel',   [\App\Http\Controllers\Admin\WalkinLogController::class, 'cancelFollowUp'])->name('walkin.followup.cancel');
+
             // Medicine
             Route::get('/medicine',               [Admin\MedicineController::class, 'index'])->name('medicine.index');
             Route::post('/medicine',              [Admin\MedicineController::class, 'store'])->name('medicine.store');

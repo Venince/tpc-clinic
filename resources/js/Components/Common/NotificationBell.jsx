@@ -29,6 +29,13 @@ function resolveUrl(notif, role) {
                 ? route(`${prefix}.messages.show`, convId)
                 : route(`${prefix}.messages.index`);
 
+        case 'WalkinFollowUpNotification':
+        case 'WalkinFollowUpReminderNotification':
+            // Deep-link to the same walk-in history page, highlighting the log with the follow-up
+            return record_id
+                ? route(`${prefix}.walkin.index`, { highlight: record_id })
+                : route(`${prefix}.walkin.index`);
+
         case 'AppointmentStatusNotification':
             return route(`${prefix}.appointments.index`);
 

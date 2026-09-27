@@ -1,13 +1,14 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState, useEffect, useRef } from 'react';
 import {
     PlusIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon,
     XMarkIcon, MagnifyingGlassIcon, FunnelIcon, HeartIcon, BeakerIcon,
-    PencilSquareIcon,
+    PencilSquareIcon, CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import Modal from '@/Components/UI/Modal';
+import FollowUpAction from '@/Components/Admin/FollowUpAction';
 
 /* ── small reusable bits ── */
 function VitalPill({ label, value }) {
@@ -188,11 +189,18 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
                 <div>
                     <p className="page-subtitle">Record and track unscheduled clinic visits</p>
                 </div>
-                <button onClick={() => setShowCreate(true)} className="btn-primary btn-sm whitespace-nowrap flex-shrink-0">
-                    <PlusIcon className="w-4 h-4 mr-1 inline" />
-                    <span className="hidden sm:inline">Log Walk-in</span>
-                    <span className="sm:hidden">Log</span>
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <Link href={route('admin.walkin.followups.index')} className="btn-secondary btn-sm whitespace-nowrap">
+                        <CalendarDaysIcon className="w-4 h-4 mr-1 inline" />
+                        <span className="hidden sm:inline">Follow-Up Calendar</span>
+                        <span className="sm:hidden">Follow-Ups</span>
+                    </Link>
+                    <button onClick={() => setShowCreate(true)} className="btn-primary btn-sm whitespace-nowrap">
+                        <PlusIcon className="w-4 h-4 mr-1 inline" />
+                        <span className="hidden sm:inline">Log Walk-in</span>
+                        <span className="sm:hidden">Log</span>
+                    </button>
+                </div>
             </div>
 
             {/* ── Stats ── */}
@@ -365,6 +373,10 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
                                         <p className="text-[11px] text-gray-400">
                                             Logged by <span className="font-medium">{log.logged_by?.name}</span>
                                         </p>
+                                        <FollowUpAction log={log} />
+                                    </div>
+
+                                    <div className="flex items-center justify-end">
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => openEdit(log)}
@@ -485,9 +497,12 @@ export default function WalkinLogIndex({ logs, stats, users, medicines, filters,
                                                 </div>
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-3">
-                                            Logged by <span className="font-medium">{log.logged_by?.name}</span>
-                                        </p>
+                                        <div className="flex items-center justify-between mt-3">
+                                            <p className="text-xs text-gray-400">
+                                                Logged by <span className="font-medium">{log.logged_by?.name}</span>
+                                            </p>
+                                            <FollowUpAction log={log} />
+                                        </div>
                                     </div>
                                 )}
                             </div>

@@ -26,6 +26,12 @@ function resolveUrl(notif, role) {
                 ? route(`${prefix}.messages.show`, convId)
                 : route(`${prefix}.messages.index`);
 
+        case 'WalkinFollowUpNotification':
+        case 'WalkinFollowUpReminderNotification':
+            return record_id
+                ? route(`${prefix}.walkin.index`, { highlight: record_id })
+                : route(`${prefix}.walkin.index`);
+
         case 'AppointmentStatusNotification':
             return route(`${prefix}.appointments.index`);
 
@@ -54,7 +60,9 @@ function resolveUrl(notif, role) {
 }
 
 const typeLabel = {
-    WalkinLogNotification:             'Walk-in Visit',
+    WalkinLogNotification:              'Walk-in Visit',
+    WalkinFollowUpNotification:         'Follow-Up Visit',
+    WalkinFollowUpReminderNotification: 'Follow-Up Reminder',
     NewMessageNotification:            'Message',
     AppointmentStatusNotification:     'Appointment',
     MedicineRequestStatusNotification: 'Medicine',
@@ -64,7 +72,9 @@ const typeLabel = {
 };
 
 const typeBadgeColor = {
-    WalkinLogNotification:             'bg-green-100 text-green-700',
+    WalkinLogNotification:              'bg-green-100 text-green-700',
+    WalkinFollowUpNotification:         'bg-teal-100 text-teal-700',
+    WalkinFollowUpReminderNotification: 'bg-amber-100 text-amber-700',
     NewMessageNotification:            'bg-blue-100 text-blue-700',
     AppointmentStatusNotification:     'bg-green-100 text-green-700',
     MedicineRequestStatusNotification: 'bg-yellow-100 text-yellow-700',
