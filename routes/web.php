@@ -261,7 +261,7 @@ Route::middleware(['auth', 'active'])->group(function () {
                 Route::get('/dashboard', [Student\DashboardController::class, 'index'])->name('dashboard');
 
                 Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
-                Route::get('/appointments/calendar',              [Student\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+                Route::get('/appointments/calendar',              [Student\AppointmentController::class, 'index'])->name('appointments.calendar');
                 Route::get('/appointments/list',                  [Student\AppointmentController::class, 'list'])->name('appointments.list');
                 Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
                 Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');
@@ -320,7 +320,7 @@ Route::middleware(['auth', 'active'])->group(function () {
                 Route::get('/faculty/{facultyProfile}', [Admin\ProgramController::class, 'showFaculty'])->name('faculty.show');
 
                 Route::get('/appointments',                       [Student\AppointmentController::class, 'index'])->name('appointments.index');
-                Route::get('/appointments/calendar',              [Student\AppointmentController::class, 'calendar'])->name('appointments.calendar');
+                Route::get('/appointments/calendar',              [Student\AppointmentController::class, 'index'])->name('appointments.calendar');
                 Route::get('/appointments/list',                  [Student\AppointmentController::class, 'list'])->name('appointments.list');
                 Route::post('/appointments',                      [Student\AppointmentController::class, 'store'])->name('appointments.store');
                 Route::post('/appointments/{appointment}/cancel', [Student\AppointmentController::class, 'cancel'])->name('appointments.cancel');

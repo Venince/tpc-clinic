@@ -39,6 +39,11 @@ function resolveUrl(notif, role) {
         case 'AppointmentStatusNotification':
             return route(`${prefix}.appointments.index`);
 
+        case 'NewAppointmentSlotNotification':
+            // appointments.index is the booking calendar for students/faculty
+            // and reads ?month=YYYY-MM, so open the month that has the new slot.
+            return route(`${prefix}.appointments.index`, date ? { month: date.slice(0, 7) } : {});
+
         case 'MedicineRequestStatusNotification':
             return isAdmin
                 ? route('admin.medicine.requests')

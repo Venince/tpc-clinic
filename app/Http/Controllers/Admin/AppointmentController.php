@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Notifications\AppointmentStatusNotification;
 use App\Rules\NotWeekendOrHoliday;
+use App\Services\AppointmentService;
 use App\Support\PhilippineHolidays;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +67,7 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function slotStore(Request $request)
+    public function slotStore(Request $request, AppointmentService $appointments)
     {
         $data = $request->validate([
             'date'             => ['required', 'date', 'after_or_equal:today', new NotWeekendOrHoliday],
@@ -76,7 +77,7 @@ class AppointmentController extends Controller
             'notes'            => ['nullable', 'string'],
         ]);
 
-        AppointmentSlot::create(array_merge($data, ['created_by' => $request->user()->id]));
+        $appointments->createSlot($data, $request->user()->id);
 
         return back()->with('success', 'Slot created.');
     }

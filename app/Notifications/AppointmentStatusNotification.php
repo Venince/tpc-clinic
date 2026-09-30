@@ -20,8 +20,9 @@ class AppointmentStatusNotification extends Notification implements ShouldQueue
 
     protected function statusLabel(): array
     {
-        $date = $this->record->appointment_date
-            ? \Carbon\Carbon::parse($this->record->appointment_date)->format('M d, Y')
+        $slotDate = $this->record->slot?->date;
+        $date = $slotDate
+            ? \Carbon\Carbon::parse($slotDate)->format('M d, Y')
             : 'your appointment';
 
         return [

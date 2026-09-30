@@ -7,10 +7,13 @@ use App\Models\AppointmentSlot;
 use App\Models\User;
 use App\Notifications\AppointmentStatusNotification;
 use App\Notifications\NewAppointmentNotification;
+use App\Notifications\NewAppointmentSlotNotification;
 use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Rules\NotWeekendOrHoliday;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 
@@ -29,7 +32,39 @@ class AppointmentService
 
         $slot = AppointmentSlot::create(array_merge($data, ['created_by' => $adminId]));
         $this->auditService->log('slot_created', $adminId, 'AppointmentSlot', $slot->id, null, $data);
+
+        $this->notifySlotCreated($slot);
+
         return $slot;
+    }
+
+    /**
+     * Let every active student, faculty/staff member and admin (including the
+     * admin who created the slot) know a new slot is open.
+     *
+     * Slots created for the same date within 15 minutes share one notification,
+     * so an admin adding several slots in a row doesn't spam everyone.
+     * Chunked so the whole user table is never loaded; the notification is queued.
+     */
+    protected function notifySlotCreated(AppointmentSlot $slot): void
+    {
+        try {
+            $key = 'slot-notified:' . $slot->date->toDateString();
+
+            if (!Cache::add($key, true, now()->addMinutes(15))) {
+                return;
+            }
+
+            User::query()
+                ->where('is_active', true)
+                ->whereHas('role', fn ($q) => $q->whereIn('name', ['student', 'faculty_staff', 'admin', 'super_admin']))
+                ->chunkById(200, function ($users) use ($slot) {
+                    Notification::send($users, new NewAppointmentSlotNotification($slot));
+                });
+        } catch (\Throwable $e) {
+            // A notification failure must never block slot creation.
+            report($e);
+        }
     }
 
     public function updateSlot(AppointmentSlot $slot, array $data, int $adminId): AppointmentSlot
