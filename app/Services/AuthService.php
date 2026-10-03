@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use App\Support\Maintenance;
 
 class AuthService
 {
@@ -62,6 +63,12 @@ class AuthService
         if (!$user->is_active) {
             throw ValidationException::withMessages([
                 'email' => ['Your account has been deactivated. Contact the clinic admin.'],
+            ]);
+        }
+
+        if (Maintenance::blocksUser($user)) {
+            throw ValidationException::withMessages([
+                'email' => [Maintenance::loginMessage()],
             ]);
         }
 

@@ -3,12 +3,12 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
 import {
     PlusIcon, TrashIcon, CheckIcon, XMarkIcon,
-    EyeIcon, MagnifyingGlassIcon, ExclamationTriangleIcon,
+    EyeIcon, MagnifyingGlassIcon, ExclamationTriangleIcon, ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import Modal from '@/Components/UI/Modal';
 
-export default function RequirementsIndex({ types, requirements, programs, filters }) {
+export default function RequirementsIndex({ types, people, pendingTotal = 0, programs, filters }) {
     const { auth } = usePage().props;
     const isSuperAdmin = auth?.user?.role?.name === 'super_admin';
 
@@ -20,6 +20,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
     const [search, setSearch]         = useState(filters?.search || '');
     const [status, setStatus]         = useState(filters?.status || '');
     const [programId, setProgramId]   = useState(filters?.program_id || '');
+    const [expanded, setExpanded]   = useState({});
 
     const addForm = useForm({
         name:        '',
@@ -83,6 +84,33 @@ export default function RequirementsIndex({ types, requirements, programs, filte
         return <span className={`badge ${map[s] || 'badge-gray'}`}>{s.replace('_', ' ')}</span>;
     };
 
+    // ── Grouped-by-person helpers ─────────────────────────────────────────
+    const toggleOpen = (id, current) => setExpanded(prev => ({ ...prev, [id]: !current }));
+    const keepOpen   = (id) => setExpanded(prev => ({ ...prev, [id]: true }));
+
+    const statusRank = (s) => (s === 'pending' ? 0 : s === 'rejected' ? 1 : 2);
+    const sortItems  = (items = []) => [...items].sort((a, b) =>
+        statusRank(a.approval_status) - statusRank(b.approval_status)
+        || (a.requirement_type?.sort_order ?? 0) - (b.requirement_type?.sort_order ?? 0)
+    );
+    const countStatuses = (items = []) => items.reduce((acc, r) => {
+        acc[r.approval_status] = (acc[r.approval_status] || 0) + 1;
+        return acc;
+    }, { pending: 0, approved: 0, rejected: 0 });
+
+    const openReview = (r, person, newStatus) => {
+        keepOpen(person.id);
+        setReviewing({ ...r, user: person });
+        reviewForm.setData('status', newStatus);
+    };
+
+    const approveAll = (person, pendingCount) => {
+        const s = pendingCount !== 1 ? 's' : '';
+        if (!confirm(`Approve all ${pendingCount} pending requirement${s} for ${person.name}?`)) return;
+        keepOpen(person.id);
+        router.post(route('admin.requirements.approve-all', person.id), {}, { preserveScroll: true });
+    };
+
     const isImage = (f) => /\.(jpe?g|png|gif|webp)$/i.test(f || '');
     const isPdf   = (f) => /\.pdf$/i.test(f || '');
 
@@ -120,7 +148,7 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         {label}
                         {key === 'submissions' && (
                             <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">
-                                {requirements?.total || 0}
+                                {people?.total || 0}
                             </span>
                         )}
                     </button>
@@ -245,188 +273,144 @@ export default function RequirementsIndex({ types, requirements, programs, filte
                         </div>
                     </div>
 
-                    {/* Submissions — Mobile Cards */}
-                    <div className="md:hidden space-y-3 mb-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-gray-900">Submissions</h3>
-                            <span className="text-xs text-gray-400">{requirements.total} total</span>
-                        </div>
-                        {requirements.data.map(r => (
-                            <div key={r.id} className="card p-4">
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                        <UserAvatar user={r.user} size="sm" className="flex-shrink-0" />
-                                        <div className="min-w-0">
-                                            <p className="font-medium text-sm text-gray-900 truncate">{r.user?.name}</p>
-                                            <p className="text-xs text-gray-400 truncate">{r.user?.email}</p>
-                                        </div>
-                                    </div>
-                                    {statusBadge(r.approval_status)}
-                                </div>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-3">
-                                    <div>
-                                        <span className="text-gray-400">Requirement: </span>
-                                        <span className="text-gray-700">{r.requirement_type?.name}</span>
-                                        {r.requirement_type?.is_required && (
-                                            <span className="badge badge-red text-[10px] ml-1">Required</span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-400">Program: </span>
-                                        <span className="text-gray-700">{r.user?.student_profile?.program?.code || '—'}</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-400">Uploaded: </span>
-                                        <span className="text-gray-700">{new Date(r.created_at).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="min-w-0">
-                                        {r.file_path ? (
-                                            <button onClick={() => setPreviewing(r)} className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0 text-left">
-                                                <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                                                <span className="break-all">{r.original_filename || 'View file'}</span>
-                                            </button>
-                                        ) : (
-                                            <span className="text-xs text-gray-400">No file</span>
-                                        )}
-                                    </div>
-                                </div>
-                                {r.approval_status === 'pending' ? (
-                                    <div className="flex gap-2 pt-2 border-t border-gray-100">
-                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
-                                            className="btn-success btn-sm flex-1 flex items-center justify-center gap-1">
-                                            <CheckIcon className="w-4 h-4" /> Approve
-                                        </button>
-                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
-                                            className="btn-danger btn-sm flex-1 flex items-center justify-center gap-1">
-                                            <XMarkIcon className="w-4 h-4" /> Reject
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
-                                        <p className="text-xs text-gray-400 italic">
-                                            {r.reviewer?.name ? `Reviewed by ${r.reviewer.name}` : '—'}
-                                        </p>
-                                        {isSuperAdmin && (
+                    {/* Submissions — one card per person */}
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900">Submissions</h3>
+                        <span className="text-xs text-gray-400">
+                            {people.total} {people.total === 1 ? 'person' : 'people'}
+                            {pendingTotal > 0 && <> · {pendingTotal} pending</>}
+                        </span>
+                    </div>
+
+                    <div className="space-y-3 mb-4">
+                        {people.data.map(p => {
+                            const items      = sortItems(p.requirements);
+                            const counts     = countStatuses(items);
+                            const open       = expanded[p.id] ?? counts.pending > 0;
+                            const isFaculty  = p.role?.name === 'faculty_staff';
+                            const program    = p.student_profile?.program?.code;
+
+                            return (
+                                <div key={p.id} className="card overflow-hidden">
+                                    {/* Person header */}
+                                    <div className="p-4">
+                                        <div className="flex items-start gap-3 cursor-pointer" onClick={() => toggleOpen(p.id, open)}>
+                                            <UserAvatar user={p} size="sm" className="flex-shrink-0" />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-medium text-sm text-gray-900 truncate">{p.name}</p>
+                                                <p className="text-xs text-gray-400 truncate">{p.email}</p>
+                                            </div>
                                             <button
-                                                onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
-                                                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium flex-shrink-0"
-                                                title="Delete submission"
+                                                type="button"
+                                                onClick={e => { e.stopPropagation(); toggleOpen(p.id, open); }}
+                                                aria-expanded={open}
+                                                aria-label={open ? 'Collapse requirements' : 'Expand requirements'}
+                                                className="p-1.5 -mr-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors flex-shrink-0"
                                             >
-                                                <TrashIcon className="w-3.5 h-3.5" /> Delete
+                                                <ChevronDownIcon className={`w-5 h-5 transition-transform ${open ? 'rotate-180' : ''}`} />
+                                            </button>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                                            {isFaculty
+                                                ? <span className="badge badge-purple">Faculty / Staff</span>
+                                                : program && <span className="badge badge-blue">{program}</span>}
+                                            <span className="text-xs text-gray-400 mr-1">{items.length} submitted</span>
+                                            {counts.pending  > 0 && <span className="badge badge-yellow">{counts.pending} pending</span>}
+                                            {counts.approved > 0 && <span className="badge badge-green">{counts.approved} approved</span>}
+                                            {counts.rejected > 0 && <span className="badge badge-red">{counts.rejected} rejected</span>}
+                                        </div>
+
+                                        {counts.pending > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => approveAll(p, counts.pending)}
+                                                className="btn-success btn-sm w-full sm:w-auto mt-3 flex items-center justify-center gap-1"
+                                            >
+                                                <CheckIcon className="w-4 h-4" /> Approve all pending ({counts.pending})
                                             </button>
                                         )}
                                     </div>
-                                )}
-                            </div>
-                        ))}
-                        {!requirements.data?.length && (
+
+                                    {/* Requirements of this person */}
+                                    {open && (
+                                        <div className="border-t border-gray-100 divide-y divide-gray-100">
+                                            {items.map(r => (
+                                                <div key={r.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <p className="text-sm font-medium text-gray-900 break-words">
+                                                                {r.requirement_type?.name || 'Removed requirement'}
+                                                            </p>
+                                                            {r.requirement_type?.is_required && (
+                                                                <span className="badge badge-red text-[10px]">Required</span>
+                                                            )}
+                                                            {statusBadge(r.approval_status)}
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-400">
+                                                            {r.file_path ? (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setPreviewing({ ...r, user: p })}
+                                                                    className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 font-medium min-w-0 text-left"
+                                                                >
+                                                                    <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                                                                    <span className="break-all">{r.original_filename || 'View file'}</span>
+                                                                </button>
+                                                            ) : (
+                                                                <span>No file</span>
+                                                            )}
+                                                            <span>Uploaded {new Date(r.created_at).toLocaleDateString()}</span>
+                                                        </div>
+
+                                                        {r.approval_status === 'rejected' && r.rejection_reason && (
+                                                            <p className="text-xs text-red-500 mt-1 break-words">Reason: {r.rejection_reason}</p>
+                                                        )}
+                                                        {r.approval_status !== 'pending' && r.reviewer?.name && (
+                                                            <p className="text-xs text-gray-400 italic mt-0.5">Reviewed by {r.reviewer.name}</p>
+                                                        )}
+                                                    </div>
+
+                                                    {r.approval_status === 'pending' ? (
+                                                        <div className="flex gap-2 sm:flex-shrink-0">
+                                                            <button onClick={() => openReview(r, p, 'approved')}
+                                                                className="btn-success btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1">
+                                                                <CheckIcon className="w-4 h-4" /> Approve
+                                                            </button>
+                                                            <button onClick={() => openReview(r, p, 'rejected')}
+                                                                className="btn-danger btn-sm flex-1 sm:flex-none flex items-center justify-center gap-1">
+                                                                <XMarkIcon className="w-4 h-4" /> Reject
+                                                            </button>
+                                                        </div>
+                                                    ) : isSuperAdmin && (
+                                                        <div className="sm:flex-shrink-0">
+                                                            <button
+                                                                onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
+                                                                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium"
+                                                                title="Delete submission"
+                                                            >
+                                                                <TrashIcon className="w-3.5 h-3.5" /> Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        {!people.data?.length && (
                             <div className="card p-8 text-center text-gray-400">No submissions found.</div>
                         )}
                     </div>
 
-                    {/* Submissions — Desktop Table */}
-                    <div className="card hidden md:block">
-                        <div className="card-header">
-                            <h3 className="font-semibold text-gray-900">Submissions</h3>
-                            <span className="text-xs text-gray-400">{requirements.total} total</span>
-                        </div>
-                        <div className="table-wrapper">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Student</th><th>Program</th><th>Requirement</th>
-                                        <th>File</th><th>Uploaded</th><th>Status</th><th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {requirements.data.map(r => (
-                                        <tr key={r.id}>
-                                            <td>
-                                                <div className="flex items-center gap-2.5">
-                                                    <UserAvatar user={r.user} size="sm" />
-                                                    <div>
-                                                        <p className="font-medium text-sm">{r.user?.name}</p>
-                                                        <p className="text-xs text-gray-400">{r.user?.email}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="text-xs text-gray-500">
-                                                {r.user?.student_profile?.program?.code || '—'}
-                                            </td>
-                                            <td className="text-sm">
-                                                <span>{r.requirement_type?.name}</span>
-                                                {r.requirement_type?.is_required && (
-                                                    <span className="badge badge-red text-[10px] ml-1.5">Required</span>
-                                                )}
-                                            </td>
-                                            <td className="max-w-[10rem]">
-                                                {r.file_path ? (
-                                                    <button onClick={() => setPreviewing(r)} className="flex items-start gap-1 text-clinic-600 hover:text-clinic-800 text-xs font-medium min-w-0 text-left">
-                                                        <EyeIcon className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                                                        <span className="break-all">{r.original_filename || 'View file'}</span>
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-xs text-gray-400">No file</span>
-                                                )}
-                                            </td>
-                                            <td className="text-xs text-gray-400">
-                                                {new Date(r.created_at).toLocaleDateString()}
-                                            </td>
-                                            <td>{statusBadge(r.approval_status)}</td>
-                                            <td>
-                                                <div className="flex items-center gap-2">
-                                                    {r.approval_status === 'pending' && <>
-                                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'approved'); }}
-                                                            className="btn-success btn-sm px-2 py-1" title="Approve">
-                                                            <CheckIcon className="w-3.5 h-3.5" />
-                                                        </button>
-                                                        <button onClick={() => { setReviewing(r); reviewForm.setData('status', 'rejected'); }}
-                                                            className="btn-danger btn-sm px-2 py-1" title="Reject">
-                                                            <XMarkIcon className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    </>}
-                                                    {r.approval_status !== 'pending' && (
-                                                        <span className="text-xs text-gray-400 italic">
-                                                            {r.reviewer?.name ? `by ${r.reviewer.name}` : '—'}
-                                                        </span>
-                                                    )}
-                                                    {r.approval_status !== 'pending' && isSuperAdmin && (
-                                                        <button
-                                                            onClick={() => { if (confirm('Permanently delete this submission and its uploaded file? This cannot be undone.')) router.delete(route('admin.requirements.destroy', r.id), { preserveScroll: true }); }}
-                                                            className="text-gray-400 hover:text-red-600 p-1"
-                                                            title="Delete submission"
-                                                        >
-                                                            <TrashIcon className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {!requirements.data?.length && (
-                                        <tr>
-                                            <td colSpan={7} className="text-center text-gray-400 py-8">No submissions found.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        {requirements.links?.length > 3 && (
-                            <div className="px-6 py-4 flex flex-wrap justify-center gap-1 border-t border-gray-100">
-                                {requirements.links.map((link, i) => (
-                                    <button key={i} disabled={!link.url}
-                                        onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
-                                        className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Mobile Pagination */}
-                    {requirements.links?.length > 3 && (
-                        <div className="md:hidden flex flex-wrap justify-center gap-1 mt-3">
-                            {requirements.links.map((link, i) => (
+                    {/* Pagination */}
+                    {people.links?.length > 3 && (
+                        <div className="flex flex-wrap justify-center gap-1 mt-3">
+                            {people.links.map((link, i) => (
                                 <button key={i} disabled={!link.url}
                                     onClick={() => link.url && router.get(link.url, { search, status, program_id: programId })}
                                     className={`px-3 py-1 rounded text-xs ${link.active ? 'bg-clinic-600 text-white' : 'hover:bg-gray-100 text-gray-600'} disabled:opacity-40`}

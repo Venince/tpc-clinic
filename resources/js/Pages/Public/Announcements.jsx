@@ -1,6 +1,8 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import MaintenanceBanner from '@/Components/Common/MaintenanceBanner';
+import PublicNav from '@/Components/Common/PublicNav';
 import { useState } from 'react';
-import { MegaphoneIcon, HomeIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { MegaphoneIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 
 function timeAgo(dateStr) {
     if (!dateStr) return '';
@@ -63,64 +65,14 @@ function ExpandableText({ text = '', className = '' }) {
 }
 
 export default function PublicAnnouncements({ announcements }) {
-    const goToSection = (hash) => {
-        router.visit(route('home'), {
-            onSuccess: () => {
-                setTimeout(() => {
-                    document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-            }
-        });
-    };
-
     return (
         <>
             <Head title="Announcements — TPC e-Clinic" />
             <div className="min-h-screen bg-white font-sans">
+                <MaintenanceBanner variant="public" />
 
                 {/* ── Nav ── */}
-                <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-4 md:gap-8">
-                        <Link href={route('home')} className="flex items-center gap-2.5">
-                            <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain" />
-                            <span className="font-semibold text-gray-900 text-sm">TPC e-Clinic</span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-6">
-                            <Link href={route('home')}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Home
-                            </Link>
-                            <a href="#" onClick={e => { e.preventDefault(); goToSection('#services'); }}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Services
-                            </a>
-                            <a href="#" onClick={e => { e.preventDefault(); goToSection('#about'); }}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                About
-                            </a>
-                            <Link href={route('announcements')}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Announcements
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Link href={route('home')}
-                            className="p-2 text-gray-500 hover:text-clinic-600 transition-colors"
-                            title="Home">
-                            <HomeIcon className="w-5 h-5" />
-                        </Link>
-                        <Link href={route('announcements')}
-                            className="md:hidden p-2 text-clinic-600"
-                            title="Announcements">
-                            <MegaphoneIcon className="w-5 h-5" />
-                        </Link>
-                        <Link href={route('login')}
-                            className="bg-clinic-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-clinic-700 transition-colors">
-                            Sign in
-                        </Link>
-                    </div>
-                </nav>
+                <PublicNav />
 
                 {/* ── Content ── */}
                 <div className="page-fade">

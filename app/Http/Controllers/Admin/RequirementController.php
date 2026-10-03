@@ -2,7 +2,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\RequirementType;
+use App\Models\User;
 use App\Models\UserRequirement;
 use App\Notifications\RequirementStatusNotification;
 use Illuminate\Http\Request;
@@ -17,11 +19,25 @@ class RequirementController extends Controller
                 ->withCount('userRequirements')
                 ->orderBy('sort_order')
                 ->get(),
-            'requirements' => UserRequirement::with(['user.studentProfile.program', 'requirementType', 'reviewer:id,name'])
-                ->when($request->program_id, fn($q) => $q->whereHas('user.studentProfile', fn($s) => $s->where('program_id', $request->program_id)))
-                ->when($request->status,     fn($q) => $q->where('approval_status', $request->status))
-                ->when($request->search,     fn($q) => $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$request->search}%")->orWhere('email', 'like', "%{$request->search}%")))
-                ->latest()->paginate(20)->withQueryString(),
+            // One row per person (not per file), each carrying all of their submissions,
+            // so an admin can review everything a student/faculty member uploaded in one place.
+            'people' => User::query()
+                ->whereHas('requirements', fn($q) => $q->when($request->status, fn($s) => $s->where('approval_status', $request->status)))
+                ->when($request->program_id, fn($q) => $q->whereHas('studentProfile', fn($s) => $s->where('program_id', $request->program_id)))
+                ->when($request->search,     fn($q) => $q->where(fn($u) => $u->where('name', 'like', "%{$request->search}%")->orWhere('email', 'like', "%{$request->search}%")))
+                ->with([
+                    'role:id,name',
+                    'studentProfile:id,user_id,program_id,year_level',
+                    'studentProfile.program:id,code,name',
+                    'facultyProfile:id,user_id,department,position',
+                    'requirements' => fn($q) => $q->with(['requirementType', 'reviewer:id,name']),
+                ])
+                ->withMax('requirements as latest_upload_at', 'created_at')
+                // People with something still pending first, then newest upload first.
+                ->orderByRaw("EXISTS (SELECT 1 FROM user_requirements ur WHERE ur.user_id = users.id AND ur.approval_status = 'pending') DESC")
+                ->orderByDesc('latest_upload_at')
+                ->paginate(15)->withQueryString(),
+            'pendingTotal' => UserRequirement::where('approval_status', 'pending')->count(),
             'programs' => \App\Models\Program::orderBy('name')->get(['id', 'code', 'name']),
             'filters'  => $request->only('program_id', 'status', 'search'),
         ]);
@@ -84,6 +100,46 @@ class RequirementController extends Controller
         $userRequirement->user->notify(new RequirementStatusNotification($userRequirement->load('requirementType')));
 
         return back()->with('success', "Requirement {$request->status}.");
+    }
+
+    /**
+     * Approve every pending submission of one person in a single action.
+     * Each item still gets its own status notification, same as approving one by one.
+     */
+    public function approveAllForUser(Request $request, User $user)
+    {
+        $pending = UserRequirement::with('requirementType')
+            ->where('user_id', $user->id)
+            ->where('approval_status', 'pending')
+            ->whereNotNull('file_path')
+            ->get();
+
+        if ($pending->isEmpty()) {
+            return back()->with('error', 'There are no pending requirements for this user.');
+        }
+
+        foreach ($pending as $requirement) {
+            $requirement->update([
+                'approval_status'     => 'approved',
+                'verification_status' => 'verified',
+                'rejection_reason'    => null,
+                'reviewed_by'         => $request->user()->id,
+                'reviewed_at'         => now(),
+            ]);
+
+            $user->notify(new RequirementStatusNotification($requirement));
+        }
+
+        AuditLog::create([
+            'user_id'     => $request->user()->id,
+            'action'      => 'requirements_approved_all',
+            'model_type'  => 'User',
+            'model_id'    => $user->id,
+            'ip_address'  => $request->ip(),
+            'description' => "Approved {$pending->count()} pending requirement(s) for {$user->name}.",
+        ]);
+
+        return back()->with('success', "Approved {$pending->count()} requirement(s) for {$user->name}.");
     }
 
     public function destroy(Request $request, UserRequirement $userRequirement)

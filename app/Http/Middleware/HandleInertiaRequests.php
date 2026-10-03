@@ -132,6 +132,7 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'onboarding'        => $onboarding,
             'facultyOnboarding' => $facultyOnboarding,   // ← new
+            'maintenance'       => fn() => \App\Support\Maintenance::publicState(),
         ]);
     }
 }

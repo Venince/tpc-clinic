@@ -1,10 +1,11 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
+import MaintenanceBanner from '@/Components/Common/MaintenanceBanner';
+import PublicNav from '@/Components/Common/PublicNav';
 import { useState, useEffect } from 'react';
 import {
     PlusIcon, PencilIcon, TrashIcon, XMarkIcon,
     CalendarDaysIcon, PhoneIcon, MapPinIcon,
-    ClockIcon, EnvelopeIcon, MegaphoneIcon,
-} from '@heroicons/react/24/outline';
+    ClockIcon, EnvelopeIcon, } from '@heroicons/react/24/outline';
 
 const tagStyles = {
     available: 'bg-green-50 text-green-700 border border-green-200',
@@ -66,59 +67,14 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
         event:   'bg-purple-50 text-purple-700',
     })[c] || 'bg-gray-100 text-gray-600';
 
-    const scrollTo = (e, hash) => {
-        e.preventDefault();
-        const el = document.querySelector(hash);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
-
     return (
         <>
             <Head title="TPC e-Clinic — Talibon Polytechnic College" />
             <div className="min-h-screen bg-white font-sans">
+                <MaintenanceBanner variant="public" />
 
                 {/* ── Nav ── */}
-                <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-4 md:gap-8">
-                        <Link href={route('home')} className="flex items-center gap-2.5">
-                            <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain" />
-                            <span className="font-semibold text-gray-900 text-sm">TPC e-Clinic</span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-6">
-                            <a href="#top"
-                                onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Home
-                            </a>
-                            <a href="#services"
-                                onClick={e => scrollTo(e, '#services')}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Services
-                            </a>
-                            <a href="#about"
-                                onClick={e => scrollTo(e, '#about')}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                About
-                            </a>
-                            <Link href={route('announcements')}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Announcements
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Link href={route('announcements')}
-                            className="md:hidden p-2 text-gray-500 hover:text-clinic-600 transition-colors"
-                            title="Announcements">
-                            <MegaphoneIcon className="w-5 h-5" />
-                        </Link>
-                        <Link href={route('login')} className="bg-clinic-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-clinic-700 transition-colors">
-                            Sign in
-                        </Link>
-                    </div>
-                </nav>
+                <PublicNav />
 
                 <div className="page-fade">
                 {/* ── Hero ── */}
@@ -198,7 +154,7 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
                 </section>
 
                 {/* ── Services ── */}
-                <section id="services" className="section-animate bg-gray-50 px-4 md:px-10 py-10 md:py-14">
+                <section id="services" style={{ scrollMarginTop: '4.5rem' }} className="section-animate bg-gray-50 px-4 md:px-10 py-10 md:py-14">
                     <div className="flex items-end justify-between mb-8">
                         <div>
                             <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Clinical services</p>
@@ -233,7 +189,7 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
                 </section>
 
                 {/* ── Announcements ── */}
-                <section className="section-animate px-4 md:px-10 py-10 md:py-14">
+                <section id="announcements-preview" style={{ scrollMarginTop: '4.5rem' }} className="section-animate px-4 md:px-10 py-10 md:py-14">
                     <div className="flex items-end justify-between mb-8">
                         <div>
                             <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Clinic announcements</p>
@@ -267,7 +223,7 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
                 </section>
 
                 {/* ── Facilities ── */}
-                <section id="about" className="section-animate bg-gray-50 px-4 md:px-10 py-10 md:py-14">
+                <section id="about" style={{ scrollMarginTop: '4.5rem' }} className="section-animate bg-gray-50 px-4 md:px-10 py-10 md:py-14">
                     <p className="text-xs font-semibold text-clinic-600 uppercase tracking-widest mb-1">Visit our facilities</p>
                     <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-8">Find us on campus</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

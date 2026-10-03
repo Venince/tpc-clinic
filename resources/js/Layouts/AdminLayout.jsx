@@ -6,13 +6,14 @@ import {
     HomeIcon, UsersIcon, CalendarIcon, BeakerIcon, ClipboardDocumentListIcon,
     DocumentChartBarIcon, MegaphoneIcon, ChatBubbleLeftRightIcon,
     AcademicCapIcon, DocumentTextIcon, ArrowRightOnRectangleIcon, Bars3Icon, XMarkIcon,
-    IdentificationIcon, UserCircleIcon, GlobeAltIcon, ClipboardDocumentCheckIcon,
+    IdentificationIcon, UserCircleIcon, GlobeAltIcon, ClipboardDocumentCheckIcon, WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { useState, useEffect, useRef } from 'react';
 import LogoutConfirmModal from '@/Components/Common/LogoutConfirmModal';
+import MaintenanceBanner from '@/Components/Common/MaintenanceBanner';
 
 const navigation = [
     { name: 'Dashboard',         href: 'admin.dashboard',          icon: HomeIcon },
@@ -28,6 +29,7 @@ const navigation = [
     { name: 'Announcements',     href: 'admin.announcements.index',icon: MegaphoneIcon },
     { name: 'Messages',          href: 'admin.messages.index',     icon: ChatBubbleLeftRightIcon },
     { name: 'Reports',           href: 'admin.reports.index',      icon: DocumentChartBarIcon },
+    { name: 'Maintenance',       href: 'admin.maintenance.index',  icon: WrenchScrewdriverIcon },
     { name: 'Profile',           href: 'admin.profile',            icon: UserCircleIcon },
 ];
 
@@ -135,6 +137,7 @@ export default function AdminLayout({ children, title }) {
 
             {/* Main */}
             <div className="flex flex-col min-h-screen-safe lg:flex-1 min-w-0">
+                <MaintenanceBanner variant="admin" />
                 <header className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-4">
                         <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-gray-700">

@@ -11,6 +11,7 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Cache;
+use App\Support\Maintenance;
 
 class AuthController extends Controller
 {
@@ -82,6 +83,18 @@ class AuthController extends Controller
         // Clear on success
         Cache::forget($key);
         Cache::forget($lockoutKey);
+
+        // Maintenance mode: only admins may sign in. Checked before last_login_at is
+        // touched, so a blocked student still counts as "never logged in".
+        if (Maintenance::blocksUser($user)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => Maintenance::loginMessage()]);
+        }
 
         $user->update(['last_login_at' => now(), 'last_login_ip' => $request->ip()]);
 

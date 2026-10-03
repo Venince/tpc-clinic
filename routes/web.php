@@ -141,6 +141,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::put('/requirements/types/{requirementType}',    [Admin\RequirementController::class, 'updateType'])->name('requirements.types.update');
             Route::delete('/requirements/types/{requirementType}', [Admin\RequirementController::class, 'destroyType'])->name('requirements.types.destroy');
             Route::post('/requirements/{userRequirement}/review',  [Admin\RequirementController::class, 'review'])->name('requirements.review');
+            Route::post('/requirements/users/{user}/approve-all',  [Admin\RequirementController::class, 'approveAllForUser'])->name('requirements.approve-all');
             Route::delete('/requirements/{userRequirement}',       [Admin\RequirementController::class, 'destroy'])
                 ->name('requirements.destroy')
                 ->middleware('role:super_admin');
@@ -154,6 +155,10 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::put('/announcements/{announcement}',    [Admin\AnnouncementController::class, 'update'])->name('announcements.update');
             Route::patch('/announcements/{announcement}/pin', [Admin\AnnouncementController::class, 'togglePin'])->name('announcements.pin');
             Route::delete('/announcements/{announcement}', [Admin\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+
+            // Maintenance mode
+            Route::get('/maintenance', [Admin\MaintenanceController::class, 'index'])->name('maintenance.index');
+            Route::put('/maintenance', [Admin\MaintenanceController::class, 'update'])->name('maintenance.update');
 
             // Messages
             Route::get('/messages',                       [Admin\MessageController::class, 'index'])->name('messages.index');
