@@ -17,7 +17,7 @@ class AnnouncementController extends Controller
         $announcements = Announcement::with('creator:id,name')
             ->when($request->category,     fn($q) => $q->where('category', $request->category))
             ->when($request->is_published !== null, fn($q) => $q->where('is_published', $request->boolean('is_published')))
-            ->latest()->paginate(20);
+            ->pinnedFirst('created_at')->paginate(20);
         return response()->json(['data' => $announcements]);
     }
 
@@ -33,6 +33,7 @@ class AnnouncementController extends Controller
             'content'      => ['required', 'string'],
             'category'     => ['required', 'in:general,health,event'],
             'is_published' => ['boolean'],
+            'is_pinned'    => ['boolean'],
             'published_at' => ['nullable', 'date'],
             'expires_at'   => ['nullable', 'date', 'after:published_at'],
         ]);
@@ -53,6 +54,7 @@ class AnnouncementController extends Controller
             'content'      => ['sometimes', 'string'],
             'category'     => ['sometimes', 'in:general,health,event'],
             'is_published' => ['sometimes', 'boolean'],
+            'is_pinned'    => ['sometimes', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'expires_at'   => ['nullable', 'date'],
         ]);

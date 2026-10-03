@@ -12,9 +12,9 @@ Route::get('/', function () {
     return Inertia::render('Public/Home', [
         'announcements' => \App\Models\Announcement::published()
             ->notExpired()
-            ->latest('published_at')
+            ->pinnedFirst()
             ->take(3)
-            ->get(['id', 'title', 'content', 'category', 'published_at']),
+            ->get(['id', 'title', 'content', 'category', 'is_pinned', 'published_at']),
         'services'      => \App\Models\ClinicService::active()->get(),
         'facilityPhoto' => \App\Models\Setting::get('facility_photo') ?: null,
         'clinicEmail'   => \App\Models\Setting::get('clinic_email') ?: 'tpc.eclinic@gmail.com',
@@ -25,8 +25,8 @@ Route::get('/announcements', function () {
     return Inertia::render('Public/Announcements', [
         'announcements' => \App\Models\Announcement::published()
             ->notExpired()
-            ->latest('published_at')
-            ->paginate(12, ['id', 'title', 'content', 'category', 'published_at']),
+            ->pinnedFirst()
+            ->paginate(12, ['id', 'title', 'content', 'category', 'is_pinned', 'published_at']),
     ]);
 })->name('announcements');
 
@@ -152,6 +152,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::get('/announcements',                   [Admin\AnnouncementController::class, 'index'])->name('announcements.index');
             Route::post('/announcements',                  [Admin\AnnouncementController::class, 'store'])->name('announcements.store');
             Route::put('/announcements/{announcement}',    [Admin\AnnouncementController::class, 'update'])->name('announcements.update');
+            Route::patch('/announcements/{announcement}/pin', [Admin\AnnouncementController::class, 'togglePin'])->name('announcements.pin');
             Route::delete('/announcements/{announcement}', [Admin\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
 
             // Messages

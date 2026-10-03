@@ -30,13 +30,56 @@ function timeAgo(dateStr) {
     });
 }
 
+function PinIcon({ className = 'w-4 h-4' }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+            <path d="M12 17v5" />
+            <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+        </svg>
+    );
+}
+
+const PREVIEW_LINES = 8;
+const PREVIEW_CHARS = 600;
+
+// Long posts (e.g. lists of names/emails) collapse to a preview with Read more / Show less.
+function ExpandableText({ text = '', className = '' }) {
+    const [expanded, setExpanded] = useState(false);
+    const lines = text.split('\n');
+    const isLong = lines.length > PREVIEW_LINES || text.length > PREVIEW_CHARS;
+
+    let preview = lines.slice(0, PREVIEW_LINES).join('\n');
+    if (preview.length > PREVIEW_CHARS) {
+        const cut = preview.slice(0, PREVIEW_CHARS);
+        const lastBreak = Math.max(cut.lastIndexOf(' '), cut.lastIndexOf('\n'));
+        preview = lastBreak > 0 ? cut.slice(0, lastBreak) : cut;
+    }
+
+    return (
+        <>
+            <p className={`${className} whitespace-pre-line break-words`}>
+                {isLong && !expanded ? preview.trimEnd() + '…' : text}
+            </p>
+            {isLong && (
+                <button
+                    type="button"
+                    onClick={() => setExpanded(e => !e)}
+                    className="mt-2 text-sm font-medium text-clinic-600 hover:text-clinic-700"
+                >
+                    {expanded ? 'Show less' : 'Read more'}
+                </button>
+            )}
+        </>
+    );
+}
+
 export default function AnnouncementsIndex({ announcements }) {
     const [modal, setModal]       = useState(null);
     const [openMenu, setOpenMenu] = useState(null);
     const menuRef = useRef(null);
 
     const { data, setData, post, put, processing, reset } = useForm({
-        title: '', content: '', category: 'general', is_published: false, expires_at: ''
+        title: '', content: '', category: 'general', is_published: false, is_pinned: false, expires_at: ''
     });
 
     useEffect(() => {
@@ -51,8 +94,8 @@ export default function AnnouncementsIndex({ announcements }) {
         setModal(a || 'new');
         setOpenMenu(null);
         setData(a
-            ? { title: a.title, content: a.content, category: a.category, is_published: a.is_published, expires_at: a.expires_at || '' }
-            : { title: '', content: '', category: 'general', is_published: false, expires_at: '' }
+            ? { title: a.title, content: a.content, category: a.category, is_published: a.is_published, is_pinned: a.is_pinned, expires_at: a.expires_at || '' }
+            : { title: '', content: '', category: 'general', is_published: false, is_pinned: false, expires_at: '' }
         );
     };
 
@@ -63,6 +106,11 @@ export default function AnnouncementsIndex({ announcements }) {
         } else {
             put(route('admin.announcements.update', modal.id), { onSuccess: () => { setModal(null); reset(); } });
         }
+    };
+
+    const togglePin = (a) => {
+        setOpenMenu(null);
+        router.patch(route('admin.announcements.pin', a.id), {}, { preserveScroll: true });
     };
 
     const del = (a) => {
@@ -94,7 +142,7 @@ export default function AnnouncementsIndex({ announcements }) {
                     {announcements.data.map(a => {
                         const cat = CATEGORY_STYLES[a.category] || { label: a.category, className: 'bg-gray-100 text-gray-600' };
                         return (
-                            <div key={a.id} className="card overflow-visible">
+                            <div key={a.id} className={`card overflow-visible ${a.is_pinned ? 'ring-1 ring-green-200' : ''}`}>
                                 {/* Post header */}
                                 <div className="flex items-start justify-between px-4 sm:px-5 pt-4 pb-2">
                                     <div className="flex items-center gap-3 min-w-0">
@@ -121,7 +169,10 @@ export default function AnnouncementsIndex({ announcements }) {
                                             <EllipsisHorizontalIcon className="w-5 h-5" />
                                         </button>
                                         {openMenu === a.id && (
-                                            <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                                                <button onClick={() => togglePin(a)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                    <PinIcon className="w-4 h-4" /> {a.is_pinned ? 'Unpin from top' : 'Pin to top'}
+                                                </button>
                                                 <button onClick={() => open(a)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                                     <PencilIcon className="w-4 h-4" /> Edit post
                                                 </button>
@@ -136,11 +187,16 @@ export default function AnnouncementsIndex({ announcements }) {
                                 {/* Post body */}
                                 <div className="px-4 sm:px-5 pb-2">
                                     <p className="font-semibold text-gray-900 text-[15px] leading-snug mb-1">{a.title}</p>
-                                    <p className="text-gray-700 text-sm whitespace-pre-line">{a.content}</p>
+                                    <ExpandableText text={a.content} className="text-gray-700 text-sm" />
                                 </div>
 
                                 {/* Footer: category pill + expiry note */}
                                 <div className="px-4 sm:px-5 pb-4 pt-2 mt-1 flex flex-wrap items-center gap-2 border-t border-gray-50">
+                                    {a.is_pinned && (
+                                        <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-green-50 text-green-700">
+                                            <PinIcon className="w-3 h-3" /> Pinned
+                                        </span>
+                                    )}
                                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cat.className}`}>{cat.label}</span>
                                     {a.expires_at && (
                                         <span className="text-xs text-gray-400">
@@ -217,10 +273,11 @@ export default function AnnouncementsIndex({ announcements }) {
                                 name="content"
                                 value={data.content}
                                 onChange={e => setData('content', e.target.value)}
-                                className="input"
-                                rows={4}
+                                className="input resize-y min-h-[12rem]"
+                                rows={10}
                                 placeholder="Write your announcement..."
                             />
+                            <p className="text-xs text-gray-400 mt-1">Long text is supported. Line breaks are kept as you type them.</p>
                         </div>
 
                         <div>
@@ -261,6 +318,20 @@ export default function AnnouncementsIndex({ announcements }) {
                             />
                             <label htmlFor="pub" className="text-sm text-gray-700 select-none cursor-pointer">
                                 Publish immediately
+                            </label>
+                        </div>
+
+                        <div className="flex items-center gap-2.5">
+                            <input
+                                type="checkbox"
+                                id="pin"
+                                name="is_pinned"
+                                checked={data.is_pinned}
+                                onChange={e => setData('is_pinned', e.target.checked)}
+                                className="rounded text-clinic-600 w-4 h-4"
+                            />
+                            <label htmlFor="pin" className="text-sm text-gray-700 select-none cursor-pointer">
+                                Pin to top
                             </label>
                         </div>
 

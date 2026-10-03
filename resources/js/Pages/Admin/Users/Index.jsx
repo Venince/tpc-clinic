@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { useState } from 'react';
-import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { useState, useRef, useEffect } from 'react';
+import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, ChevronDownIcon, UserMinusIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import PhotoLightbox from '@/Components/Common/PhotoLightbox';
 import Modal from '@/Components/UI/Modal';
@@ -12,7 +12,21 @@ export default function UsersIndex({ users, filters, roles, auth, neverLoggedInC
     const [viewingPhoto, setViewingPhoto] = useState(null);
     const [showDeleteNeverLoggedIn, setShowDeleteNeverLoggedIn] = useState(false);
     const [deletingNeverLoggedIn, setDeletingNeverLoggedIn] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
     const { post, delete: destroy } = useForm();
+
+    useEffect(() => {
+        if (!menuOpen) return;
+        const onClickOutside = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+        const onEsc = (e) => { if (e.key === 'Escape') setMenuOpen(false); };
+        document.addEventListener('mousedown', onClickOutside);
+        document.addEventListener('keydown', onEsc);
+        return () => {
+            document.removeEventListener('mousedown', onClickOutside);
+            document.removeEventListener('keydown', onEsc);
+        };
+    }, [menuOpen]);
 
     const applyFilters = () => router.get(route('admin.users.index'), { search, role }, { preserveState: true });
     const toggleActive = (user) => router.post(route('admin.users.toggle', user.id));
@@ -44,27 +58,48 @@ export default function UsersIndex({ users, filters, roles, auth, neverLoggedInC
                     <p className="page-subtitle">Manage all system accounts</p>
                 </div>
                 <div className="flex gap-2 sm:ml-auto">
-                    {auth.user.role?.name === 'super_admin' && neverLoggedInCount > 0 && (
-                        <button
-                            onClick={() => setShowDeleteNeverLoggedIn(true)}
-                            title={`Delete Never Logged In (${neverLoggedInCount})`}
-                            className="btn-danger btn-sm flex-1 sm:flex-none justify-center"
-                        >
-                            <TrashIcon className="w-4 h-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Delete Never Logged In ({neverLoggedInCount})</span>
-                            <span className="sm:hidden ml-1">{neverLoggedInCount}</span>
-                        </button>
-                    )}
                     {neverLoggedInCount > 0 && (
-                        <a
-                            href={route('admin.users.export-never-logged-in')}
-                            title={`Export Never Logged In (${neverLoggedInCount})`}
-                            className="btn-secondary btn-sm flex-1 sm:flex-none justify-center"
-                        >
-                            <ArrowDownTrayIcon className="w-4 h-4 sm:mr-1" />
-                            <span className="hidden sm:inline">Export Never Logged In ({neverLoggedInCount})</span>
-                            <span className="sm:hidden ml-1">{neverLoggedInCount}</span>
-                        </a>
+                        <div className="relative flex-1 sm:flex-none" ref={menuRef}>
+                            <button
+                                type="button"
+                                onClick={() => setMenuOpen(o => !o)}
+                                aria-haspopup="menu"
+                                aria-expanded={menuOpen}
+                                title={`Never Logged In (${neverLoggedInCount})`}
+                                className="btn-secondary btn-sm w-full sm:w-auto justify-center whitespace-nowrap"
+                            >
+                                <UserMinusIcon className="w-4 h-4 sm:hidden" />
+                                <span className="ml-1 sm:ml-0">
+                                    <span className="hidden sm:inline">Never Logged In </span>({neverLoggedInCount})
+                                </span>
+                                <ChevronDownIcon className={`w-4 h-4 ml-1 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {menuOpen && (
+                                <div role="menu" className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-60 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-30">
+                                    <a
+                                        role="menuitem"
+                                        href={route('admin.users.export-never-logged-in')}
+                                        onClick={() => setMenuOpen(false)}
+                                        className="flex items-center gap-2 px-4 py-3 sm:py-2 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 whitespace-nowrap"
+                                    >
+                                        <ArrowDownTrayIcon className="w-4 h-4" />
+                                        Export to Excel
+                                    </a>
+                                    {auth.user.role?.name === 'super_admin' && (
+                                        <button
+                                            type="button"
+                                            role="menuitem"
+                                            onClick={() => { setMenuOpen(false); setShowDeleteNeverLoggedIn(true); }}
+                                            className="w-full flex items-center gap-2 px-4 py-3 sm:py-2 text-sm text-red-600 hover:bg-red-50 active:bg-red-100 text-left whitespace-nowrap"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
+                                            Delete Accounts
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
                     <Link href={route('admin.users.import')} method="get" title="Bulk Import" className="btn-secondary btn-sm flex-1 sm:flex-none justify-center">
                         <ArrowUpTrayIcon className="w-4 h-4 sm:mr-1" />

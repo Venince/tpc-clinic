@@ -12,6 +12,15 @@ const tagStyles = {
     info:      'bg-blue-50 text-blue-700 border border-blue-200',
 };
 
+function PinIcon({ className = 'w-4 h-4' }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+            <path d="M12 17v5" />
+            <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+        </svg>
+    );
+}
+
 export default function Home({ announcements, services, auth, facilityPhoto, clinicEmail }) {
     const isAdmin = auth?.user?.role?.name === 'admin' || auth?.user?.role?.name === 'super_admin';
     const [modal, setModal] = useState(null);
@@ -243,7 +252,10 @@ export default function Home({ announcements, services, auth, facilityPhoto, cli
                                     <p className="text-xs text-clinic-500 uppercase mt-0.5">{new Date(a.published_at).toLocaleString('default',{month:'short'})}</p>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-gray-900 text-sm mb-1">{a.title}</h3>
+                                    <h3 className="font-semibold text-gray-900 text-sm mb-1 flex items-center gap-1.5">
+                                        {a.is_pinned && <PinIcon className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
+                                        <span>{a.title}</span>
+                                    </h3>
                                     <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{a.content}</p>
                                 </div>
                             </div>

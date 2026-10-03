@@ -10,10 +10,10 @@ use Inertia\Inertia;
 
 class AnnouncementController extends Controller {
     public function index(Request $request) {
-        return Inertia::render('Admin/Announcements/Index', ['announcements' => Announcement::with('creator:id,name')->latest()->paginate(15)->withQueryString()]);
+        return Inertia::render('Admin/Announcements/Index', ['announcements' => Announcement::with('creator:id,name')->pinnedFirst('created_at')->paginate(15)->withQueryString()]);
     }
     public function store(Request $request) {
-        $data = $request->validate(['title'=>['required','string','max:255'],'content'=>['required','string'],'category'=>['required','in:general,health,event'],'is_published'=>['boolean'],'expires_at'=>['nullable','date']]);
+        $data = $request->validate(['title'=>['required','string','max:255'],'content'=>['required','string'],'category'=>['required','in:general,health,event'],'is_published'=>['boolean'],'is_pinned'=>['boolean'],'expires_at'=>['nullable','date']]);
         $isPublished = $data['is_published'] ?? false;
 
         $announcement = Announcement::create(array_merge($data,['created_by'=>$request->user()->id,'published_at'=>$isPublished?now():null]));
@@ -25,7 +25,7 @@ class AnnouncementController extends Controller {
         return back()->with('success','Announcement created.');
     }
     public function update(Request $request, Announcement $announcement) {
-        $data = $request->validate(['title'=>['required','string','max:255'],'content'=>['required','string'],'category'=>['required','in:general,health,event'],'is_published'=>['boolean'],'expires_at'=>['nullable','date']]);
+        $data = $request->validate(['title'=>['required','string','max:255'],'content'=>['required','string'],'category'=>['required','in:general,health,event'],'is_published'=>['boolean'],'is_pinned'=>['boolean'],'expires_at'=>['nullable','date']]);
 
         $newlyPublished = ($data['is_published']??false) && !$announcement->published_at;
         if($newlyPublished) $data['published_at'] = now();
@@ -37,6 +37,10 @@ class AnnouncementController extends Controller {
         }
 
         return back()->with('success','Announcement updated.');
+    }
+    public function togglePin(Announcement $announcement) {
+        $announcement->update(['is_pinned' => !$announcement->is_pinned]);
+        return back()->with('success', $announcement->is_pinned ? 'Announcement pinned to top.' : 'Announcement unpinned.');
     }
     public function destroy(Announcement $announcement) { $announcement->delete(); return back()->with('success','Announcement deleted.'); }
 

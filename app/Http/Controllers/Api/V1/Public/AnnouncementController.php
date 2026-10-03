@@ -13,8 +13,8 @@ class AnnouncementController extends Controller
     {
         $announcements = Announcement::published()->notExpired()
             ->when($request->category, fn($q) => $q->where('category', $request->category))
-            ->select('id', 'title', 'content', 'category', 'published_at')
-            ->latest('published_at')
+            ->select('id', 'title', 'content', 'category', 'is_pinned', 'published_at')
+            ->pinnedFirst()
             ->paginate(10);
 
         return response()->json(['data' => $announcements]);
@@ -25,6 +25,6 @@ class AnnouncementController extends Controller
         if (!$announcement->is_published) {
             abort(404);
         }
-        return response()->json(['data' => $announcement->only('id', 'title', 'content', 'category', 'published_at')]);
+        return response()->json(['data' => $announcement->only('id', 'title', 'content', 'category', 'is_pinned', 'published_at')]);
     }
 }
