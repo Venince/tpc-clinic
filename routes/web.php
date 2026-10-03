@@ -73,6 +73,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/users/bulk-import', [Admin\UserController::class, 'bulkImport'])->name('users.import.store');
             Route::post('/users',             [Admin\UserController::class, 'store'])->name('users.store');
             Route::delete('/users/bulk/never-logged-in', [Admin\UserController::class, 'destroyNeverLoggedIn'])->name('users.destroy-never-logged-in');
+            Route::get('/users/export/never-logged-in', [Admin\UserController::class, 'exportNeverLoggedIn'])->name('users.export-never-logged-in');
             Route::get('/users/{user}/edit',  [Admin\UserController::class, 'edit'])->name('users.edit');
             Route::get('/users/{user}',       [Admin\UserController::class, 'show'])->name('users.show');
             Route::put('/users/{user}',       [Admin\UserController::class, 'update'])->name('users.update');

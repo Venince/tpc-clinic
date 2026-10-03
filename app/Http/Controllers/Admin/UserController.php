@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\NeverLoggedInUsersExport;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Role;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -42,13 +44,12 @@ class UserController extends Controller
             'users' => $users,
             'filters' => $request->only('search', 'role', 'is_active'),
             'roles' => $roles,
-            // Only super_admin sees/uses the bulk-delete action, and it never
-            // targets other super_admin accounts regardless of login status.
-            'neverLoggedInCount' => $isSuperAdmin
-                ? User::whereNull('last_login_at')
-                    ->whereHas('role', fn($r) => $r->where('name', '!=', 'super_admin'))
-                    ->count()
-                : 0,
+            // Shown to all admins (export). The bulk-delete button is still
+            // super_admin only (gated in the UI and in destroyNeverLoggedIn),
+            // and neither action ever targets super_admin accounts.
+            'neverLoggedInCount' => User::whereNull('last_login_at')
+                ->whereHas('role', fn($r) => $r->where('name', '!=', 'super_admin'))
+                ->count(),
         ]);
     }
 
@@ -315,6 +316,22 @@ class UserController extends Controller
         ]);
 
         return redirect()->route('admin.users.index')->with('success', "Deleted {$count} account(s) that never logged in.");
+    }
+
+    public function exportNeverLoggedIn(Request $request)
+    {
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'export_never_logged_in',
+            'model_type' => 'User',
+            'model_id' => null,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return Excel::download(
+            new NeverLoggedInUsersExport(),
+            'never-logged-in-users-' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 
     public function toggleActive(Request $request, User $user)

@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useState } from 'react';
-import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import UserAvatar from '@/Components/Common/UserAvatar';
 import PhotoLightbox from '@/Components/Common/PhotoLightbox';
 import Modal from '@/Components/UI/Modal';
@@ -54,6 +54,17 @@ export default function UsersIndex({ users, filters, roles, auth, neverLoggedInC
                             <span className="hidden sm:inline">Delete Never Logged In ({neverLoggedInCount})</span>
                             <span className="sm:hidden ml-1">{neverLoggedInCount}</span>
                         </button>
+                    )}
+                    {neverLoggedInCount > 0 && (
+                        <a
+                            href={route('admin.users.export-never-logged-in')}
+                            title={`Export Never Logged In (${neverLoggedInCount})`}
+                            className="btn-secondary btn-sm flex-1 sm:flex-none justify-center"
+                        >
+                            <ArrowDownTrayIcon className="w-4 h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Export Never Logged In ({neverLoggedInCount})</span>
+                            <span className="sm:hidden ml-1">{neverLoggedInCount}</span>
+                        </a>
                     )}
                     <Link href={route('admin.users.import')} method="get" title="Bulk Import" className="btn-secondary btn-sm flex-1 sm:flex-none justify-center">
                         <ArrowUpTrayIcon className="w-4 h-4 sm:mr-1" />
