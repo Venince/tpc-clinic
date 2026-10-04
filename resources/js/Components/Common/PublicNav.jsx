@@ -8,6 +8,7 @@ const LINKS = [
     { key: 'services',      label: 'Services',      type: 'section', hash: '#services' },
     { key: 'about',         label: 'About',         type: 'section', hash: '#about' },
     { key: 'announcements', label: 'Announcements', type: 'page',    routeName: 'announcements' },
+    { key: 'privacy',       label: 'Privacy Policy', shortLabel: 'Privacy', type: 'page', routeName: 'privacy-policy' },
 ];
 
 // Sections on the Home page that drive the "active" link while scrolling.
@@ -37,6 +38,7 @@ export default function PublicNav() {
     const { auth } = usePage().props;
     const isHome          = route().current('home');
     const isAnnouncements = route().current('announcements');
+    const isPrivacy       = route().current('privacy-policy');
 
     const [open, setOpen]         = useState(false);
     const [spy, setSpy]           = useState('home');
@@ -92,7 +94,7 @@ export default function PublicNav() {
         };
     }, [open]);
 
-    const active = isHome ? spy : isAnnouncements ? 'announcements' : null;
+    const active = isHome ? spy : isAnnouncements ? 'announcements' : isPrivacy ? 'privacy' : null;
 
     const goToSection = (hash) => {
         if (isHome) {
@@ -115,7 +117,11 @@ export default function PublicNav() {
         }
     };
 
-    const renderLink = (link, className, style) => {
+    const renderLink = (link, className, style, compact = false) => {
+        const label = compact && link.shortLabel
+            ? <><span className="lg:hidden">{link.shortLabel}</span><span className="hidden lg:inline">{link.label}</span></>
+            : link.label;
+
         const common = {
             className,
             style,
@@ -124,11 +130,11 @@ export default function PublicNav() {
         };
 
         if (link.type === 'section') {
-            return <a key={link.key} href={`${route('home')}${link.hash}`} {...common}>{link.label}</a>;
+            return <a key={link.key} href={`${route('home')}${link.hash}`} {...common}>{label}</a>;
         }
         return (
             <Link key={link.key} href={route(link.type === 'home' ? 'home' : link.routeName)} {...common}>
-                {link.label}
+                {label}
             </Link>
         );
     };
@@ -178,13 +184,13 @@ export default function PublicNav() {
                 )}
             >
                 <div className="px-4 md:px-8 py-3 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-4 md:gap-8 min-w-0">
+                    <div className="flex items-center gap-4 md:gap-6 lg:gap-8 min-w-0">
                         <Link href={route('home')} className="flex items-center gap-2.5 min-w-0" onClick={() => setOpen(false)}>
                             <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain flex-shrink-0" />
                             <span className="font-semibold text-gray-900 text-sm truncate">TPC e-Clinic</span>
                         </Link>
-                        <div className="hidden md:flex items-center gap-6">
-                            {LINKS.map(link => renderLink(link, desktopClass(link.key)))}
+                        <div className="hidden md:flex items-center gap-4 lg:gap-6">
+                            {LINKS.map(link => renderLink(link, desktopClass(link.key), undefined, true))}
                         </div>
                     </div>
 

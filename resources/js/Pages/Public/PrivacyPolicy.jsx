@@ -1,5 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import { ShieldCheckIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon } from '@heroicons/react/24/outline';
+import MaintenanceBanner from '@/Components/Common/MaintenanceBanner';
+import PublicNav from '@/Components/Common/PublicNav';
 
 const SECTIONS = [
     {
@@ -92,41 +94,10 @@ export default function PrivacyPolicy() {
         <>
             <Head title="Privacy Policy — TPC e-Clinic" />
             <div className="min-h-screen bg-white font-sans">
+                <MaintenanceBanner variant="public" />
 
                 {/* ── Nav ── */}
-                <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 md:px-8 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-4 md:gap-8">
-                        <Link href={route('home')} className="flex items-center gap-2.5">
-                            <img src="/images/tpc-logo.png" alt="TPC" className="w-8 h-8 object-contain" />
-                            <span className="font-semibold text-gray-900 text-sm">TPC e-Clinic</span>
-                        </Link>
-                        <div className="hidden md:flex items-center gap-6">
-                            <Link href={route('home')}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Home
-                            </Link>
-                            <Link href={route('announcements')}
-                                className="text-sm text-gray-500 hover:text-clinic-600 transition-colors">
-                                Announcements
-                            </Link>
-                            <Link href={route('privacy-policy')}
-                                className="text-sm text-clinic-600 font-medium">
-                                Privacy Policy
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Link href={route('announcements')}
-                            className="md:hidden p-2 text-gray-500 hover:text-clinic-600 transition-colors"
-                            title="Announcements">
-                            <MegaphoneIcon className="w-5 h-5" />
-                        </Link>
-                        <Link href={route('login')}
-                            className="bg-clinic-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-clinic-700 transition-colors">
-                            Sign in
-                        </Link>
-                    </div>
-                </nav>
+                <PublicNav />
 
                 {/* ── Content ── */}
                 <div className="page-fade">
@@ -155,7 +126,7 @@ export default function PrivacyPolicy() {
                                         <ul className="space-y-2 mb-3">
                                             {section.list.map((item, i) => (
                                                 <li key={i} className="flex gap-2.5 text-gray-600 leading-relaxed">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-clinic-400 mt-2 flex-shrink-0" />
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-current mt-2.5 flex-shrink-0" />
                                                     <span>{item}</span>
                                                 </li>
                                             ))}
