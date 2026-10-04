@@ -1,12 +1,17 @@
 import { Link, usePage } from '@inertiajs/react';
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 
+// Always 12-hour with AM/PM, whatever the visitor's device language/region is set to.
 export function formatExpectedBack(value) {
     if (!value) return null;
     const d = new Date(value);
     if (isNaN(d.getTime())) return null;
-    return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    return d
+        .toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+        .replace(/\u202f/g, ' ');
 }
+
+export const formatDateTime12 = formatExpectedBack;
 
 /**
  * variant="admin"  → strip inside the admin layout (admins are never blocked).

@@ -1,7 +1,84 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { WrenchScrewdriverIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { formatDateTime12, formatExpectedBack } from '@/Components/Common/MaintenanceBanner';
+
+// A native <input type="datetime-local"> follows the device's 12/24-hour setting, so the
+// expected-back time uses a date field plus Hour / Minute / AM-PM selects instead.
+const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
+
+function splitDateTime(value) {
+    if (!value) return { date: '', hour: '12', minute: '00', period: 'PM' };
+    const [date, time = '00:00'] = value.split('T');
+    const [h24, min] = time.split(':').map(Number);
+    return {
+        date,
+        hour: String(h24 % 12 || 12),
+        minute: String(min || 0).padStart(2, '0'),
+        period: h24 >= 12 ? 'PM' : 'AM',
+    };
+}
+
+function joinDateTime({ date, hour, minute, period }) {
+    if (!date) return '';
+    const h24 = (parseInt(hour, 10) % 12) + (period === 'PM' ? 12 : 0);
+    return `${date}T${String(h24).padStart(2, '0')}:${minute}`;
+}
+
+function ExpectedBackPicker({ value, onChange }) {
+    const [parts, setParts] = useState(() => splitDateTime(value));
+
+    const update = (patch) => {
+        const next = { ...parts, ...patch };
+        setParts(next);
+        onChange(joinDateTime(next));
+    };
+
+    const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+    if (!minutes.includes(parts.minute)) minutes.push(parts.minute);
+    minutes.sort();
+
+    const hasDate = !!parts.date;
+
+    return (
+        <div className="space-y-2">
+            <input
+                id="maintenance-ends-date"
+                name="ends_at_date"
+                type="date"
+                aria-label="Expected back date"
+                value={parts.date}
+                onChange={e => update({ date: e.target.value })}
+                className="input"
+            />
+            <div className="grid grid-cols-3 gap-2">
+                <select aria-label="Hour" disabled={!hasDate} value={parts.hour}
+                    onChange={e => update({ hour: e.target.value })} className="input disabled:opacity-50">
+                    {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+                <select aria-label="Minute" disabled={!hasDate} value={parts.minute}
+                    onChange={e => update({ minute: e.target.value })} className="input disabled:opacity-50">
+                    {minutes.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select aria-label="AM or PM" disabled={!hasDate} value={parts.period}
+                    onChange={e => update({ period: e.target.value })} className="input disabled:opacity-50">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+            {hasDate ? (
+                <p className="text-xs text-gray-500">
+                    Visitors will see: <span className="font-medium text-gray-700">{formatExpectedBack(joinDateTime(parts))}</span>
+                    <button type="button" onClick={() => update({ date: '' })} className="ml-3 text-red-500 hover:underline">Clear</button>
+                </p>
+            ) : (
+                <p className="text-xs text-gray-400">Pick a date to show an expected-back time.</p>
+            )}
+        </div>
+    );
+}
 
 export default function MaintenanceIndex({ settings }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -36,7 +113,7 @@ export default function MaintenanceIndex({ settings }) {
                                     <p className="font-semibold text-gray-900 text-sm">Maintenance mode</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
                                         {settings.enabled
-                                            ? <>Currently <span className="font-medium text-gray-700">ON</span>{settings.enabled_at && <> since {new Date(settings.enabled_at).toLocaleString()}</>}.</>
+                                            ? <>Currently <span className="font-medium text-gray-700">ON</span>{settings.enabled_at && <> since {formatDateTime12(settings.enabled_at)}</>}.</>
                                             : <>Currently <span className="font-medium text-gray-700">OFF</span>. The portal is available to everyone.</>}
                                     </p>
                                 </div>
@@ -82,17 +159,10 @@ export default function MaintenanceIndex({ settings }) {
 
                         {/* Expected back */}
                         <div>
-                            <label className="label" htmlFor="maintenance-ends-at">
+                            <label className="label" htmlFor="maintenance-ends-date">
                                 Expected back <span className="text-gray-400 font-normal">(optional)</span>
                             </label>
-                            <input
-                                id="maintenance-ends-at"
-                                name="ends_at"
-                                type="datetime-local"
-                                value={data.ends_at}
-                                onChange={e => setData('ends_at', e.target.value)}
-                                className="input"
-                            />
+                            <ExpectedBackPicker value={data.ends_at} onChange={v => setData('ends_at', v)} />
                             {errors.ends_at && <p className="text-xs text-red-500 mt-1">{errors.ends_at}</p>}
                         </div>
 
