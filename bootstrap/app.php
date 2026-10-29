@@ -25,6 +25,16 @@ return Application::configure(basePath: dirname(__DIR__))
         attributes: ['middleware' => ['web', 'auth']],
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Only set this if the app sits behind a reverse proxy / load balancer / CDN
+        // (nginx in front of another server, Cloudflare, etc.). Use '*' or a list of
+        // proxy IPs, e.g. ['10.0.0.5']. Leave null when PHP is exposed directly:
+        // trusting '*' there would let clients spoof X-Forwarded-For and dodge rate limits.
+        // Without it behind a proxy, $request->ip() is the proxy's IP for every user.
+        $trustedProxies = null;
+        if ($trustedProxies) {
+            $middleware->trustProxies(at: $trustedProxies);
+        }
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,

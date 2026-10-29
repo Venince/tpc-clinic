@@ -17,9 +17,12 @@ class Maintenance
 {
   private const CACHE_KEY = 'maintenance_state';
 
+  /** Per-request memo: isOn()/publicState() are called several times per request. */
+  private static ?array $memo = null;
+
   public static function state(): array
   {
-    return Cache::rememberForever(self::CACHE_KEY, fn() => [
+    return self::$memo ??= Cache::rememberForever(self::CACHE_KEY, fn() => [
       'enabled' => Setting::get('maintenance_enabled', '0') === '1',
       'message' => Setting::get('maintenance_message') ?: null,
       'ends_at' => Setting::get('maintenance_ends_at') ?: null,
@@ -64,6 +67,7 @@ class Maintenance
     Setting::set('maintenance_enabled_at', $enabledAt);
 
     Cache::forget(self::CACHE_KEY);
+    self::$memo = null;
 
     return self::state();
   }

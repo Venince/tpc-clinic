@@ -66,4 +66,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\WalkinLog::class, 'user_id');
     }
+
+    /**
+     * Send the password-reset email through the queue. The default implementation
+     * sends synchronously, which holds a PHP-FPM worker open while it talks to the
+     * SMTP server. When the mail provider is slow or rate-limiting, workers pile up
+     * and the whole site returns 500/504 errors.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\QueuedResetPasswordNotification($token));
+    }
 }

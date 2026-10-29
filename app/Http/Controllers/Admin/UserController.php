@@ -11,6 +11,7 @@ use App\Jobs\SendCredentialsEmail;
 use App\Notifications\PasswordChangedByAdminNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -118,10 +119,12 @@ class UserController extends Controller
             }
         }
 
+        $emailFailed = false;
         try {
             SendCredentialsEmail::dispatch($user, $password);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Credentials email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            $emailFailed = true;
+            Log::error('Credentials email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
         }
 
         AuditLog::create([
@@ -132,7 +135,12 @@ class UserController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User created and credentials sent.');
+        return redirect()->route('admin.users.index')->with(
+            $emailFailed ? 'error' : 'success',
+            $emailFailed
+                ? 'User created, but the credentials email could not be queued. Set a temporary password for this user so they can sign in.'
+                : 'User created. The credentials email has been queued; if it does not arrive, set a temporary password for the user.'
+        );
     }
 
     public function edit(User $user)
@@ -375,7 +383,7 @@ class UserController extends Controller
         $emails = array_slice(array_values($lines), 0, 500);
 
         $role = Role::where('name', $request->role)->firstOrFail();
-        $results = ['created' => 0, 'skipped' => 0, 'failed' => 0];
+        $results = ['created' => 0, 'skipped' => 0, 'failed' => 0, 'email_failed' => 0];
 
         foreach ($emails as $email) {
             // Strict email validation
@@ -402,7 +410,8 @@ class UserController extends Controller
             try {
                 SendCredentialsEmail::dispatch($user, $password);
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Credentials email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+                $results['email_failed']++;
+                Log::error('Credentials email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
             }
             $results['created']++;
         }
@@ -415,6 +424,12 @@ class UserController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        return back()->with('success', "Import complete: {$results['created']} created, {$results['skipped']} skipped, {$results['failed']} failed.");
+        $summary = "Import complete: {$results['created']} created, {$results['skipped']} skipped, {$results['failed']} invalid.";
+
+        if ($results['email_failed'] > 0) {
+            return back()->with('error', "{$summary} {$results['email_failed']} credentials email(s) could not be queued; those users need a temporary password set by an admin.");
+        }
+
+        return back()->with('success', "{$summary} Credentials emails have been queued; check the failed jobs list if users report not receiving them.");
     }
 }

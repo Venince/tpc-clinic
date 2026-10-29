@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Cache;
 use App\Support\Maintenance;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -31,8 +32,10 @@ class AuthController extends Controller
 
         $request->validate(['remember' => ['sometimes', 'boolean']]);
 
-        $key        = 'login_attempts:' . md5($credentials['email'] . '|' . $request->ip());
-        $lockoutKey = 'login_lockout:'  . md5($credentials['email'] . '|' . $request->ip());
+        // Normalised so "Juan@X.com" and "juan@x.com" share one counter.
+        $identity   = Str::lower(trim($credentials['email'])) . '|' . $request->ip();
+        $key        = 'login_attempts:' . md5($identity);
+        $lockoutKey = 'login_lockout:'  . md5($identity);
 
         // Lockout check
         if (Cache::has($lockoutKey)) {
@@ -66,7 +69,7 @@ class AuthController extends Controller
         }
 
         /** @var \App\Models\User $user */
-        $user = \App\Models\User::find(Auth::id());
+        $user = Auth::user();
 
         if (!$user->is_active) {
             // Full teardown — otherwise a lingering "remember me" cookie could
@@ -78,6 +81,18 @@ class AuthController extends Controller
             return redirect()->route('login')
                 ->withInput($request->only('email'))
                 ->withErrors(['email' => 'Your account has been deactivated.']);
+        }
+
+        // A user with no (or an unrecognised) role can't be routed anywhere; without
+        // this they'd be bounced to the guest-only login route in a redirect loop.
+        if (!$user->role || $this->dashboardRoute($user) === 'login') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Your account has no valid role assigned. Contact the clinic admin.']);
         }
 
         // Clear on success
@@ -169,9 +184,24 @@ class AuthController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $status = \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
+        try {
+            $status = \Illuminate\Support\Facades\Password::sendResetLink($request->only('email'));
+        } catch (\Throwable $e) {
+            // Mail transport failure (e.g. Gmail daily limit). Log it and show a
+            // friendly message instead of a 500 page.
+            report($e);
 
-        return back()->with('status', __($status));
+            return back()->withErrors([
+                'email' => 'We could not send the email right now. Please try again later or contact the clinic office.',
+            ]);
+        }
+
+        if ($status === \Illuminate\Support\Facades\Password::RESET_THROTTLED) {
+            return back()->withErrors(['email' => __($status)]);
+        }
+
+        // Same answer whether or not the address is registered (no account enumeration).
+        return back()->with('status', 'If that email address is registered, a password reset link has been sent.');
     }
 
     public function showResetPassword(Request $request): Response
@@ -206,7 +236,7 @@ class AuthController extends Controller
 
     private function dashboardRoute($user): string
     {
-        return match ($user->role->name) {
+        return match ($user->role?->name) {
             'admin', 'super_admin' => 'admin.dashboard',
             'student'              => 'student.dashboard',
             'faculty_staff'        => 'faculty.dashboard',

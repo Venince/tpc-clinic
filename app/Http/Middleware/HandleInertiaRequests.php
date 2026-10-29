@@ -10,7 +10,12 @@ class HandleInertiaRequests extends Middleware
 
     public function version(Request $request): ?string
     {
-        return md5_file(public_path('build/manifest.json')) ?: null;
+        // md5_file() on a missing file raises a warning, which Laravel turns into an
+        // exception (HTTP 500) on every page, including the login page. This happens
+        // while a build/deploy is rewriting public/build or if it's absent.
+        $manifest = public_path('build/manifest.json');
+
+        return is_file($manifest) ? (md5_file($manifest) ?: null) : null;
     }
 
     public function share(Request $request): array
@@ -131,7 +136,7 @@ class HandleInertiaRequests extends Middleware
                 ]),
             ] : null,
             'onboarding'        => $onboarding,
-            'facultyOnboarding' => $facultyOnboarding,   // ← new
+            'facultyOnboarding' => $facultyOnboarding,  
             'maintenance'       => fn() => \App\Support\Maintenance::publicState(),
         ]);
     }

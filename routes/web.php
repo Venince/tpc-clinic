@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Faculty;
 use App\Http\Controllers\Student;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -34,15 +36,41 @@ Route::get('/privacy-policy', function () {
     return Inertia::render('Public/PrivacyPolicy');
 })->name('privacy-policy');
 
+// ─── Rate limiters ─────────────────────────────────────────────────────────
+// Keyed per email + IP (plus a loose per-IP ceiling), NOT per IP alone. A campus
+// network puts hundreds of users behind one public IP, so a strict per-IP limit
+// (the old throttle:5,1) locked everyone out at once. The per-account brute-force
+// lockout lives in AuthController::login().
+RateLimiter::for('login', function (\Illuminate\Http\Request $request) {
+    $email = \Illuminate\Support\Str::lower(trim((string) $request->input('email')));
+
+    return [
+        Limit::perMinute(10)->by('login:e:' . $email . '|' . $request->ip()),
+        Limit::perMinute(600)->by('login:ip:' . $request->ip()),
+    ];
+});
+
+RateLimiter::for('password-reset', function (\Illuminate\Http\Request $request) {
+    $email = \Illuminate\Support\Str::lower(trim((string) $request->input('email')));
+
+    return [
+        Limit::perMinute(5)->by('pwreset:e:' . $email . '|' . $request->ip()),
+        Limit::perMinute(120)->by('pwreset:ip:' . $request->ip()),
+    ];
+});
+
 // ─── Auth ──────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/tpc_login',  [AuthController::class, 'showLogin'])->name('login');
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
 
-    // Rate-limited auth POSTs — 5 attempts per minute per IP
-    Route::middleware('throttle:5,1')->group(function () {
-        Route::post('/tpc_login',       [AuthController::class, 'login'])->name('login.store');
+    // Rate-limited auth POSTs — see the 'login' and 'password-reset' limiters above
+    Route::post('/tpc_login', [AuthController::class, 'login'])
+        ->middleware('throttle:login')
+        ->name('login.store');
+
+    Route::middleware('throttle:password-reset')->group(function () {
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
         Route::post('/reset-password',  [AuthController::class, 'resetPassword'])->name('password.update');
     });
