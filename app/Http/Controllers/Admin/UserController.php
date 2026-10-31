@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Jobs\SendCredentialsEmail;
 use App\Notifications\PasswordChangedByAdminNotification;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -19,6 +20,20 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
+    /** Maximum email lines processed per bulk import when a real queue worker sends the mail. */
+    private const IMPORT_LIMIT = 500;
+
+    /**
+     * With QUEUE_CONNECTION=sync every credentials email is sent INSIDE the web request
+     * (1-3 s each over Gmail SMTP), so a big import would hit PHP's time limit, the
+     * proxy timeout and Gmail's daily cap. Keep batches small in that mode, or switch
+     * to QUEUE_CONNECTION=database/redis with a running worker.
+     */
+    private const SYNC_IMPORT_LIMIT = 25;
+
+    /** Stop a sync-mode import when this many emails in a row fail (bad SMTP settings). */
+    private const MAX_CONSECUTIVE_MAIL_FAILURES = 3;
+
     public function index(Request $request)
     {
         $isSuperAdmin = $request->user()->role->name === 'super_admin';
@@ -93,11 +108,11 @@ class UserController extends Controller
         ]);
 
         $role = Role::where('name', $data['role'])->firstOrFail();
-        $password = Str::random(12);
+        $password = User::generateTemporaryPassword();
 
         $user = User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
+            'email' => Str::lower($data['email']),
             'role_id' => $role->id,
             'password' => Hash::make($password),
             'force_password_change' => true,
@@ -135,11 +150,13 @@ class UserController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
+        $delivery = config('queue.default') === 'sync' ? 'sent' : 'queued';
+
         return redirect()->route('admin.users.index')->with(
             $emailFailed ? 'error' : 'success',
             $emailFailed
-                ? 'User created, but the credentials email could not be queued. Set a temporary password for this user so they can sign in.'
-                : 'User created. The credentials email has been queued; if it does not arrive, set a temporary password for the user.'
+                ? 'User created, but the credentials email could not be sent. Set a temporary password for this user so they can sign in.'
+                : "User created. The credentials email has been {$delivery}; if it does not arrive, set a temporary password for the user."
         );
     }
 
@@ -245,12 +262,22 @@ class UserController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user->update([
+        // forceFill because remember_token is intentionally not mass-assignable.
+        // Rotating it signs out any "remember me" session that used the old password.
+        $user->forceFill([
             'password' => Hash::make($data['password']),
             'force_password_change' => true,
-        ]);
+            'remember_token' => Str::random(60),
+        ])->save();
 
-        $user->notify(new PasswordChangedByAdminNotification($request->user()));
+        // The password is already changed at this point. If the notification email
+        // fails (e.g. Gmail limit with the sync queue), don't turn the whole request
+        // into a 500 page and leave the admin unsure whether it worked.
+        try {
+            $user->notify(new PasswordChangedByAdminNotification($request->user()));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         AuditLog::create([
             'user_id' => $request->user()->id,
@@ -377,15 +404,26 @@ class UserController extends Controller
             ],
         ]);
 
-        // Normalize line endings, split, trim, remove blanks, cap at 500
-        $raw = file_get_contents($request->file('file')->getRealPath());
-        $lines = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw)));
-        $emails = array_slice(array_values($lines), 0, 500);
+        $sync  = config('queue.default') === 'sync';
+        $limit = $sync ? self::SYNC_IMPORT_LIMIT : self::IMPORT_LIMIT;
+
+        if ($sync) {
+            // Emails are sent inline in this mode; allow the request to run longer.
+            @set_time_limit(300);
+        }
+
+        $emails       = $this->readEmailLines($request->file('file'));
+        $notProcessed = max(0, count($emails) - $limit);
+        $emails       = array_slice($emails, 0, $limit);
 
         $role = Role::where('name', $request->role)->firstOrFail();
         $results = ['created' => 0, 'skipped' => 0, 'failed' => 0, 'email_failed' => 0];
 
-        foreach ($emails as $email) {
+        $queued              = 0;
+        $consecutiveFailures = 0;
+        $halted              = false;
+
+        foreach ($emails as $index => $email) {
             // Strict email validation
             if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 255) {
                 $results['failed']++;
@@ -397,7 +435,7 @@ class UserController extends Controller
                 continue;
             }
 
-            $password = Str::random(12);
+            $password = User::generateTemporaryPassword();
             $user = User::create([
                 'name' => ucwords(str_replace(['.', '_', '-'], ' ', explode('@', $email)[0])),
                 'email' => $email,
@@ -406,14 +444,29 @@ class UserController extends Controller
                 'force_password_change' => true,
                 'is_active' => true,
             ]);
+            $results['created']++;
 
             try {
-                SendCredentialsEmail::dispatch($user, $password);
+                // The delay spaces out sends when a real queue worker is used, which
+                // eases provider rate limits. It has no effect with the sync driver.
+                SendCredentialsEmail::dispatch($user, $password)
+                    ->delay(now()->addSeconds($queued * 2));
+                $consecutiveFailures = 0;
             } catch (\Throwable $e) {
                 $results['email_failed']++;
+                $consecutiveFailures++;
                 Log::error('Credentials email failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+
+                // Every send is failing (wrong SMTP host/port/password, daily limit hit).
+                // Stop instead of creating more accounts nobody can sign in to.
+                if ($sync && $consecutiveFailures >= self::MAX_CONSECUTIVE_MAIL_FAILURES) {
+                    $halted = true;
+                    $notProcessed += count($emails) - $index - 1;
+                    break;
+                }
             }
-            $results['created']++;
+
+            $queued++;
         }
 
         AuditLog::create([
@@ -425,11 +478,53 @@ class UserController extends Controller
         ]);
 
         $summary = "Import complete: {$results['created']} created, {$results['skipped']} skipped, {$results['failed']} invalid.";
+        $notes   = [];
 
-        if ($results['email_failed'] > 0) {
-            return back()->with('error', "{$summary} {$results['email_failed']} credentials email(s) could not be queued; those users need a temporary password set by an admin.");
+        if ($halted) {
+            $notes[] = 'Stopped early after ' . self::MAX_CONSECUTIVE_MAIL_FAILURES . " emails in a row failed to send. Check the mail settings (host, port 587, username, app password), then import the same file again; existing accounts are skipped. {$notProcessed} line(s) were not processed.";
+        } elseif ($notProcessed > 0) {
+            $notes[] = "{$notProcessed} line(s) were not processed (limit of {$limit} per import). Import the same file again to continue; existing accounts are skipped.";
         }
 
-        return back()->with('success', "{$summary} Credentials emails have been queued; check the failed jobs list if users report not receiving them.");
+        if ($results['email_failed'] > 0) {
+            $notes[] = "{$results['email_failed']} credentials email(s) could not be sent; those users need a temporary password set by an admin.";
+
+            return back()->with('error', trim($summary . ' ' . implode(' ', $notes)));
+        }
+
+        // ($halted can only be true when at least one email failed, handled above.)
+        $notes[] = $sync
+            ? 'Credentials emails have been sent.'
+            : 'Credentials emails have been queued; check the failed jobs list if users report not receiving them.';
+
+        return back()->with('success', trim($summary . ' ' . implode(' ', $notes)));
+    }
+
+    /**
+     * Read the uploaded .txt into a de-duplicated, lower-cased list of non-empty lines.
+     * Handles files saved by Windows tools: UTF-8 with BOM and UTF-16 (Excel "Unicode Text").
+     *
+     * @return string[]
+     */
+    private function readEmailLines(UploadedFile $file): array
+    {
+        $raw = (string) file_get_contents($file->getRealPath());
+
+        if (str_starts_with($raw, "\xFF\xFE")) {
+            $raw = mb_convert_encoding(substr($raw, 2), 'UTF-8', 'UTF-16LE');
+        } elseif (str_starts_with($raw, "\xFE\xFF")) {
+            $raw = mb_convert_encoding(substr($raw, 2), 'UTF-8', 'UTF-16BE');
+        }
+
+        // A UTF-8 BOM is not removed by trim() and would make the first email invalid.
+        $raw = preg_replace('/^\xEF\xBB\xBF/', '', $raw);
+
+        // Normalize line endings, split, trim, remove blanks
+        $lines = array_filter(
+            array_map('trim', preg_split('/\r\n|\r|\n/', $raw)),
+            fn ($line) => $line !== ''
+        );
+
+        return array_values(array_unique(array_map(fn ($line) => Str::lower($line), $lines)));
     }
 }

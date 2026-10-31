@@ -19,6 +19,11 @@ use Illuminate\Support\Str;
  * Every handled failed_jobs row is deleted, which also removes the plaintext
  * password that Laravel stored in its payload.
  *
+ * NOTE: this only sees jobs recorded in the failed_jobs table. With
+ * QUEUE_CONNECTION=sync nothing is ever recorded there (the email is sent inside the
+ * web request and a failure is only logged), so the command has nothing to recover.
+ * Use QUEUE_CONNECTION=database or redis with a running worker to benefit from it.
+ *
  * Run with --dry-run first. Use --limit to test a small batch (e.g. --limit=3).
  */
 class RetryFailedCredentials extends Command
@@ -43,6 +48,10 @@ class RetryFailedCredentials extends Command
         if ($mailer === 'log' || $mailer === 'array') {
             $this->error("MAIL_MAILER is '{$mailer}': emails would only be written to the log. Fix mail settings first.");
             return self::FAILURE;
+        }
+
+        if (config('queue.default') === 'sync') {
+            $this->warn("QUEUE_CONNECTION is 'sync': failed sends are not recorded in failed_jobs, so there is usually nothing for this command to recover. Re-issued emails would also be sent immediately, one after another, inside this command.");
         }
 
         if (!$dry && !$this->option('force') && str_contains(strtolower($host), 'gmail')) {
@@ -116,12 +125,14 @@ class RetryFailedCredentials extends Command
                 continue;
             }
 
-            $password = Str::random(12);
+            $password = User::generateTemporaryPassword();
 
             // The 'hashed' cast on User::password hashes this on assignment.
+            // This replaces any temporary password an admin set by hand for this user.
             $user->forceFill([
                 'password'              => $password,
                 'force_password_change' => true,
+                'remember_token'        => Str::random(60),
             ])->save();
 
             SendCredentialsEmail::dispatch($user, $password)

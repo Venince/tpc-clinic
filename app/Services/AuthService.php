@@ -7,14 +7,12 @@ use App\Models\Role;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
 use App\Support\Maintenance;
 
 class AuthService
@@ -26,8 +24,8 @@ class AuthService
 
     public function login(array $credentials, string $ipAddress): array
     {
-        $cacheKey   = 'login_attempts:' . md5($credentials['email'] . '|' . $ipAddress);
-        $lockoutKey = 'login_lockout:'  . md5($credentials['email'] . '|' . $ipAddress);
+        // Same normalisation as the web login, so both share one counter per person.
+        [$cacheKey, $lockoutKey] = $this->throttleKeys($credentials['email'], $ipAddress);
 
         // Check active lockout
         if (Cache::has($lockoutKey)) {
@@ -39,7 +37,14 @@ class AuthService
 
         $user = $this->userRepository->findByEmail($credentials['email']);
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        // A pasted temporary password can carry stray whitespace; accept it trimmed too.
+        $password = $credentials['password'];
+        $matches  = $user && (
+            Hash::check($password, $user->password)
+            || (trim($password) !== $password && Hash::check(trim($password), $user->password))
+        );
+
+        if (!$matches) {
             $attempts = Cache::get($cacheKey, 0) + 1;
             Cache::put($cacheKey, $attempts, now()->addHour());
 
@@ -63,6 +68,13 @@ class AuthService
         if (!$user->is_active) {
             throw ValidationException::withMessages([
                 'email' => ['Your account has been deactivated. Contact the clinic admin.'],
+            ]);
+        }
+
+        // Without a role there are no token abilities to grant (and ->role->name would crash).
+        if (!$user->role) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has no valid role assigned. Contact the clinic admin.'],
             ]);
         }
 
@@ -101,6 +113,14 @@ class AuthService
         return $s > 0 ? "{$m}m {$s}s" : "{$m} minute(s)";
     }
 
+    /** @return array{0: string, 1: string} [attempts key, lockout key] */
+    private function throttleKeys(string $email, ?string $ip): array
+    {
+        $identity = Str::lower(trim($email)) . '|' . $ip;
+
+        return ['login_attempts:' . md5($identity), 'login_lockout:' . md5($identity)];
+    }
+
     public function logout(User $user): void
     {
         $user->currentAccessToken()->delete();
@@ -109,7 +129,10 @@ class AuthService
 
     public function changePassword(User $user, string $currentPassword, string $newPassword): void
     {
-        if (!Hash::check($currentPassword, $user->password)) {
+        $matches = Hash::check($currentPassword, $user->password)
+            || (trim($currentPassword) !== $currentPassword && Hash::check(trim($currentPassword), $user->password));
+
+        if (!$matches) {
             throw ValidationException::withMessages([
                 'current_password' => ['The current password is incorrect.'],
             ]);
@@ -127,19 +150,27 @@ class AuthService
     {
         $status = Password::sendResetLink(['email' => $email]);
 
-        if ($status !== Password::RESET_LINK_SENT) {
+        // Only the throttle is reported. An unknown address must look the same as a
+        // known one, otherwise this endpoint can be used to discover who has an account.
+        if ($status === Password::RESET_THROTTLED) {
             throw ValidationException::withMessages([
                 'email' => [__($status)],
             ]);
         }
     }
 
-    public function resetPassword(array $data): void
+    /**
+     * @param  string|null  $ipAddress  When given, the login lockout for this email+IP is
+     *                                  cleared after a successful reset.
+     */
+    public function resetPassword(array $data, ?string $ipAddress = null): void
     {
         $status = Password::reset($data, function (User $user, string $password) {
             $user->forceFill([
                 'password' => Hash::make($password),
                 'force_password_change' => false,
+                // Signs out "remember me" sessions that belonged to the old password.
+                'remember_token' => Str::random(60),
             ])->save();
 
             $this->auditService->log('password_reset', $user->id);
@@ -150,16 +181,31 @@ class AuthService
                 'email' => [__($status)],
             ]);
         }
+
+        if ($ipAddress !== null && !empty($data['email'])) {
+            [$cacheKey, $lockoutKey] = $this->throttleKeys($data['email'], $ipAddress);
+            Cache::forget($cacheKey);
+            Cache::forget($lockoutKey);
+        }
     }
 
     public function bulkCreateFromEmailFile(UploadedFile $file, string $roleSlug, int $adminId): array
     {
         $content = file_get_contents($file->getRealPath());
-        $emails = array_filter(array_map('trim', explode("\n", $content)));
+
+        // Strip a UTF-8 byte-order mark (Windows Notepad/Excel add one); otherwise the
+        // first line is rejected as an "invalid email" without any visible reason.
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+
+        $emails = array_values(array_unique(array_map(
+            fn ($line) => Str::lower(trim($line)),
+            array_filter(preg_split('/\r\n|\r|\n/', $content), fn ($line) => trim($line) !== '')
+        )));
 
         $role = Role::where('name', $roleSlug)->firstOrFail();
 
         $results = ['created' => [], 'failed' => [], 'skipped' => []];
+        $toSend  = [];
 
         DB::beginTransaction();
         try {
@@ -174,7 +220,7 @@ class AuthService
                     continue;
                 }
 
-                $password = Str::random(12);
+                $password = User::generateTemporaryPassword();
                 $name = ucwords(str_replace(['.', '_', '-'], ' ', explode('@', $email)[0]));
 
                 $user = User::create([
@@ -186,8 +232,7 @@ class AuthService
                     'is_active' => true,
                 ]);
 
-                // Queue email sending
-                SendCredentialsEmail::dispatch($user, $password);
+                $toSend[] = [$user, $password];
 
                 $results['created'][] = ['email' => $email, 'name' => $name];
 
@@ -199,6 +244,14 @@ class AuthService
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;
+        }
+
+        // Dispatch only after the commit. Inside the transaction, a rollback would leave
+        // emails already queued for accounts that no longer exist, and a fast worker
+        // could look the user up before it is visible. Spacing the sends eases
+        // provider rate limits (it has no effect with the sync queue driver).
+        foreach ($toSend as $i => [$user, $password]) {
+            SendCredentialsEmail::dispatch($user, $password)->delay(now()->addSeconds($i * 2));
         }
 
         return $results;

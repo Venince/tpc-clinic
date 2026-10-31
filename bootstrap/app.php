@@ -11,6 +11,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -66,9 +67,36 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // The 'throttle:5,1' middleware on the login/forgot-password/reset-password
-        // POST routes fires before AuthController runs, so without this it renders
-        // Laravel's raw 429 Blade page instead of redirecting back into the Inertia app.
+        // Expired CSRF token / session (HTTP 419). A login, forgot-password or reset
+        // page left open longer than SESSION_LIFETIME otherwise shows Laravel's raw
+        // "Page Expired" screen inside an Inertia modal, which users read as
+        // "I can't sign in". Send them back to the form with a clear message instead.
+        // (TokenMismatchException is converted to an HttpException(419) before render
+        // callbacks run, hence the status check.)
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+
+            $message = 'Your session expired. Please try again.';
+
+            if ($request->expectsJson() && !$request->header('X-Inertia')) {
+                return response()->json(['message' => $message], 419);
+            }
+
+            if ($request->routeIs('login.store', 'password.email', 'password.update')) {
+                return back()
+                    ->withInput($request->except('password', 'password_confirmation', '_token'))
+                    ->withErrors(['email' => $message]);
+            }
+
+            return back()->with('error', $message);
+        });
+
+        // The 'throttle:login' and 'throttle:password-reset' limiters (defined in
+        // AppServiceProvider) fire before AuthController runs, so without this they
+        // would render Laravel's raw 429 Blade page instead of redirecting back into
+        // the Inertia app.
         $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Too many requests. Please wait a moment and try again.'], 429);

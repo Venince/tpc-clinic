@@ -12,12 +12,21 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes, HasPushSubscriptions;
 
+    /**
+     * Characters used for temporary passwords. Look-alikes are removed on purpose
+     * (no 0/O, 1/l/I) because people retype these from an email, and a single
+     * misread character counts as a failed attempt toward the login lockout.
+     */
+    public const TEMP_PASSWORD_ALPHABET = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
     protected $fillable = [
         'role_id', 'name', 'email', 'password', 'is_active',
         'force_password_change', 'last_login_at', 'last_login_ip', 'profile_photo_path',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    // 'email_active' is a generated column added by the optional
+    // 2026_10_31_000001_enforce_unique_active_user_email migration.
+    protected $hidden = ['password', 'remember_token', 'email_active'];
 
     /**
      * Always serialize profile_photo_url so every Inertia page and API resource
@@ -34,6 +43,24 @@ class User extends Authenticatable
             'force_password_change' => 'boolean',
             'last_login_at'         => 'datetime',
         ];
+    }
+
+    /**
+     * A random temporary password that is easy to read and retype.
+     * ~57 bits of entropy at the default length, and it is only valid until the
+     * user's first password change.
+     */
+    public static function generateTemporaryPassword(int $length = 10): string
+    {
+        $alphabet = self::TEMP_PASSWORD_ALPHABET;
+        $max      = strlen($alphabet) - 1;
+        $password = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $password .= $alphabet[random_int(0, $max)];
+        }
+
+        return $password;
     }
 
     public function role()           { return $this->belongsTo(Role::class); }

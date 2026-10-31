@@ -35,7 +35,9 @@ export default function Login({ status, lockout_seconds = 0 }) {
         e.preventDefault();
         if (isLockedOut) return;
         post(route('login.store'), {
-            onError: () => reset(),
+            // Only clear the password. Clearing the email as well forced users to retype
+            // it after every typo, and each retry counts toward the 5-attempt lockout.
+            onError: () => { reset('password'); setShowPassword(false); },
         });
     };
 
@@ -75,6 +77,9 @@ export default function Login({ status, lockout_seconds = 0 }) {
                             name="email"
                             type="email"
                             autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
                             value={data.email}
                             onChange={e => setData('email', e.target.value)}
                             className={`input pl-9 ${errors.email ? 'input-error' : ''}`}
@@ -102,29 +107,35 @@ export default function Login({ status, lockout_seconds = 0 }) {
                             name="password"
                             type={showPassword ? 'text' : 'password'}
                             autoComplete="current-password"
+                            // Once the field is shown as plain text, phone keyboards would
+                            // otherwise capitalise the first letter and "autocorrect" the rest,
+                            // which silently breaks case-sensitive temporary passwords.
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
                             value={data.password}
                             onChange={e => setData('password', e.target.value)}
                             className={`input pl-9 pr-10 ${errors.password ? 'input-error' : ''}`}
                             placeholder="••••••••"
                             disabled={isLockedOut}
                         />
+                        {/* Tap/click to toggle. The old "hold to show" button could not be used
+                            while typing on a phone, so people could not check what they typed. */}
                         <button
                             type="button"
-                            tabIndex={-1}
-                            aria-label="Hold to show password"
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            aria-pressed={showPassword}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 select-none"
-                            onMouseDown={() => setShowPassword(true)}
-                            onMouseUp={() => setShowPassword(false)}
-                            onMouseLeave={() => setShowPassword(false)}
-                            onTouchStart={(e) => { e.preventDefault(); setShowPassword(true); }}
-                            onTouchEnd={() => setShowPassword(false)}
-                            onTouchCancel={() => setShowPassword(false)}
+                            onClick={() => setShowPassword(v => !v)}
                             disabled={isLockedOut}
                         >
                             {showPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                         </button>
                     </div>
                     {errors.password && <p className="error-msg">{errors.password}</p>}
+                    <p className="text-xs text-gray-400 mt-1">
+                        Using a temporary password from your email? Copy and paste it, or tap the eye to check what you typed.
+                    </p>
                 </div>
 
                 <div className="flex items-center gap-2">

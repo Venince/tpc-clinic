@@ -14,7 +14,10 @@
     .body p { color: #374151; line-height: 1.6; }
     .creds { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 20px; margin: 20px 0; }
     .creds p { margin: 6px 0; color: #374151; }
-    .pwd { font-size: 24px; letter-spacing: 4px; color: #15803d; font-weight: bold; margin-top: 8px !important; }
+    /* Monospace and no extra letter-spacing so characters are easy to tell apart;
+       user-select:all lets a double-click select the whole password. */
+    .pwd { font-family: 'Courier New', Courier, monospace; font-size: 22px; letter-spacing: 1px; color: #15803d; font-weight: bold; margin-top: 8px !important; user-select: all; -webkit-user-select: all; }
+    .hint { font-size: 12px; color: #6b7280 !important; }
     .warn { background: #fefce8; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; font-size: 13px; color: #92400e; border-radius: 0 6px 6px 0; }
     .btn { display: inline-block; background: #16a34a; color: #fff !important; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0; }
     .btn:hover { background: #15803d; }
@@ -36,11 +39,12 @@
         <p><strong>Email:</strong> {{ $user->email }}</p>
         <p><strong>Temporary Password:</strong></p>
         <p class="pwd">{{ $password }}</p>
+        <p class="hint">Letters are case-sensitive. Copy and paste it, or type it exactly as shown, with no spaces.</p>
       </div>
       <div class="warn">
         ⚠️ <strong>Important:</strong> You must change your password upon your first login. Keep your credentials safe and do not share them with anyone.
       </div>
-      <a href="{{ config('app.url') }}/tpc_login" class="btn">Login to TPC e-Clinic</a>
+      <a href="{{ route('login') }}" class="btn">Login to TPC e-Clinic</a>
       <hr class="divider">
       <p style="font-size:13px; color:#6b7280;">If you did not expect this email or need assistance, please contact the clinic staff directly.</p>
     </div>
